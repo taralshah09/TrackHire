@@ -1,0 +1,20 @@
+{
+  "name": "jobtracker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "axios": "^1.13.5",
+    "cheerio": "^1.2.0",
+    "fs-extra": "^11.3.3",
+    "mysql2": "^3.17.1",
+    "puppeteer": "^24.37.3"
+  }
+}
