@@ -28,10 +28,10 @@ const Sidebar = () => {
                     <span className="material-icons-round text-[20px]">work_outline</span>
                     <span>Jobs</span>
                 </Link>
-                <a href="/profile" className={`sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive('/profile')}`}>
+                <Link to="/profile" className={`sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive('/profile')}`}>
                     <span className="material-icons-round text-[20px]">person_outline</span>
                     <span>Profile</span>
-                </a>
+                </Link>
                 {/* <a href="#" className={`sidebar-link flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive('/reports')}`}>
                     <span className="material-icons-round text-[20px]">analytics</span>
                     <span>Reports</span>

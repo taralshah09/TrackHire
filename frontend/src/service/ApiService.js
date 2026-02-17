@@ -182,6 +182,16 @@ export const api = {
     getUserStats: () =>
         apiRequest('/jobs/stats/user', { method: 'GET' }),
 
+    // User Profile
+    getUserByUsername: (username) =>
+        apiRequest(`/users/username/${username}`, { method: 'GET' }),
+
+    updateUser: (id, data) =>
+        apiRequest(`/users/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        }),
+
     logout: async () => {
         const refreshToken = getRefreshToken();
         try {
