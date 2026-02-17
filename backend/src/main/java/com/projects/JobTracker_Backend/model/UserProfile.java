@@ -2,12 +2,16 @@ package com.projects.JobTracker_Backend.model;
 
 import com.projects.JobTracker_Backend.enums.WorkType;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 @Entity
+@Setter
+@Getter
 @Table(name = "user_profiles")
 public class UserProfile {
     @Id
