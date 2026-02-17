@@ -14,19 +14,18 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@CrossOrigin("http://localhost:5173")
 @RestController
 @RequestMapping("/api/jobs")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class JobController {
 
     private final JobService jobService;
-    private final SecurityUtil securityUtil; // Inject SecurityUtil
+    private final SecurityUtil securityUtil;
 
     // ================== JOB BROWSING ==================
 
@@ -211,51 +210,47 @@ public class JobController {
         return ResponseEntity.ok(status);
     }
 
-    // ================== APPLIED JOBS ==================
+    // ================== APPLICATION STATUS MANAGEMENT ==================
 
-    /**
-     * POST /api/jobs/{jobId}/apply
-     * Mark job as applied
-     */
-    @PostMapping("/{jobId}/apply")
-    public ResponseEntity<Void> applyToJob(
+    @PostMapping("/{jobId}/status")
+    public ResponseEntity<AppliedStatusDTO> updateJobStatus(
             @PathVariable Long jobId,
-            @RequestBody(required = false) ApplyJobRequestDTO request
+            @RequestBody(required = false) UpdateApplicationStatusDTO request
     ) {
         AppliedJob.ApplicationStatus status = (request != null && request.getStatus() != null)
                 ? request.getStatus()
                 : AppliedJob.ApplicationStatus.APPLIED;
 
-        jobService.applyToJob(jobId, status, securityUtil.getCurrentUser());
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        AppliedStatusDTO result = jobService.updateJobStatus(jobId, status, securityUtil.getCurrentUser());
+        return ResponseEntity.ok(result);
     }
 
     /**
-     * PATCH /api/jobs/{jobId}/apply/status
-     * Update application status
+     * DELETE /api/jobs/{jobId}/status
+     * Withdraw application (removes application record)
+     * Job returns to "Not Applied" state
      */
-    @PatchMapping("/{jobId}/apply/status")
-    public ResponseEntity<Void> updateApplicationStatus(
-            @PathVariable Long jobId,
-            @Valid @RequestBody UpdateApplicationStatusDTO request
-    ) {
-        jobService.updateApplicationStatus(jobId, request.getStatus(), securityUtil.getCurrentUser());
-        return ResponseEntity.ok().build();
-    }
-
-    /**
-     * DELETE /api/jobs/{jobId}/apply
-     * Remove applied job
-     */
-    @DeleteMapping("/{jobId}/apply")
-    public ResponseEntity<Void> removeApplication(@PathVariable Long jobId) {
-        jobService.removeApplication(jobId, securityUtil.getCurrentUser());
+    @DeleteMapping("/{jobId}/status")
+    public ResponseEntity<Void> withdrawApplication(@PathVariable Long jobId) {
+        jobService.withdrawApplication(jobId, securityUtil.getCurrentUser());
         return ResponseEntity.noContent().build();
     }
 
     /**
+     * GET /api/jobs/{jobId}/status
+     * Get current application status for a job
+     */
+    @GetMapping("/{jobId}/status")
+    public ResponseEntity<AppliedStatusDTO> getJobStatus(@PathVariable Long jobId) {
+        AppliedStatusDTO status = jobService.getJobStatus(jobId, securityUtil.getCurrentUser());
+        return ResponseEntity.ok(status);
+    }
+
+    /**
      * GET /api/jobs/applied
-     * Get user's applied jobs with multi-status filter
+     * Get user's applied jobs with optional status filter
+     * - No filter: returns all applied jobs
+     * - With statuses param: filters by comma-separated statuses (e.g., "APPLIED,INTERVIEW")
      */
     @GetMapping("/applied")
     public ResponseEntity<Page<JobDTO>> getAppliedJobs(
@@ -265,19 +260,9 @@ public class JobController {
     ) {
         List<AppliedJob.ApplicationStatus> statusList = parseEnumList(statuses, AppliedJob.ApplicationStatus.class);
 
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "appliedAt"));
         Page<JobDTO> jobs = jobService.getAppliedJobs(statusList, pageable, securityUtil.getCurrentUser());
         return ResponseEntity.ok(jobs);
-    }
-
-    /**
-     * GET /api/jobs/{jobId}/is-applied
-     * Check if job is applied
-     */
-    @GetMapping("/{jobId}/is-applied")
-    public ResponseEntity<AppliedStatusDTO> isJobApplied(@PathVariable Long jobId) {
-        AppliedStatusDTO status = jobService.isJobApplied(jobId, securityUtil.getCurrentUser());
-        return ResponseEntity.ok(status);
     }
 
     // ================== USER STATISTICS ==================

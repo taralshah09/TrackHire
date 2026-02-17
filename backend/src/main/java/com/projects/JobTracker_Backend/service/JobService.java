@@ -101,7 +101,6 @@ public class JobService {
             return getAllJobs(pageable, user);
         }
 
-        // Clean and filter keywords
         List<String> cleanedKeywords = keywords.stream()
                 .map(String::trim)
                 .filter(k -> !k.isEmpty())
@@ -111,7 +110,6 @@ public class JobService {
             return getAllJobs(pageable, user);
         }
 
-        // Use specification for multi-keyword search
         Specification<Job> spec = JobSpecification.filterJobs(
                 cleanedKeywords, null, null, null, null, null, null, null, null, null
         );
@@ -135,7 +133,6 @@ public class JobService {
             return getJobsByCategory(category, pageable, user);
         }
 
-        // Use specification for multi-keyword search with category filter
         Specification<Job> spec = JobSpecification.filterJobs(
                 cleanedKeywords, List.of(category), null, null, null, null, null, null, null, null
         );
@@ -212,42 +209,78 @@ public class JobService {
         return SavedStatusDTO.builder().saved(saved).build();
     }
 
-    // ================== APPLIED JOBS ==================
+    // ================== APPLICATION STATUS MANAGEMENT ==================
 
+    /**
+     * Update or create job application status
+     * - If application doesn't exist: creates new application with given status
+     * - If application exists: updates to new status
+     * - This is a single unified endpoint for all status changes
+     */
     @Transactional
-    public void applyToJob(Long jobId, AppliedJob.ApplicationStatus status, User user) {
+    public AppliedStatusDTO updateJobStatus(Long jobId, AppliedJob.ApplicationStatus status, User user) {
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new RuntimeException("Job not found with id: " + jobId));
 
-        if (appliedJobRepository.existsByUserIdAndJobId(user.getId(), jobId)) {
-            throw new RuntimeException("Already applied to this job");
+        Optional<AppliedJob> existingApplication = appliedJobRepository.findByUserIdAndJobId(user.getId(), jobId);
+
+        AppliedJob appliedJob;
+        if (existingApplication.isPresent()) {
+            // Update existing application
+            appliedJob = existingApplication.get();
+            appliedJob.setStatus(status);
+        } else {
+            // Create new application
+            appliedJob = new AppliedJob();
+            appliedJob.setUser(user);
+            appliedJob.setJob(job);
+            appliedJob.setStatus(status);
         }
 
-        AppliedJob appliedJob = new AppliedJob();
-        appliedJob.setUser(user);
-        appliedJob.setJob(job);
-        appliedJob.setStatus(status != null ? status : AppliedJob.ApplicationStatus.APPLIED);
         appliedJobRepository.save(appliedJob);
+
+        return AppliedStatusDTO.builder()
+                .applied(true)
+                .status(status.name())
+                .build();
     }
 
+    /**
+     * Withdraw application - deletes the application record
+     * Job returns to "Not Applied" state
+     */
     @Transactional
-    public void updateApplicationStatus(Long jobId, AppliedJob.ApplicationStatus status, User user) {
-        AppliedJob appliedJob = appliedJobRepository.findByUserIdAndJobId(user.getId(), jobId)
-                .orElseThrow(() -> new RuntimeException("Application not found"));
-
-        appliedJob.setStatus(status);
-        appliedJobRepository.save(appliedJob);
-    }
-
-    @Transactional
-    public void removeApplication(Long jobId, User user) {
+    public void withdrawApplication(Long jobId, User user) {
         if (!appliedJobRepository.existsByUserIdAndJobId(user.getId(), jobId)) {
-            throw new RuntimeException("Application not found");
+            throw new RuntimeException("No application found to withdraw");
         }
 
         appliedJobRepository.deleteByUserIdAndJobId(user.getId(), jobId);
     }
 
+    /**
+     * Get current application status
+     * Returns applied=false if not applied
+     * Returns applied=true with status if applied
+     */
+    public AppliedStatusDTO getJobStatus(Long jobId, User user) {
+        Optional<AppliedJob> appliedJob = appliedJobRepository.findByUserIdAndJobId(user.getId(), jobId);
+
+        if (appliedJob.isPresent()) {
+            return AppliedStatusDTO.builder()
+                    .applied(true)
+                    .status(appliedJob.get().getStatus().name())
+                    .build();
+        }
+
+        return AppliedStatusDTO.builder()
+                .applied(false)
+                .build();
+    }
+
+    /**
+     * Get all applied jobs with optional status filter
+     */
     public Page<JobDTO> getAppliedJobs(List<AppliedJob.ApplicationStatus> statuses,
                                        Pageable pageable, User user) {
         Page<AppliedJob> appliedJobs;
@@ -265,21 +298,6 @@ public class JobService {
             dto.setIsSaved(savedJobRepository.existsByUserIdAndJobId(user.getId(), appliedJob.getJob().getId()));
             return dto;
         });
-    }
-
-    public AppliedStatusDTO isJobApplied(Long jobId, User user) {
-        Optional<AppliedJob> appliedJob = appliedJobRepository.findByUserIdAndJobId(user.getId(), jobId);
-
-        if (appliedJob.isPresent()) {
-            return AppliedStatusDTO.builder()
-                    .applied(true)
-                    .status(appliedJob.get().getStatus().name())
-                    .build();
-        }
-
-        return AppliedStatusDTO.builder()
-                .applied(false)
-                .build();
     }
 
     // ================== USER STATISTICS ==================

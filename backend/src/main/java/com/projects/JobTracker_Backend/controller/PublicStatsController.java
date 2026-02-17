@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/public")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin("http://localhost:5173")
 public class PublicStatsController {
 
     private final JobService jobService;
