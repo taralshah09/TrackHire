@@ -38,6 +38,7 @@ public class JobDTO {
     private Boolean isSaved;
     private Boolean isApplied;
     private String applicationStatus;
+    private LocalDateTime appliedAt;
 
     public static JobDTO fromEntity(Job job) {
         return JobDTO.builder()

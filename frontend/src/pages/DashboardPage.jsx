@@ -3,9 +3,10 @@ import Sidebar from '../components/Sidebar';
 import StatCard from '../components/StatCard';
 import api from '../service/ApiService';
 import { Link } from 'react-router-dom';
+import { formatDate } from '../utils/dateUtils';
 
 const DashboardPage = () => {
-    const [stats, setStats] = useState({ saved: 0, applied: 0, interviewed: 0, offered: 0 });
+    const [stats, setStats] = useState({});
     const [appliedJobs, setAppliedJobs] = useState([]);
     const [savedJobs, setSavedJobs] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -68,38 +69,30 @@ const DashboardPage = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                             <StatCard
                                 title="Total Saved"
-                                value={stats.saved || 0}
+                                value={stats.totalSaved || 0}
                                 icon="bookmark_border"
                                 iconColor="bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
-                                trend="neutral"
-                                trendValue="--"
                                 trendLabel="Total saved jobs"
                             />
                             <StatCard
                                 title="Applied"
-                                value={stats.applied || 0}
+                                value={stats.totalApplied || 0}
                                 icon="send"
                                 iconColor="bg-blue-50 dark:bg-blue-900/30 text-primary"
-                                trend="neutral"
-                                trendValue="--"
                                 trendLabel="Applications sent"
                             />
                             <StatCard
                                 title="Interviews"
-                                value={stats.interviewed || 0}
+                                value={stats.applicationStatusBreakdown ? stats.applicationStatusBreakdown.INTERVIEW || 0 : 0}
                                 icon="forum"
                                 iconColor="bg-amber-50 dark:bg-amber-900/30 text-amber-500"
-                                trend="neutral"
-                                trendValue="--"
                                 trendLabel="Interviews scheduled"
                             />
                             <StatCard
                                 title="Offers"
-                                value={stats.offered || 0}
+                                value={stats.applicationStatusBreakdown ? stats.applicationStatusBreakdown.OFFER || 0 : 0}
                                 icon="verified"
                                 iconColor="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-500"
-                                trend="neutral"
-                                trendValue="--"
                                 trendLabel="Job offers"
                             />
                         </div>
@@ -110,7 +103,7 @@ const DashboardPage = () => {
                                 <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
                                     <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
                                         <h2 className="text-lg font-bold text-slate-900 dark:text-white">Applied Jobs</h2>
-                                        <button className="text-sm text-primary font-medium hover:underline">View All</button>
+                                        <Link to="/applied-all" className="text-sm text-primary font-medium hover:underline">View All</Link>
                                     </div>
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-left">
@@ -120,7 +113,6 @@ const DashboardPage = () => {
                                                     <th className="px-6 py-4">Company</th>
                                                     <th className="px-6 py-4">Status</th>
                                                     <th className="px-6 py-4">Date Applied</th>
-                                                    <th className="px-6 py-4">Notes</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
@@ -128,36 +120,36 @@ const DashboardPage = () => {
                                                     <tr><td colSpan="5" className="p-4 text-center">Loading...</td></tr>
                                                 ) : appliedJobs.length === 0 ? (
                                                     <tr><td colSpan="5" className="p-4 text-center text-slate-500">No applications yet.</td></tr>
-                                                ) : appliedJobs.map((job) => (
-                                                    <tr key={job.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors group">
-                                                        <td className="px-6 py-4">
-                                                            <Link to={`/jobs/${job.id}`} className="font-semibold text-slate-900 dark:text-slate-200 hover:text-primary">
-                                                                {job.title || job.role}
-                                                            </Link>
-                                                        </td>
-                                                        <td className="px-6 py-4">
-                                                            <div className="flex items-center">
-                                                                <div className={`w-6 h-6 rounded mr-2 flex items-center justify-center text-[10px] text-white font-bold ${job.logoColor || 'bg-blue-600'}`}>
-                                                                    {(job.companyName || job.company || 'C').charAt(0)}
+                                                ) : appliedJobs.map((job) => {
+                                                    console.log(job); // Helpful for debugging
+                                                    return (
+                                                        <tr key={job.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors group">
+                                                            <td className="px-6 py-4">
+                                                                <Link to={`/jobs/${job.id}`} className="font-semibold text-slate-900 dark:text-slate-200 hover:text-primary">
+                                                                    {job.title || job.role}
+                                                                </Link>
+                                                            </td>
+                                                            <td className="px-6 py-4">
+                                                                <div className="flex items-center">
+                                                                    <div className={`w-6 h-6 rounded mr-2 flex items-center justify-center text-[10px] text-white font-bold ${job.logoColor || 'bg-blue-600'}`}>
+                                                                        {(job.companyName || job.company || 'C').charAt(0)}
+                                                                    </div>
+                                                                    <span className="text-slate-600 dark:text-slate-400">{job.companyName || job.company}</span>
                                                                 </div>
-                                                                <span className="text-slate-600 dark:text-slate-400">{job.companyName || job.company}</span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-6 py-4">
-                                                            <span className={`px-2.5 py-1 rounded-full text-xs font-semibold
+                                                            </td>
+                                                            <td className="px-6 py-4">
+                                                                <span className={`px-2.5 py-1 rounded-full text-xs font-semibold
                                                                 ${job.applicationStatus === 'OFFER' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
-                                                                    job.applicationStatus === 'REJECTED' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                                                                        job.applicationStatus === 'INTERVIEW' ? 'bg-blue-100 text-primary dark:bg-primary/20 dark:text-primary' :
-                                                                            'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'}`}>
-                                                                {job.applicationStatus || 'Applied'}
-                                                            </span>
-                                                        </td>
-                                                        <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">{job.appliedAt || 'N/A'}</td>
-                                                        <td className="px-6 py-4">
-                                                            <p className="text-sm text-slate-500 dark:text-slate-400 truncate max-w-[180px]">{job.note || '-'}</p>
-                                                        </td>
-                                                    </tr>
-                                                ))}
+                                                                        job.applicationStatus === 'REJECTED' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                                                                            job.applicationStatus === 'INTERVIEW' ? 'bg-blue-100 text-primary dark:bg-primary/20 dark:text-primary' :
+                                                                                'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'}`}>
+                                                                    {job.applicationStatus || 'Applied'}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">{formatDate(job.appliedAt)}</td>
+                                                        </tr>
+                                                    );
+                                                })}
                                             </tbody>
                                         </table>
                                     </div>
@@ -207,9 +199,9 @@ const DashboardPage = () => {
                                         ))}
                                     </div>
                                     <div className="p-4 mt-auto border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
-                                        <button className="w-full py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                                        <Link to="/saved-all" className="block w-full text-center py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg transition-colors">
                                             View All Saved Jobs
-                                        </button>
+                                        </Link>
                                     </div>
                                 </div>
                             </div>

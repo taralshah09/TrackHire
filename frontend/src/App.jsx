@@ -7,6 +7,8 @@ import JobPage from './pages/JobPage';
 import DashboardPage from './pages/DashboardPage';
 import LaunchpadPage from './pages/LaunchpadPage';
 import Profile from './pages/Profile';
+import AppliedJobsPage from './pages/AppliedJobsPage';
+import SavedJobsPage from './pages/SavedJobsPage';
 import LandingPage from './pages/LandingPage';
 
 function App() {
@@ -56,6 +58,22 @@ function App() {
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/applied-all"
+          element={
+            <ProtectedRoute>
+              <AppliedJobsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/saved-all"
+          element={
+            <ProtectedRoute>
+              <SavedJobsPage />
             </ProtectedRoute>
           }
         />

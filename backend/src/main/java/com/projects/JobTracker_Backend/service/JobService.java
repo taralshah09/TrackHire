@@ -198,7 +198,10 @@ public class JobService {
             dto.setIsApplied(appliedJobRepository.existsByUserIdAndJobId(user.getId(), savedJob.getJob().getId()));
             if (dto.getIsApplied()) {
                 appliedJobRepository.findByUserIdAndJobId(user.getId(), savedJob.getJob().getId())
-                        .ifPresent(applied -> dto.setApplicationStatus(applied.getStatus().name()));
+                        .ifPresent(applied -> {
+                            dto.setApplicationStatus(applied.getStatus().name());
+                            dto.setAppliedAt(applied.getAppliedAt());
+                        });
             }
             return dto;
         });
@@ -295,6 +298,7 @@ public class JobService {
             JobDTO dto = JobDTO.fromEntity(appliedJob.getJob());
             dto.setIsApplied(true);
             dto.setApplicationStatus(appliedJob.getStatus().name());
+            dto.setAppliedAt(appliedJob.getAppliedAt());
             dto.setIsSaved(savedJobRepository.existsByUserIdAndJobId(user.getId(), appliedJob.getJob().getId()));
             return dto;
         });
@@ -342,7 +346,10 @@ public class JobService {
 
             if (dto.getIsApplied()) {
                 appliedJobRepository.findByUserIdAndJobId(user.getId(), job.getId())
-                        .ifPresent(applied -> dto.setApplicationStatus(applied.getStatus().name()));
+                        .ifPresent(applied -> {
+                            dto.setApplicationStatus(applied.getStatus().name());
+                            dto.setAppliedAt(applied.getAppliedAt());
+                        });
             }
         }
 
