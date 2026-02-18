@@ -12,11 +12,12 @@ const JobsPage = () => {
     const [totalElements, setTotalElements] = useState(0);
 
     // Filters State
-    const [searchQuery, setSearchQuery] = useState('');
     const [filters, setFilters] = useState({
+        position: '',
+        company: '',
+        skills: '',
         locations: '',
         experienceLevels: '',
-        salaryRange: '', // e.g., "80000-120000"
         sort: 'postedAt',
         direction: 'DESC'
     });
@@ -31,25 +32,13 @@ const JobsPage = () => {
                 direction: filters.direction
             };
 
-            if (searchQuery) params.keywords = searchQuery;
-            if (filters.locations) {
-                if (filters.locations === 'Remote') params.isRemote = true;
-                else params.locations = filters.locations;
-            }
+            if (filters.position) params.position = filters.position;
+            if (filters.company) params.companies = filters.company;
+            if (filters.skills) params.skills = filters.skills;
+            if (filters.locations) params.locations = filters.locations;
             if (filters.experienceLevels) params.experienceLevels = filters.experienceLevels;
-            if (filters.salaryRange) {
-                const [min, max] = filters.salaryRange.split('-');
-                if (min) params.minSalary = min;
-                if (max) params.maxSalary = max;
-            }
 
-            // Decide which endpoint to use based on complexity
-            let response;
-            if (searchQuery || filters.locations || filters.experienceLevels || filters.salaryRange) {
-                response = await api.filterJobs(params);
-            } else {
-                response = await api.getJobs(params);
-            }
+            const response = await api.filterJobs(params);
 
             const data = response.json ? await response.json() : response;
             setJobs(data.content || []);
@@ -67,13 +56,7 @@ const JobsPage = () => {
         fetchJobs();
     }, [page, filters]); // Re-fetch when page or filters change
 
-    // Handle Search Enter
-    const handleSearch = (e) => {
-        if (e.key === 'Enter') {
-            setPage(0); // Reset to first page
-            fetchJobs();
-        }
-    };
+
 
     const handleFilterChange = (key, value) => {
 
@@ -96,15 +79,7 @@ const JobsPage = () => {
                 {/* Top Bar */}
                 <header className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 shrink-0">
                     <div className="flex-1 max-w-xl relative">
-                        <span className="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
-                        <input
-                            className="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-xl pl-10 pr-4 py-2 focus:ring-2 focus:ring-primary/50 transition-all outline-none"
-                            placeholder="Search for jobs, companies, or keywords..."
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            onKeyDown={handleSearch}
-                        />
+                        {/* Global Search Removed in favor of granular filters below */}
                     </div>
                     <div className="flex items-center gap-4">
                         <button className="w-10 h-10 flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors relative">
@@ -145,54 +120,73 @@ const JobsPage = () => {
                                     </select>
                                 </div>
                             </div>
-                            {/* Filter Bar */}
-                            <div className="bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-wrap gap-4 items-center">
-                                <div className="flex-1 min-w-[200px] relative">
-                                    <span className="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">location_on</span>
-                                    <select
-                                        className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-lg pl-9 p-2 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
-                                        onChange={(e) => handleFilterChange('locations', e.target.value)}
-                                        value={filters.locations}
-                                    >
-                                        <option value="">Any Location</option>
-                                        <option value="Remote">Remote</option>
-                                        <option value="San Francisco">San Francisco, CA</option>
-                                        <option value="New York">New York, NY</option>
-                                    </select>
+                            {/* Search & Filter Bar */}
+                            <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    {/* Position */}
+                                    <div className="relative">
+                                        <span className="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">work_outline</span>
+                                        <input
+                                            type="text"
+                                            placeholder="Job Title / Position"
+                                            className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-lg pl-9 p-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+                                            value={filters.position}
+                                            onChange={(e) => handleFilterChange('position', e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && fetchJobs()}
+                                        />
+                                    </div>
+
+                                    {/* Company */}
+                                    <div className="relative">
+                                        <span className="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">business</span>
+                                        <input
+                                            type="text"
+                                            placeholder="Company"
+                                            className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-lg pl-9 p-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+                                            value={filters.company}
+                                            onChange={(e) => handleFilterChange('company', e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && fetchJobs()}
+                                        />
+                                    </div>
+
+                                    {/* Skills */}
+                                    <div className="relative">
+                                        <span className="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">psychology</span>
+                                        <input
+                                            type="text"
+                                            placeholder="Skills / Keywords"
+                                            className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-lg pl-9 p-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+                                            value={filters.skills}
+                                            onChange={(e) => handleFilterChange('skills', e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && fetchJobs()}
+                                        />
+                                    </div>
+
+                                    {/* Location */}
+                                    <div className="relative">
+                                        <span className="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">location_on</span>
+                                        <input
+                                            type="text"
+                                            placeholder="Location (e.g. Remote)"
+                                            className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-lg pl-9 p-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+                                            value={filters.locations}
+                                            onChange={(e) => handleFilterChange('locations', e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && fetchJobs()}
+                                        />
+                                    </div>
                                 </div>
-                                <div className="flex-1 min-w-[200px] relative">
-                                    <span className="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">stairs</span>
-                                    <select
-                                        className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-lg pl-9 p-2 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
-                                        onChange={(e) => handleFilterChange('experienceLevels', e.target.value)}
-                                        value={filters.experienceLevels}
+
+                                <div className="flex items-center gap-4 justify-between">
+                                    {/* Experience Level */}
+
+                                    <button
+                                        className="bg-primary text-white px-8 py-2.5 rounded-lg font-semibold flex items-center gap-2 hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
+                                        onClick={fetchJobs}
                                     >
-                                        <option value="">Experience Level</option>
-                                        <option value="JUNIOR">Junior (0-2y)</option>
-                                        <option value="MID">Mid-Level (3-5y)</option>
-                                        <option value="SENIOR">Senior (6y+)</option>
-                                    </select>
+                                        <span className="material-icons-round text-sm">search</span>
+                                        Search Jobs
+                                    </button>
                                 </div>
-                                <div className="flex-1 min-w-[200px] relative">
-                                    <span className="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">payments</span>
-                                    <select
-                                        className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-lg pl-9 p-2 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
-                                        onChange={(e) => handleFilterChange('salaryRange', e.target.value)}
-                                        value={filters.salaryRange}
-                                    >
-                                        <option value="">Salary Range</option>
-                                        <option value="80000-120000">$80k - $120k</option>
-                                        <option value="120000-160000">$120k - $160k</option>
-                                        <option value="160000-500000">$160k+</option>
-                                    </select>
-                                </div>
-                                <button
-                                    className="bg-primary text-white px-6 py-2 rounded-lg font-semibold flex items-center gap-2 hover:bg-blue-700 transition-colors"
-                                    onClick={fetchJobs}
-                                >
-                                    <span className="material-icons-round text-sm">filter_list</span>
-                                    Apply Filters
-                                </button>
                             </div>
                         </div>
 

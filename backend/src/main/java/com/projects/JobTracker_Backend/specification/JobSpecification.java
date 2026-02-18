@@ -19,7 +19,9 @@ public class JobSpecification {
             Integer minSalary,
             Integer maxSalary,
             List<String> companies,
-            List<Job.Source> sources
+            List<Job.Source> sources,
+            List<String> positions, // Changed to List
+            List<String> skills     // Changed to List
     ) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -97,6 +99,31 @@ public class JobSpecification {
             // Sources (OR within sources)
             if (sources != null && !sources.isEmpty()) {
                 predicates.add(root.get("source").in(sources));
+            }
+
+            // Positions (OR within positions)
+            if (positions != null && !positions.isEmpty()) {
+                List<Predicate> positionPredicates = new ArrayList<>();
+                for (String position : positions) {
+                    positionPredicates.add(criteriaBuilder.like(
+                            criteriaBuilder.lower(root.get("title")),
+                            "%" + position.trim().toLowerCase() + "%"));
+                }
+                predicates.add(criteriaBuilder.or(positionPredicates.toArray(new Predicate[0])));
+            }
+
+            // Skills (OR within skills)
+            if (skills != null && !skills.isEmpty()) {
+                List<Predicate> skillPredicates = new ArrayList<>();
+                for (String skill : skills) {
+                    String likePattern = "%" + skill.trim().toLowerCase() + "%";
+                    Predicate titleMatch = criteriaBuilder.like(
+                            criteriaBuilder.lower(root.get("title")), likePattern);
+                    Predicate descMatch = criteriaBuilder.like(
+                            criteriaBuilder.lower(root.get("description")), likePattern);
+                    skillPredicates.add(criteriaBuilder.or(titleMatch, descMatch));
+                }
+                predicates.add(criteriaBuilder.or(skillPredicates.toArray(new Predicate[0])));
             }
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));

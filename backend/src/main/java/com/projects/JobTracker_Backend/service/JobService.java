@@ -111,7 +111,7 @@ public class JobService {
         }
 
         Specification<Job> spec = JobSpecification.filterJobs(
-                cleanedKeywords, null, null, null, null, null, null, null, null, null
+                cleanedKeywords, null, null, null, null, null, null, null, null, null, null, null
         );
 
         Page<Job> jobs = jobRepository.findAll(spec, pageable);
@@ -134,7 +134,7 @@ public class JobService {
         }
 
         Specification<Job> spec = JobSpecification.filterJobs(
-                cleanedKeywords, List.of(category), null, null, null, null, null, null, null, null
+                cleanedKeywords, List.of(category), null, null, null, null, null, null, null, null, null, null
         );
 
         Page<Job> jobs = jobRepository.findAll(spec, pageable);
@@ -152,12 +152,14 @@ public class JobService {
             Integer maxSalary,
             List<String> companies,
             List<Job.Source> sources,
+            List<String> positions,
+            List<String> skills,
             Pageable pageable,
             User user
     ) {
         Specification<Job> spec = JobSpecification.filterJobs(
                 keywords, categories, locations, employmentTypes, experienceLevels,
-                isRemote, minSalary, maxSalary, companies, sources
+                isRemote, minSalary, maxSalary, companies, sources, positions, skills
         );
 
         Page<Job> jobs = jobRepository.findAll(spec, pageable);

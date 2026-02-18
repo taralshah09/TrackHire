@@ -139,6 +139,8 @@ public class JobController {
             @RequestParam(required = false) Integer maxSalary,
             @RequestParam(required = false) String companies,
             @RequestParam(required = false) String sources,
+            @RequestParam(required = false) String position,
+            @RequestParam(required = false) String skills,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "postedAt") String sort,
@@ -151,6 +153,8 @@ public class JobController {
         List<Job.ExperienceLevel> experienceLevelList = parseEnumList(experienceLevels, Job.ExperienceLevel.class);
         List<String> companyList = parseCommaSeparated(companies);
         List<Job.Source> sourceList = parseEnumList(sources, Job.Source.class);
+        List<String> positionList = parseCommaSeparated(position);
+        List<String> skillList = parseCommaSeparated(skills);
 
         Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC") ?
                 Sort.Direction.ASC : Sort.Direction.DESC;
@@ -158,7 +162,7 @@ public class JobController {
 
         Page<JobDTO> jobs = jobService.filterJobs(
                 keywordList, categoryList, locationList, employmentTypeList, experienceLevelList,
-                isRemote, minSalary, maxSalary, companyList, sourceList, pageable, securityUtil.getCurrentUser()
+                isRemote, minSalary, maxSalary, companyList, sourceList, positionList, skillList, pageable, securityUtil.getCurrentUser()
         );
 
         return ResponseEntity.ok(jobs);
