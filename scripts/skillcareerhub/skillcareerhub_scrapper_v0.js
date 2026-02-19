@@ -1,10 +1,13 @@
 const fs = require("fs");
+const dotenv = require("dotenv");
+dotenv.config();
 
-const URL = "https://zsdlupsfugjfgxcmkwip.supabase.co/rest/v1/jobs?select=*&order=created_at.desc";
+
+const URL = process.env.SKILLHUB_URL;
 
 const HEADERS = {
-    "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpzZGx1cHNmdWdqZmd4Y21rd2lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAxODEwMjEsImV4cCI6MjA1NTc1NzAyMX0.lT0Ccj2H6NzpHSmFfGKUbRev2Z55DCJnGWtP0F2JN3k",
-    "authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpzZGx1cHNmdWdqZmd4Y21rd2lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAxODEwMjEsImV4cCI6MjA1NTc1NzAyMX0.lT0Ccj2H6NzpHSmFfGKUbRev2Z55DCJnGWtP0F2JN3k",
+    "apikey": process.env.SKILLHUB_API_KEY,
+    "authorization": "Bearer " + process.env.SKILLHUB_API_KEY,
     "accept": "*/*",
     "accept-language": "en-US,en;q=0.6",
     "accept-profile": "public",

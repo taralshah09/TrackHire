@@ -1,12 +1,14 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
 const fs = require("fs-extra");
+const dotenv = require("dotenv");
+dotenv.config();
 
 // 🔐 Add your credentials
-const APP_ID = "b401efea";
-const APP_KEY = "65ce630fab025f6d5e6fbd310680da3a";
+const APP_ID = process.env.ADZUNA_APP_ID;
+const APP_KEY = process.env.ADZUNA_APP_KEY;
 
-const BASE_URL = "https://api.adzuna.com/v1/api/jobs/in/search";
+const BASE_URL = process.env.ADZUNA_BASE_URL;
 
 // Tech keywords to search
 const SEARCH_TERMS = [

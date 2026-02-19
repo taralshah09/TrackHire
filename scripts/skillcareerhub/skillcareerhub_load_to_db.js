@@ -1,18 +1,21 @@
-const mysql = require("mysql2/promise");
+const { Pool } = require("pg");
 const fs = require("fs");
 const path = require("path");
 
 const dbConfig = {
     host: "localhost",
-    user: "root",
-    password: "Ardumyaj@2599",
+    user: "postgres",
+    password: "root",
     database: "jobs_tracker_v1",
-    waitForConnections: true,
-    connectionLimit: 20
+    port: 5432,
+    max: 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
 };
 
 async function saveJobsToDb() {
-    let connection;
+    const pool = new Pool(dbConfig);
+    let client;
     try {
         const jobsFilePath = path.join(__dirname, "skillcareerhub_jobs.json");
         if (!fs.existsSync(jobsFilePath)) {
@@ -24,30 +27,29 @@ async function saveJobsToDb() {
         const jobs = JSON.parse(jobsData);
         console.log(`Loaded ${jobs.length} jobs from JSON.`);
 
-        connection = await mysql.createPool(dbConfig);
+        client = await pool.connect();
         console.log("Connected to database.");
 
         const sql = `
             INSERT INTO jobs
-            (id, company, title, location, department, employment_type,
-             description, apply_url, posted_at, source, is_remote, company_logo)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE 
-                title = VALUES(title),
-                location = VALUES(location),
-                description = VALUES(description),
-                company_logo = VALUES(company_logo),
+            (external_id, company, title, location, department, employment_type,
+             description, apply_url, posted_at, source, is_remote, company_logo, job_category)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+            ON CONFLICT (external_id) DO UPDATE SET
+                title = EXCLUDED.title,
+                location = EXCLUDED.location,
+                description = EXCLUDED.description,
+                company_logo = EXCLUDED.company_logo,
                 updated_at = CURRENT_TIMESTAMP
         `;
 
         let inserted = 0;
-        let updated = 0;
         let failed = 0;
 
         for (const job of jobs) {
             try {
                 // Determine is_remote based on location
-                const isRemote = job.location && job.location.toLowerCase().includes("remote") ? 1 : 0;
+                const isRemote = job.location && job.location.toLowerCase().includes("remote") ? true : false;
 
                 // Ensure posted_at is a valid date or null
                 let postedAt = null;
@@ -59,8 +61,8 @@ async function saveJobsToDb() {
                     }
                 }
 
-                const [result] = await connection.execute(sql, [
-                    job.id,
+                const result = await client.query(sql, [
+                    job.id, // Maps to external_id
                     job.company,
                     job.title,
                     job.location,
@@ -71,13 +73,12 @@ async function saveJobsToDb() {
                     postedAt,
                     "OTHER", // Using 'OTHER' because 'SkillCareerHub' is not in the source ENUM
                     isRemote,
-                    job.company_logo || null
+                    job.company_logo || null,
+                    "DISCOVER" // Default job_category
                 ]);
 
-                if (result.affectedRows === 1) {
+                if (result.rowCount > 0) {
                     inserted++;
-                } else if (result.affectedRows === 2) {
-                    updated++;
                 }
             } catch (err) {
                 console.error(`Failed to insert job ${job.id}:`, err.message);
@@ -86,17 +87,17 @@ async function saveJobsToDb() {
         }
 
         console.log("\nDatabase Import Summary:");
-        console.log(`- Inserted: ${inserted}`);
-        console.log(`- Updated: ${updated}`);
+        console.log(`- Processed (Inserted/Updated): ${inserted}`);
         console.log(`- Failed: ${failed}`);
 
     } catch (error) {
         console.error("Fatal error:", error);
     } finally {
-        if (connection) {
-            await connection.end();
-            console.log("Database connection closed.");
+        if (client) {
+            client.release();
         }
+        await pool.end();
+        console.log("Database connection closed.");
     }
 }
 
