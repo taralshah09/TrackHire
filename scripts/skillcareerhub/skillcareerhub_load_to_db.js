@@ -1,6 +1,8 @@
 const { Pool } = require("pg");
 const fs = require("fs");
 const path = require("path");
+const dotenv = require("dotenv");
+dotenv.config();
 
 const dbConfig = {
     host: process.env.DB_HOST,
