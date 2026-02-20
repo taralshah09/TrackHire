@@ -1,9 +1,11 @@
 const fs = require("fs");
 const dotenv = require("dotenv");
-dotenv.config();
+const path = require("path");
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
+const SKILLHUB_ENDPOINT = process.env.SKILLHUB_URL;
 
-const URL = process.env.SKILLHUB_URL;
+console.log(process.env.DB_HOST)
 
 const HEADERS = {
     "apikey": process.env.SKILLHUB_API_KEY,
@@ -85,9 +87,13 @@ function transformJob(job) {
     };
 }
 
-async function fetchJobs() {
+/**
+ * Runs the SkillCareerHub scraper.
+ * @returns {Promise<{ filePath: string, count: number }>}
+ */
+async function run() {
     try {
-        const res = await fetch(URL, { headers: HEADERS });
+        const res = await fetch(SKILLHUB_ENDPOINT, { headers: HEADERS });
 
         if (!res.ok) {
             throw new Error(`HTTP error! Status: ${res.status}`);
@@ -98,12 +104,19 @@ async function fetchJobs() {
 
         const transformedJobs = data.map(transformJob);
 
-        fs.writeFileSync('skillcareerhub_jobs.json', JSON.stringify(transformedJobs, null, 2));
-        console.log("Jobs saved to skillcareerhub_jobs.json");
+        const filePath = path.resolve(__dirname, "skillcareerhub_jobs.json");
+        fs.writeFileSync(filePath, JSON.stringify(transformedJobs, null, 2));
+        console.log(`Jobs saved to ${filePath}`);
+
+        return {
+            filePath,
+            count: transformedJobs.length
+        };
 
     } catch (err) {
         console.error("Error fetching jobs:", err);
+        throw err;
     }
 }
 
-fetchJobs();
+module.exports = { run };

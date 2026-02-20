@@ -2,60 +2,59 @@ const { Pool } = require("pg");
 const fs = require("fs");
 const path = require("path");
 const dotenv = require("dotenv");
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
+
+const DB_SCHEMA = process.env.DB_SCHEMA || "jobs_tracker_v1";
 
 const dbConfig = {
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    port: process.env.DB_PORT,
+    port: parseInt(process.env.DB_PORT),
     max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
+    ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
+    options: `-c search_path=${DB_SCHEMA}`,
 };
 
-async function saveJobsToDb() {
+const BATCH_SIZE = 500;
+
+/**
+ * Loads jobs from JSON file to DB.
+ * @param {string} filePath 
+ * @returns {Promise<{ inserted: number, updated: number, failed: number }>}
+ */
+async function run(filePath) {
+    if (!fs.existsSync(filePath)) {
+        console.error(`❌ File not found: ${filePath}`);
+        return { inserted: 0, updated: 0, failed: 0 };
+    }
+
+    const jobsData = fs.readFileSync(filePath, "utf-8");
+    const jobs = JSON.parse(jobsData);
+    console.log(`Loaded ${jobs.length} jobs from ${filePath}.`);
+
     const pool = new Pool(dbConfig);
-    let client;
+    const client = await pool.connect();
+    console.log("Connected to database.");
+
+    let totalInserted = 0;
+
     try {
-        const jobsFilePath = path.join(__dirname, "skillcareerhub_jobs.json");
-        if (!fs.existsSync(jobsFilePath)) {
-            console.error("Error: skillcareerhub_jobs.json not found.");
-            return;
-        }
+        for (let i = 0; i < jobs.length; i += BATCH_SIZE) {
+            const batch = jobs.slice(i, i + BATCH_SIZE);
+            const values = [];
+            const placeholders = [];
+            let paramIndex = 1;
 
-        const jobsData = fs.readFileSync(jobsFilePath, "utf-8");
-        const jobs = JSON.parse(jobsData);
-        console.log(`Loaded ${jobs.length} jobs from JSON.`);
-
-        client = await pool.connect();
-        console.log("Connected to database.");
-
-        const sql = `
-            INSERT INTO jobs
-            (external_id, company, title, location, department, employment_type,
-             description, apply_url, posted_at, source, is_remote, company_logo, job_category)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-            ON CONFLICT (external_id) DO UPDATE SET
-                title = EXCLUDED.title,
-                location = EXCLUDED.location,
-                description = EXCLUDED.description,
-                company_logo = EXCLUDED.company_logo,
-                updated_at = CURRENT_TIMESTAMP
-        `;
-
-        let inserted = 0;
-        let failed = 0;
-
-        for (const job of jobs) {
-            try {
+            for (const job of batch) {
                 // Determine is_remote based on location
                 const isRemote = job.location && job.location.toLowerCase().includes("remote") ? true : false;
 
                 // Ensure posted_at is a valid date or null
                 let postedAt = null;
-                if (jobs.indexOf(job) === 0) console.log("First job logo:", job.company_logo);
                 if (job.posted_at) {
                     postedAt = new Date(job.posted_at);
                     if (isNaN(postedAt.getTime())) {
@@ -63,7 +62,7 @@ async function saveJobsToDb() {
                     }
                 }
 
-                const result = await client.query(sql, [
+                const row = [
                     job.id, // Maps to external_id
                     job.company,
                     job.title,
@@ -73,27 +72,46 @@ async function saveJobsToDb() {
                     job.description,
                     job.apply_url,
                     postedAt,
-                    "OTHER", // Using 'OTHER' because 'SkillCareerHub' is not in the source ENUM
+                    "OTHER", // Source
                     isRemote,
                     job.company_logo || null,
-                    "DISCOVER" // Default job_category
-                ]);
+                    "DISCOVER" // job_category
+                ];
+                values.push(...row);
 
-                if (result.rowCount > 0) {
-                    inserted++;
-                }
-            } catch (err) {
-                console.error(`Failed to insert job ${job.id}:`, err.message);
-                failed++;
+                const rowPlaceholders = row.map(() => `$${paramIndex++}`).join(", ");
+                placeholders.push(`(${rowPlaceholders})`);
             }
+
+            const sql = `
+            INSERT INTO jobs
+            (external_id, company, title, location, department, employment_type,
+             description, apply_url, posted_at, source, is_remote, company_logo, job_category)
+            VALUES ${placeholders.join(", ")}
+            ON CONFLICT (external_id) DO UPDATE SET
+                title = EXCLUDED.title,
+                location = EXCLUDED.location,
+                description = EXCLUDED.description,
+                company_logo = EXCLUDED.company_logo,
+                posted_at = EXCLUDED.posted_at,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE
+                jobs.title IS DISTINCT FROM EXCLUDED.title OR
+                jobs.description IS DISTINCT FROM EXCLUDED.description OR
+                jobs.company_logo IS DISTINCT FROM EXCLUDED.company_logo
+            `;
+
+            const res = await client.query(sql, values);
+            totalInserted += res.rowCount;
+            console.log(`✅ Processed batch ${i + batch.length}/${jobs.length}`);
         }
 
-        console.log("\nDatabase Import Summary:");
-        console.log(`- Processed (Inserted/Updated): ${inserted}`);
-        console.log(`- Failed: ${failed}`);
+        console.log(`\n🎉 Job load complete. Rows affected: ${totalInserted}`);
+        return { inserted: totalInserted, updated: 0, failed: 0 };
 
-    } catch (error) {
-        console.error("Fatal error:", error);
+    } catch (err) {
+        console.error("Fatal error:", err);
+        throw err;
     } finally {
         if (client) {
             client.release();
@@ -103,4 +121,4 @@ async function saveJobsToDb() {
     }
 }
 
-saveJobsToDb();
+module.exports = { run };

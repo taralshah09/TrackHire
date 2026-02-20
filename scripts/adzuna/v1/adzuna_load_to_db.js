@@ -1,15 +1,22 @@
 const fs = require("fs-extra");
 const { Pool } = require("pg");
+const path = require("path");
+const dotenv = require("dotenv");
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+
+const DB_SCHEMA = process.env.DB_SCHEMA || "jobs_tracker_v1";
 
 const DB_CONFIG = {
-    host: "localhost",
-    user: "postgres",
-    password: "root",
-    database: "jobs_tracker_v1",
-    port: 5432,
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    port: parseInt(process.env.DB_PORT) || 5432,
     max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
+    ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
+    options: `-c search_path=${DB_SCHEMA}`,
 };
 
 const BATCH_SIZE = 500;
@@ -18,14 +25,17 @@ const TABLE_NAME = "jobs";
 // ---------- Helpers ----------
 
 // Create primary key: company + title + id
-function generateId(company, title, id) {
+function generateId(company, title, id, date) {
     const normalize = str =>
         str
             ?.toLowerCase()
             .replace(/\s+/g, "_")
             .replace(/[^\w]/g, "") || "unknown";
 
-    return `${normalize(company)}_${normalize(title)}_${id}`;
+    // Normalise date to YYYY-MM-DD so ID is clean and deterministic
+    const dateStr = date ? new Date(date).toISOString().slice(0, 10) : "unknown";
+
+    return `${normalize(company)}_${normalize(title)}_${id}_${dateStr}`;
 }
 
 // Map job type → ENUM
@@ -70,13 +80,28 @@ function toDate(iso) {
 
 // ---------- Main Loader ----------
 
-async function loadJobs() {
-    const jobs = await fs.readJson("./adzuna_jobs_v1.json");
+// ---------- Main Loader ----------
+
+/**
+ * Loads jobs from JSON file to DB.
+ * @param {string} filePath 
+ * @returns {Promise<{ inserted: number, updated: number, failed: number }>}
+ */
+async function run(filePath) {
+    if (!fs.existsSync(filePath)) {
+        console.error(`❌ File not found: ${filePath}`);
+        return { inserted: 0, updated: 0, failed: 0 };
+    }
+
+    const jobs = await fs.readJson(filePath);
 
     const pool = new Pool(DB_CONFIG);
     const client = await pool.connect();
 
-    console.log(`📦 Processing ${jobs.length} jobs...`);
+    console.log(`📦 Loading ${jobs.length} jobs from ${filePath}...`);
+    let totalInserted = 0;
+    let totalUpdated = 0;
+    let totalSkipped = 0;
 
     try {
         for (let i = 0; i < jobs.length; i += BATCH_SIZE) {
@@ -89,7 +114,7 @@ async function loadJobs() {
 
             for (const job of batch) {
                 const row = [
-                    generateId(job.company, job.title, job.id),
+                    generateId(job.company, job.title, job.id, job.date_posted),
                     job.company,
                     null, // company_logo
                     job.title,
@@ -114,6 +139,8 @@ async function loadJobs() {
                 placeholders.push(`(${rowPlaceholders})`);
             }
 
+            // Optimization: Add WHERE clause to ON CONFLICT to avoid "fake" updates
+            // xmax=0 → fresh insert, xmax>0 → updated, not returned → skipped (no change)
             const sql = `
           INSERT INTO ${TABLE_NAME} (
             external_id, company, company_logo, title, location, department,
@@ -129,20 +156,33 @@ async function loadJobs() {
             posted_at = EXCLUDED.posted_at,
             is_active = TRUE,
             updated_at = CURRENT_TIMESTAMP
+          WHERE 
+            jobs.title IS DISTINCT FROM EXCLUDED.title OR
+            jobs.location IS DISTINCT FROM EXCLUDED.location OR
+            jobs.description IS DISTINCT FROM EXCLUDED.description
+          RETURNING (xmax = 0) AS inserted
         `;
 
-            await client.query(sql, values);
+            const res = await client.query(sql, values);
+            const inserted = res.rows.filter(r => r.inserted).length;
+            const updated = res.rows.filter(r => !r.inserted).length;
+            const skipped = batch.length - res.rows.length;
+            totalInserted += inserted;
+            totalUpdated += updated;
+            totalSkipped += skipped;
 
-            console.log(`✅ Inserted ${i + batch.length}/${jobs.length}`);
+            console.log(`✅ Batch ${i + batch.length}/${jobs.length} — +${inserted} new, ~${updated} updated, =${skipped} skipped`);
         }
 
-        console.log("🎉 All jobs loaded!");
+        console.log(`\n🎉 Load complete: ${totalInserted} inserted, ${totalUpdated} updated, ${totalSkipped} skipped (unchanged)`);
+        return { inserted: totalInserted, updated: totalUpdated, failed: 0 };
     } catch (err) {
         console.error("Error loading jobs:", err);
+        throw err;
     } finally {
         client.release();
         await pool.end();
     }
 }
 
-loadJobs().catch(console.error);
+module.exports = { run };
