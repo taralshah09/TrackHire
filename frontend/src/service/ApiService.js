@@ -192,6 +192,16 @@ export const api = {
             body: JSON.stringify(data)
         }),
 
+    // Job Email Preferences
+    getJobPreferences: (userId) =>
+        apiRequest(`/preferences/${userId}`, { method: 'GET' }),
+
+    saveJobPreferences: (userId, data) =>
+        apiRequest(`/preferences/${userId}`, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        }),
+
     logout: async () => {
         const refreshToken = getRefreshToken();
         try {

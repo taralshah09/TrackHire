@@ -8,7 +8,7 @@ import Cookies from 'js-cookie';
 import {
     FaUser, FaEnvelope, FaMapMarkerAlt, FaBriefcase, FaGlobe,
     FaGithub, FaLinkedin, FaSave, FaPlus, FaTimes,
-    FaCheckCircle, FaCalendarAlt, FaShieldAlt,
+    FaCheckCircle, FaCalendarAlt, FaShieldAlt, FaBell,
 } from 'react-icons/fa';
 
 /* ── Shared style helpers ── */
@@ -58,6 +58,11 @@ const sectionTitle = {
 
 const WORK_TYPES = ['REMOTE', 'HYBRID', 'ONSITE'];
 
+const ROLE_TYPE_OPTIONS = [
+    'Intern', 'Junior', 'Mid-level', 'Senior', 'Lead',
+    'Full-time', 'Part-time', 'Contract', 'Freelance',
+];
+
 function InputField({ label, icon, value, onChange, name, type = 'text', placeholder }) {
     const [focused, setFocused] = useState(false);
     return (
@@ -97,6 +102,7 @@ export default function Profile() {
     const { user } = useAuth();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [savingPrefs, setSavingPrefs] = useState(false);
     const [userId, setUserId] = useState(null);
     const [userObj, setUserObj] = useState({});
     const [newSkill, setNewSkill] = useState('');
@@ -108,6 +114,11 @@ export default function Profile() {
     const [preferences, setPreferences] = useState([]);
     const [skills, setSkills] = useState([]);
     const [stats, setStats] = useState({ memberSince: '—', isVerified: false, completion: 0 });
+
+    // ── Email job preferences state ──
+    const [emailPrefs, setEmailPrefs] = useState({ jobTitles: [], skills: [], roleTypes: [], emailEnabled: true });
+    const [newEmailTitle, setNewEmailTitle] = useState('');
+    const [newEmailSkill, setNewEmailSkill] = useState('');
 
     /* ── fetch ── */
     useEffect(() => {
@@ -141,6 +152,19 @@ export default function Profile() {
                         completion: pct || 70,
                     });
                 }
+                // Fetch email job preferences
+                try {
+                    const prefRes = await api.getJobPreferences(data.id);
+                    if (prefRes.ok) {
+                        const prefData = await prefRes.json();
+                        setEmailPrefs({
+                            jobTitles: prefData.jobTitles || [],
+                            skills: prefData.skills || [],
+                            roleTypes: prefData.roleTypes || [],
+                            emailEnabled: prefData.emailEnabled ?? true,
+                        });
+                    }
+                } catch (_) { /* silent — first-time users have no prefs yet */ }
             } catch (e) {
                 console.error(e);
                 toast.error('Failed to load profile.');
@@ -192,6 +216,52 @@ export default function Profile() {
         if (s && !skills.includes(s)) { setSkills(prev => [...prev, s]); setNewSkill(''); }
     };
     const removeSkill = (s) => setSkills(prev => prev.filter(x => x !== s));
+
+    /* ── email prefs helpers ── */
+    const addEmailTitle = () => {
+        const t = newEmailTitle.trim();
+        if (t && !emailPrefs.jobTitles.includes(t)) {
+            setEmailPrefs(p => ({ ...p, jobTitles: [...p.jobTitles, t] }));
+            setNewEmailTitle('');
+        }
+    };
+    const removeEmailTitle = (t) => setEmailPrefs(p => ({ ...p, jobTitles: p.jobTitles.filter(x => x !== t) }));
+
+    const addEmailSkill = () => {
+        const s = newEmailSkill.trim();
+        if (s && !emailPrefs.skills.includes(s)) {
+            setEmailPrefs(p => ({ ...p, skills: [...p.skills, s] }));
+            setNewEmailSkill('');
+        }
+    };
+    const removeEmailSkill = (s) => setEmailPrefs(p => ({ ...p, skills: p.skills.filter(x => x !== s) }));
+
+    const toggleRoleType = (type) => setEmailPrefs(p => ({
+        ...p,
+        roleTypes: p.roleTypes.includes(type)
+            ? p.roleTypes.filter(r => r !== type)
+            : [...p.roleTypes, type],
+    }));
+
+    const handleSaveEmailPrefs = async () => {
+        if (!userId) return;
+        setSavingPrefs(true);
+        try {
+            const res = await api.saveJobPreferences(userId, {
+                jobTitles: emailPrefs.jobTitles,
+                skills: emailPrefs.skills,
+                roleTypes: emailPrefs.roleTypes,
+                emailEnabled: emailPrefs.emailEnabled,
+            });
+            if (res.ok) toast.success('Email preferences saved!');
+            else toast.error('Failed to save email preferences.');
+        } catch (e) {
+            console.error(e);
+            toast.error('An error occurred.');
+        } finally {
+            setSavingPrefs(false);
+        }
+    };
 
     /* ── loading ── */
     if (loading) {
@@ -427,6 +497,244 @@ export default function Profile() {
                                         <InputField label="GitHub" icon={<FaGithub />} name="github" value={formData.github} onChange={handleChange} placeholder="https://github.com/username" />
                                         <InputField label="LinkedIn" icon={<FaLinkedin />} name="linkedin" value={formData.linkedin} onChange={handleChange} placeholder="https://linkedin.com/in/username" />
                                     </div>
+                                </div>
+
+                                {/* ── Email Job Notification Preferences ── */}
+                                <div style={card}>
+                                    <h2 style={sectionTitle}>
+                                        <span style={{
+                                            width: '28px', height: '28px', borderRadius: '8px',
+                                            background: 'rgba(99,102,241,0.15)',
+                                            border: '1px solid rgba(99,102,241,0.30)',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            color: '#818cf8', fontSize: '12px',
+                                        }}><FaBell /></span>
+                                        Email Job Notifications
+                                    </h2>
+
+                                    {/* Email toggle */}
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                                        <div>
+                                            <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px', color: 'var(--color-white)', margin: '0 0 2px' }}>
+                                                Weekly Job Digest
+                                            </p>
+                                            <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--color-white-40)', margin: 0 }}>
+                                                Receive matching new jobs every week by email
+                                            </p>
+                                        </div>
+                                        {/* Toggle switch */}
+                                        <button
+                                            onClick={() => setEmailPrefs(p => ({ ...p, emailEnabled: !p.emailEnabled }))}
+                                            style={{
+                                                width: '44px', height: '24px', borderRadius: '999px',
+                                                background: emailPrefs.emailEnabled ? '#6366f1' : 'var(--color-surface-3)',
+                                                border: emailPrefs.emailEnabled ? '1px solid rgba(99,102,241,0.50)' : '1px solid var(--color-border)',
+                                                cursor: 'pointer', position: 'relative',
+                                                transition: 'background 0.25s, border-color 0.25s',
+                                                flexShrink: 0,
+                                            }}
+                                        >
+                                            <span style={{
+                                                position: 'absolute', top: '3px',
+                                                left: emailPrefs.emailEnabled ? '22px' : '3px',
+                                                width: '16px', height: '16px', borderRadius: '50%',
+                                                background: '#fff', transition: 'left 0.25s',
+                                                boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
+                                            }} />
+                                        </button>
+                                    </div>
+
+                                    {/* Preferred Job Titles */}
+                                    <div style={{ marginBottom: '20px' }}>
+                                        <label style={labelStyle}>Preferred Job Titles</label>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
+                                            {emailPrefs.jobTitles.map(t => (
+                                                <span key={t} style={{
+                                                    display: 'flex', alignItems: 'center', gap: '6px',
+                                                    fontFamily: 'var(--font-display)', fontWeight: 700,
+                                                    fontSize: '11px', letterSpacing: '0.06em',
+                                                    background: 'rgba(99,102,241,0.12)',
+                                                    color: '#a5b4fc',
+                                                    border: '1px solid rgba(99,102,241,0.25)',
+                                                    padding: '5px 10px 5px 12px', borderRadius: '999px',
+                                                }}>
+                                                    {t}
+                                                    <button
+                                                        onClick={() => removeEmailTitle(t)}
+                                                        style={{
+                                                            background: 'none', border: 'none', cursor: 'pointer',
+                                                            color: 'rgba(165,180,252,0.6)', fontSize: '10px',
+                                                            display: 'flex', alignItems: 'center', padding: 0,
+                                                            transition: 'color 0.15s',
+                                                        }}
+                                                        onMouseEnter={e => e.currentTarget.style.color = '#f87171'}
+                                                        onMouseLeave={e => e.currentTarget.style.color = 'rgba(165,180,252,0.6)'}
+                                                    ><FaTimes /></button>
+                                                </span>
+                                            ))}
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <input
+                                                value={newEmailTitle}
+                                                onChange={e => setNewEmailTitle(e.target.value)}
+                                                onKeyDown={e => e.key === 'Enter' && addEmailTitle()}
+                                                placeholder="e.g. Software Engineer, Backend Developer…"
+                                                style={{ ...inputStyle, flex: 1, borderStyle: 'dashed' }}
+                                                onFocus={e => { e.target.style.borderColor = '#6366f1'; e.target.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.12)'; }}
+                                                onBlur={e => { e.target.style.borderColor = 'var(--color-border)'; e.target.style.boxShadow = 'none'; }}
+                                            />
+                                            <button
+                                                onClick={addEmailTitle}
+                                                style={{
+                                                    display: 'flex', alignItems: 'center', gap: '6px',
+                                                    padding: '10px 16px', borderRadius: '8px',
+                                                    background: 'rgba(99,102,241,0.15)',
+                                                    color: '#818cf8',
+                                                    border: '1px solid rgba(99,102,241,0.30)',
+                                                    cursor: 'pointer', fontFamily: 'var(--font-display)',
+                                                    fontWeight: 700, fontSize: '12px', whiteSpace: 'nowrap',
+                                                }}
+                                            >
+                                                <FaPlus style={{ fontSize: '10px' }} /> Add
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Skills to match */}
+                                    <div style={{ marginBottom: '24px' }}>
+                                        <label style={labelStyle}>Skills to Match</label>
+                                        <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--color-white-40)', margin: '0 0 10px', lineHeight: 1.5 }}>
+                                            Jobs mentioning any of these skills rank higher in your digest.
+                                        </p>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
+                                            {emailPrefs.skills.map(s => (
+                                                <span key={s} style={{
+                                                    display: 'flex', alignItems: 'center', gap: '6px',
+                                                    fontFamily: 'var(--font-display)', fontWeight: 700,
+                                                    fontSize: '11px', letterSpacing: '0.06em',
+                                                    background: 'var(--color-surface-3)',
+                                                    color: 'var(--color-white-65)',
+                                                    border: '1px solid var(--color-border)',
+                                                    padding: '5px 10px 5px 12px', borderRadius: '999px',
+                                                }}>
+                                                    {s}
+                                                    <button
+                                                        onClick={() => removeEmailSkill(s)}
+                                                        style={{
+                                                            background: 'none', border: 'none', cursor: 'pointer',
+                                                            color: 'var(--color-white-40)', fontSize: '10px',
+                                                            display: 'flex', alignItems: 'center', padding: 0,
+                                                            transition: 'color 0.15s',
+                                                        }}
+                                                        onMouseEnter={e => e.currentTarget.style.color = '#f87171'}
+                                                        onMouseLeave={e => e.currentTarget.style.color = 'var(--color-white-40)'}
+                                                    ><FaTimes /></button>
+                                                </span>
+                                            ))}
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <input
+                                                value={newEmailSkill}
+                                                onChange={e => setNewEmailSkill(e.target.value)}
+                                                onKeyDown={e => e.key === 'Enter' && addEmailSkill()}
+                                                placeholder="e.g. Java, React, AWS…"
+                                                style={{ ...inputStyle, flex: 1, borderStyle: 'dashed' }}
+                                                onFocus={e => { e.target.style.borderColor = '#6366f1'; e.target.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.12)'; }}
+                                                onBlur={e => { e.target.style.borderColor = 'var(--color-border)'; e.target.style.boxShadow = 'none'; }}
+                                            />
+                                            <button
+                                                onClick={addEmailSkill}
+                                                style={{
+                                                    display: 'flex', alignItems: 'center', gap: '6px',
+                                                    padding: '10px 16px', borderRadius: '8px',
+                                                    background: 'var(--color-orange-dim)',
+                                                    color: 'var(--color-orange)',
+                                                    border: '1px solid var(--color-orange-border)',
+                                                    cursor: 'pointer', fontFamily: 'var(--font-display)',
+                                                    fontWeight: 700, fontSize: '12px', whiteSpace: 'nowrap',
+                                                }}
+                                            >
+                                                <FaPlus style={{ fontSize: '10px' }} /> Add
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Role Types */}
+                                    <div style={{ marginBottom: '24px' }}>
+                                        <label style={labelStyle}>Preferred Role Types</label>
+                                        <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--color-white-40)', margin: '0 0 12px', lineHeight: 1.5 }}>
+                                            Only receive emails for these role levels.
+                                        </p>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                            {ROLE_TYPE_OPTIONS.map(type => {
+                                                const active = emailPrefs.roleTypes.includes(type);
+                                                return (
+                                                    <button
+                                                        key={type}
+                                                        onClick={() => toggleRoleType(type)}
+                                                        style={{
+                                                            fontFamily: 'var(--font-display)', fontWeight: 700,
+                                                            fontSize: '11px', letterSpacing: '0.07em',
+                                                            textTransform: 'uppercase',
+                                                            padding: '6px 14px', borderRadius: '999px',
+                                                            cursor: 'pointer', transition: 'all 0.2s',
+                                                            background: active ? 'rgba(99,102,241,0.20)' : 'var(--color-surface-3)',
+                                                            color: active ? '#a5b4fc' : 'var(--color-white-40)',
+                                                            border: active ? '1px solid rgba(99,102,241,0.40)' : '1px solid var(--color-border)',
+                                                            boxShadow: active ? '0 0 0 2px rgba(99,102,241,0.12)' : 'none',
+                                                        }}
+                                                        onMouseEnter={e => {
+                                                            if (!active) {
+                                                                e.currentTarget.style.background = 'rgba(99,102,241,0.10)';
+                                                                e.currentTarget.style.color = '#818cf8';
+                                                                e.currentTarget.style.borderColor = 'rgba(99,102,241,0.25)';
+                                                            }
+                                                        }}
+                                                        onMouseLeave={e => {
+                                                            if (!active) {
+                                                                e.currentTarget.style.background = 'var(--color-surface-3)';
+                                                                e.currentTarget.style.color = 'var(--color-white-40)';
+                                                                e.currentTarget.style.borderColor = 'var(--color-border)';
+                                                            }
+                                                        }}
+                                                    >
+                                                        {active && <FaCheckCircle style={{ marginRight: '5px', fontSize: '9px' }} />}
+                                                        {type}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    {/* Save preferences button */}
+                                    <button
+                                        onClick={handleSaveEmailPrefs}
+                                        disabled={savingPrefs}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                                            width: '100%', padding: '12px',
+                                            background: savingPrefs ? 'var(--color-surface-3)' : 'rgba(99,102,241,0.20)',
+                                            color: savingPrefs ? 'var(--color-white-40)' : '#818cf8',
+                                            border: '1px solid rgba(99,102,241,0.35)',
+                                            borderRadius: '10px',
+                                            fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px',
+                                            cursor: savingPrefs ? 'not-allowed' : 'pointer',
+                                            transition: 'all 0.2s',
+                                        }}
+                                        onMouseEnter={e => { if (!savingPrefs) { e.currentTarget.style.background = '#6366f1'; e.currentTarget.style.color = '#fff'; } }}
+                                        onMouseLeave={e => { if (!savingPrefs) { e.currentTarget.style.background = 'rgba(99,102,241,0.20)'; e.currentTarget.style.color = '#818cf8'; } }}
+                                    >
+                                        {savingPrefs ? (
+                                            <><div style={{
+                                                width: '14px', height: '14px', borderRadius: '50%',
+                                                border: '2px solid var(--color-border)',
+                                                borderTopColor: '#818cf8',
+                                                animation: 'spin 0.7s linear infinite',
+                                            }} /> Saving…</>
+                                        ) : (
+                                            <><FaBell style={{ fontSize: '12px' }} /> Save Notification Preferences</>
+                                        )}
+                                    </button>
                                 </div>
                             </div>
 
