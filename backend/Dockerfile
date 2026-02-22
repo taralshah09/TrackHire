@@ -25,3 +25,5 @@ EXPOSE 8081
 
 # Run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]
+
+ENTRYPOINT ["java", "-Xms128m", "-Xmx400m", "-XX:+UseSerialGC", "-jar", "app.jar"]
