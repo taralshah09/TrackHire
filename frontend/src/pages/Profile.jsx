@@ -127,6 +127,11 @@ export default function Profile() {
                 const username = user?.username || Cookies.get('username');
                 if (!username) { toast.error('Please login again.'); return; }
                 const res = await api.getUserByUsername(username);
+                if (!res.ok) {
+                    const errBody = await res.json().catch(() => ({}));
+                    toast.error(errBody.message || 'Failed to load user data.');
+                    return;
+                }
                 const data = await res.json();
                 setUserObj(data);
                 setUserId(data.id);
