@@ -1,216 +1,285 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
+import AppHeader from '../components/AppHeader';
 import StatCard from '../components/StatCard';
 import api from '../service/ApiService';
 import { Link } from 'react-router-dom';
 import { formatDate } from '../utils/dateUtils';
+import Cookies from 'js-cookie';
+import { FaPaperPlane, FaCalendarAlt, FaTrophy, FaBookmark, FaHandPaper } from 'react-icons/fa';
 
-const DashboardPage = () => {
+/* Brand status badge styles */
+const STATUS_STYLES = {
+    SAVED: { bg: 'rgba(168,85,247,0.12)', color: '#c084fc', border: 'rgba(168,85,247,0.20)' },
+    APPLIED: { bg: 'rgba(59,130,246,0.12)', color: '#60a5fa', border: 'rgba(59,130,246,0.20)' },
+    PHONE_SCREEN: { bg: 'rgba(20,184,166,0.12)', color: '#2dd4bf', border: 'rgba(20,184,166,0.20)' },
+    INTERVIEW: { bg: 'rgba(249,115,22,0.12)', color: '#f97316', border: 'rgba(249,115,22,0.22)' },
+    OFFER: { bg: 'rgba(34,197,94,0.12)', color: '#4ade80', border: 'rgba(34,197,94,0.20)' },
+    REJECTED: { bg: 'rgba(239,68,68,0.10)', color: '#f87171', border: 'rgba(239,68,68,0.18)' },
+    WITHDRAWN: { bg: 'rgba(100,116,139,0.12)', color: '#94a3b8', border: 'rgba(100,116,139,0.20)' },
+};
+
+function getStatus(status) {
+    if (!status) return STATUS_STYLES.APPLIED;
+    return STATUS_STYLES[status.toUpperCase().replace(' ', '_')] || STATUS_STYLES.APPLIED;
+}
+
+function getGreeting() {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
+}
+
+export default function DashboardPage() {
     const [stats, setStats] = useState({});
     const [appliedJobs, setAppliedJobs] = useState([]);
     const [savedJobs, setSavedJobs] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    const username = Cookies.get('username') || 'there';
+    const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
     useEffect(() => {
-        const fetchDashboardData = async () => {
+        const fetch = async () => {
             try {
-                const [statsRes, appliedRes, savedRes] = await Promise.all([
+                const [sr, ar, svr] = await Promise.all([
                     api.getUserStats(),
                     api.getAppliedJobs({ page: 0, size: 5, sort: 'appliedAt', direction: 'DESC' }),
-                    api.getSavedJobs({ page: 0, size: 5, sort: 'savedAt', direction: 'DESC' })
+                    api.getSavedJobs({ page: 0, size: 4, sort: 'savedAt', direction: 'DESC' }),
                 ]);
-
-                // Adjust based on actual API response structure
-                const statsData = statsRes.json ? await statsRes.json() : statsRes;
-                const appliedData = appliedRes.json ? await appliedRes.json() : appliedRes;
-                const savedData = savedRes.json ? await savedRes.json() : savedRes;
-
-                setStats(statsData); // Assuming statsData matches keys or needs mapping
-                setAppliedJobs(appliedData.content || appliedData || []);
-                setSavedJobs(savedData.content || savedData || []);
-            } catch (error) {
-                console.error('Error fetching dashboard data:', error);
+                setStats(sr.json ? await sr.json() : sr);
+                const ad = ar.json ? await ar.json() : ar;
+                const sd = svr.json ? await svr.json() : svr;
+                setAppliedJobs(ad.content || ad || []);
+                setSavedJobs(sd.content || sd || []);
+            } catch (e) {
+                console.error(e);
             } finally {
                 setLoading(false);
             }
         };
-
-        fetchDashboardData();
+        fetch();
     }, []);
+
+    const breakdown = stats.applicationStatusBreakdown || {};
+
     return (
-        <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-100 font-display transition-colors duration-200">
-            <div className="flex min-h-screen">
-                <Sidebar />
+        <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
+            <style>{`
+                @media (max-width: 768px) {
+                    .dash-main { padding-left: 0 !important; }
+                    .dash-main-inner { padding: 72px 16px 24px !important; }
+                    .dash-grid-4 { grid-template-columns: 1fr 1fr !important; }
+                    .dash-bottom { flex-direction: column !important; }
+                    .dash-saved-panel { width: 100% !important; }
+                }
+                @media (max-width: 480px) {
+                    .dash-grid-4 { grid-template-columns: 1fr !important; }
+                }
+            `}</style>
 
-                {/* Main Content */}
-                <main className="flex-1 flex flex-col overflow-hidden">
-                    {/* Top Navigation */}
-                    <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md flex items-center justify-between px-8 z-10 sticky top-0">
-                        <h1 className="text-xl font-semibold text-slate-900 dark:text-white">Welcome back, Alex</h1>
-                        <div className="flex items-center space-x-4">
-                            <div className="relative">
-                                <span className="material-icons text-slate-400 absolute left-3 top-1/2 -translate-y-1/2">search</span>
-                                <input className="pl-10 pr-4 py-1.5 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm focus:ring-2 focus:ring-primary w-64 outline-none" placeholder="Search applications..." type="text" />
-                            </div>
-                            <button className="w-10 h-10 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors relative">
-                                <span className="material-icons">notifications</span>
-                                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-background-dark"></span>
-                            </button>
-                            <button className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2">
-                                <span className="material-icons text-sm">add</span>
-                                <span>New Job</span>
-                            </button>
-                        </div>
-                    </header>
+            <Sidebar />
 
-                    {/* Dashboard Content */}
-                    <div className="flex-1 overflow-y-auto p-8">
-                        {/* Summary Cards Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                            <StatCard
-                                title="Total Saved"
-                                value={stats.totalSaved || 0}
-                                icon="bookmark_border"
-                                iconColor="bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
-                                trendLabel="Total saved jobs"
-                            />
-                            <StatCard
-                                title="Applied"
-                                value={stats.totalApplied || 0}
-                                icon="send"
-                                iconColor="bg-blue-50 dark:bg-blue-900/30 text-primary"
-                                trendLabel="Applications sent"
-                            />
-                            <StatCard
-                                title="Interviews"
-                                value={stats.applicationStatusBreakdown ? stats.applicationStatusBreakdown.INTERVIEW || 0 : 0}
-                                icon="forum"
-                                iconColor="bg-amber-50 dark:bg-amber-900/30 text-amber-500"
-                                trendLabel="Interviews scheduled"
-                            />
-                            <StatCard
-                                title="Offers"
-                                value={stats.applicationStatusBreakdown ? stats.applicationStatusBreakdown.OFFER || 0 : 0}
-                                icon="verified"
-                                iconColor="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-500"
-                                trendLabel="Job offers"
-                            />
+            <main className="dash-main" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                {/* Top header */}
+                <AppHeader left={
+                    <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px', color: 'var(--color-white-40)' }}>
+                        {today}
+                    </div>
+                } />
+
+                {/* Content */}
+                <div style={{ flex: 1, overflowY: 'auto' }}>
+                    <div className="dash-main-inner" style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px' }}>
+
+                        {/* Greeting */}
+                        <div style={{ marginBottom: '32px' }}>
+                            <h1 style={{
+                                fontFamily: 'var(--font-display)', fontWeight: 800,
+                                fontSize: 'clamp(22px, 3vw, 32px)', letterSpacing: '-0.025em',
+                                color: 'var(--color-white)', margin: 0,
+                            }}>
+                                {getGreeting()}, {username} <FaHandPaper style={{ display: 'inline', marginLeft: '6px', color: 'var(--color-orange)' }} />
+                            </h1>
+                            <p style={{
+                                fontFamily: 'var(--font-body)', fontSize: '14px',
+                                color: 'var(--color-white-40)', marginTop: '6px',
+                            }}>
+                                {today}
+                            </p>
                         </div>
 
-                        <div className="flex flex-col lg:flex-row gap-8">
-                            {/* Main Table Section */}
-                            <div className="flex-grow">
-                                <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-                                    <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
-                                        <h2 className="text-lg font-bold text-slate-900 dark:text-white">Applied Jobs</h2>
-                                        <Link to="/applied-all" className="text-sm text-primary font-medium hover:underline">View All</Link>
-                                    </div>
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-left">
-                                            <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 uppercase text-[11px] font-bold tracking-widest border-b border-slate-100 dark:border-slate-700">
-                                                <tr>
-                                                    <th className="px-6 py-4">Job Title</th>
-                                                    <th className="px-6 py-4">Company</th>
-                                                    <th className="px-6 py-4">Status</th>
-                                                    <th className="px-6 py-4">Date Applied</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-                                                {loading ? (
-                                                    <tr><td colSpan="5" className="p-4 text-center">Loading...</td></tr>
-                                                ) : appliedJobs.length === 0 ? (
-                                                    <tr><td colSpan="5" className="p-4 text-center text-slate-500">No applications yet.</td></tr>
-                                                ) : appliedJobs.map((job) => {
-                                                    console.log(job); // Helpful for debugging
-                                                    return (
-                                                        <tr key={job.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors group">
-                                                            <td className="px-6 py-4">
-                                                                <Link to={`/jobs/${job.id}`} className="font-semibold text-slate-900 dark:text-slate-200 hover:text-primary">
-                                                                    {job.title || job.role}
-                                                                </Link>
-                                                            </td>
-                                                            <td className="px-6 py-4">
-                                                                <div className="flex items-center">
-                                                                    <div className={`w-6 h-6 rounded mr-2 flex items-center justify-center text-[10px] text-white font-bold ${job.logoColor || 'bg-blue-600'}`}>
-                                                                        {(job.companyName || job.company || 'C').charAt(0)}
-                                                                    </div>
-                                                                    <span className="text-slate-600 dark:text-slate-400">{job.companyName || job.company}</span>
-                                                                </div>
-                                                            </td>
-                                                            <td className="px-6 py-4">
-                                                                <span className={`px-2.5 py-1 rounded-full text-xs font-semibold
-                                                                ${job.applicationStatus === 'OFFER' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
-                                                                        job.applicationStatus === 'REJECTED' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                                                                            job.applicationStatus === 'INTERVIEW' ? 'bg-blue-100 text-primary dark:bg-primary/20 dark:text-primary' :
-                                                                                'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'}`}>
-                                                                    {job.applicationStatus || 'Applied'}
-                                                                </span>
-                                                            </td>
-                                                            <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">{formatDate(job.appliedAt)}</td>
-                                                        </tr>
-                                                    );
-                                                })}
-                                            </tbody>
-                                        </table>
-                                    </div>
+                        {/* Stat cards */}
+                        <div
+                            className="dash-grid-4"
+                            style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(4, 1fr)',
+                                gap: '16px', marginBottom: '32px',
+                            }}
+                        >
+                            <StatCard title="Total Applied" value={stats.totalApplied || 0} icon={<FaPaperPlane />} />
+                            <StatCard title="Interviews Scheduled" value={breakdown.INTERVIEW || 0} icon={<FaCalendarAlt />} />
+                            <StatCard title="Offers Received" value={breakdown.OFFER || 0} icon={<FaTrophy />} accentColor="green" />
+                            <StatCard title="Saved Jobs" value={stats.totalSaved || 0} icon={<FaBookmark />} />
+                        </div>
+
+                        {/* Bottom row */}
+                        <div className="dash-bottom" style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
+
+                            {/* Applied jobs table */}
+                            <div style={{
+                                flex: 1,
+                                background: 'var(--color-surface-2)',
+                                border: '1px solid var(--color-border)',
+                                borderRadius: '14px', overflow: 'hidden',
+                            }}>
+                                <div style={{
+                                    padding: '20px 24px',
+                                    borderBottom: '1px solid var(--color-border)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                }}>
+                                    <h2 style={{
+                                        fontFamily: 'var(--font-display)', fontWeight: 700,
+                                        fontSize: '16px', color: 'var(--color-white)', margin: 0,
+                                    }}>Recent Activity</h2>
+                                    <Link to="/applied-all" style={{
+                                        fontFamily: 'var(--font-display)', fontWeight: 700,
+                                        fontSize: '12px', color: 'var(--color-orange)',
+                                        textDecoration: 'none', letterSpacing: '0.04em',
+                                    }}>View All →</Link>
+                                </div>
+                                <div style={{ overflowX: 'auto' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                        <thead>
+                                            <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
+                                                {['Job Title', 'Company', 'Status', 'Date Applied'].map(h => (
+                                                    <th key={h} style={{
+                                                        padding: '12px 20px',
+                                                        fontFamily: 'var(--font-display)', fontWeight: 700,
+                                                        fontSize: '10px', letterSpacing: '0.12em',
+                                                        textTransform: 'uppercase',
+                                                        color: 'var(--color-white-40)',
+                                                        textAlign: 'left', whiteSpace: 'nowrap',
+                                                    }}>{h}</th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {loading ? (
+                                                <tr><td colSpan="4" style={{ padding: '32px', textAlign: 'center', color: 'var(--color-white-40)', fontFamily: 'var(--font-body)', fontSize: '14px' }}>Loading…</td></tr>
+                                            ) : appliedJobs.length === 0 ? (
+                                                <tr><td colSpan="4" style={{ padding: '40px', textAlign: 'center' }}>
+                                                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--color-white-40)', margin: '0 0 4px' }}>No activity yet.</p>
+                                                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-20)', margin: 0 }}>Add your first application to get started.</p>
+                                                </td></tr>
+                                            ) : appliedJobs.map((job) => {
+                                                const s = getStatus(job.applicationStatus);
+                                                return (
+                                                    <tr key={job.id} style={{ borderBottom: '1px solid rgba(46,46,46,0.5)' }}>
+                                                        <td style={{ padding: '14px 20px' }}>
+                                                            <Link to={`/jobs/${job.id}`} style={{
+                                                                fontFamily: 'var(--font-display)', fontWeight: 700,
+                                                                fontSize: '14px', color: 'var(--color-white)',
+                                                                textDecoration: 'none',
+                                                            }}
+                                                                onMouseEnter={e => e.target.style.color = 'var(--color-orange)'}
+                                                                onMouseLeave={e => e.target.style.color = 'var(--color-white)'}
+                                                            >
+                                                                {job.title || job.role}
+                                                            </Link>
+                                                        </td>
+                                                        <td style={{ padding: '14px 20px', fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--color-white-65)' }}>
+                                                            {job.companyName || job.company}
+                                                        </td>
+                                                        <td style={{ padding: '14px 20px' }}>
+                                                            <span style={{
+                                                                fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '11px',
+                                                                letterSpacing: '0.06em',
+                                                                background: s.bg, color: s.color, border: `1px solid ${s.border}`,
+                                                                padding: '3px 10px', borderRadius: '999px',
+                                                            }}>
+                                                                {job.applicationStatus || 'Applied'}
+                                                            </span>
+                                                        </td>
+                                                        <td style={{ padding: '14px 20px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-white-40)' }}>
+                                                            {formatDate(job.appliedAt)}
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
 
-                            {/* Side Panel: Saved Jobs */}
-                            <div className="w-full lg:w-80 flex-shrink-0">
-                                <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col h-full">
-                                    <div className="p-6 border-b border-slate-100 dark:border-slate-700">
-                                        <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center">
-                                            <span className="material-icons text-primary mr-2 text-xl">star</span>
-                                            Saved Jobs
-                                        </h2>
-                                        <p className="text-xs text-slate-500 mt-1">Jobs you haven't applied to yet.</p>
-                                    </div>
-                                    <div className="p-4 space-y-4 overflow-y-auto">
-                                        {loading ? (
-                                            <div className="text-center p-4">Loading stats...</div>
-                                        ) : savedJobs.length === 0 ? (
-                                            <div className="text-center p-4 text-slate-500 text-sm">No saved jobs yet.</div>
-                                        ) : savedJobs.map((job) => (
-                                            <div key={job.id} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-100 dark:border-slate-700 hover:border-primary/50 transition-colors group cursor-pointer">
-                                                <div className="flex justify-between items-start mb-2">
-                                                    <div className={`w-10 h-10 rounded-lg shadow-sm flex items-center justify-center border border-slate-100 dark:border-slate-600 ${job.logoColor || 'bg-white dark:bg-slate-700'}`}>
-                                                        <span className="material-icons text-primary">{job.icon || 'work'}</span>
-                                                    </div>
-                                                    <button
-                                                        className="text-slate-300 hover:text-red-500"
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            // unsaveJob(job.id); // Implement if needed here or just link to details
-                                                        }}
-                                                    >
-                                                        <span className="material-icons text-lg">close</span>
-                                                    </button>
-                                                </div>
-                                                <Link to={`/jobs/${job.id}`}>
-                                                    <h4 className="font-bold text-slate-900 dark:text-white text-sm hover:text-primary transition-colors">{job.title || job.role}</h4>
-                                                </Link>
-                                                <p className="text-xs text-slate-500 mb-4">{job.companyName || job.company} • {job.location}</p>
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Saved {job.savedAt || 'recently'}</span>
-                                                    <Link to={`/jobs/${job.id}`} className="bg-primary text-white text-[10px] px-3 py-1.5 rounded font-bold uppercase tracking-widest hover:bg-blue-700 transition-all">Apply Now</Link>
-                                                </div>
+                            {/* Saved jobs panel */}
+                            <div className="dash-saved-panel" style={{
+                                width: '280px', flexShrink: 0,
+                                background: 'var(--color-surface-2)',
+                                border: '1px solid var(--color-border)',
+                                borderRadius: '14px', overflow: 'hidden',
+                            }}>
+                                <div style={{
+                                    padding: '20px 20px',
+                                    borderBottom: '1px solid var(--color-border)',
+                                }}>
+                                    <h2 style={{
+                                        fontFamily: 'var(--font-display)', fontWeight: 700,
+                                        fontSize: '16px', color: 'var(--color-white)', margin: 0,
+                                    }}>Saved Jobs</h2>
+                                </div>
+                                <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    {loading ? (
+                                        <p style={{ padding: '16px', textAlign: 'center', color: 'var(--color-white-40)', fontFamily: 'var(--font-body)', fontSize: '13px' }}>Loading…</p>
+                                    ) : savedJobs.length === 0 ? (
+                                        <div style={{ padding: '24px 16px', textAlign: 'center' }}>
+                                            <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)', margin: '0 0 4px' }}>No saved jobs yet.</p>
+                                            <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--color-white-20)', margin: 0 }}>Browse jobs to start saving opportunities.</p>
+                                        </div>
+                                    ) : savedJobs.map((job) => (
+                                        <Link key={job.id} to={`/jobs/${job.id}`} style={{ textDecoration: 'none' }}>
+                                            <div style={{
+                                                padding: '12px',
+                                                background: 'var(--color-surface-3)',
+                                                border: '1px solid var(--color-border)',
+                                                borderRadius: '10px',
+                                                transition: 'border-color 0.2s',
+                                            }}
+                                                onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-orange-border)'}
+                                                onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-border)'}
+                                            >
+                                                <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px', color: 'var(--color-white)', margin: '0 0 3px' }}>
+                                                    {job.title || job.role}
+                                                </p>
+                                                <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--color-white-40)', margin: 0 }}>
+                                                    {job.companyName || job.company}
+                                                </p>
                                             </div>
-                                        ))}
-                                    </div>
-                                    <div className="p-4 mt-auto border-t border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800">
-                                        <Link to="/saved-all" className="block w-full text-center py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-lg transition-colors">
-                                            View All Saved Jobs
                                         </Link>
-                                    </div>
+                                    ))}
+                                </div>
+                                <div style={{ padding: '12px', borderTop: '1px solid var(--color-border)' }}>
+                                    <Link to="/saved-all" style={{
+                                        display: 'block', textAlign: 'center',
+                                        fontFamily: 'var(--font-display)', fontWeight: 700,
+                                        fontSize: '12px', color: 'var(--color-white-65)',
+                                        textDecoration: 'none', padding: '8px',
+                                        borderRadius: '8px',
+                                        transition: 'color 0.2s, background 0.2s',
+                                    }}
+                                        onMouseEnter={e => { e.currentTarget.style.color = 'var(--color-white)'; e.currentTarget.style.background = 'var(--color-surface-3)'; }}
+                                        onMouseLeave={e => { e.currentTarget.style.color = 'var(--color-white-65)'; e.currentTarget.style.background = 'transparent'; }}
+                                    >
+                                        View All Saved Jobs →
+                                    </Link>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </main>
-            </div>
+                </div>
+            </main>
         </div>
     );
-};
-
-export default DashboardPage;
+}

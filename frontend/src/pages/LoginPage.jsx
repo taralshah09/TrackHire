@@ -1,243 +1,309 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const LoginPage = () => {
-    const location = useLocation();
-    const Navigate = useNavigate();
+/* ── Shared brand button styles ── */
+const primaryBtn = {
+    fontFamily: 'var(--font-display)',
+    fontWeight: 700,
+    fontSize: '14px',
+    color: '#000',
+    background: 'var(--color-orange)',
+    padding: '12px 24px',
+    borderRadius: '8px',
+    border: 'none',
+    cursor: 'pointer',
+    width: '100%',
+    letterSpacing: '0.01em',
+    transition: 'background 0.2s, transform 0.15s',
+};
 
-    const [formData, setFormData] = useState({
-        loginIdentifier: '',
-        password: ''
-    });
+const inputBaseStyle = {
+    width: '100%',
+    padding: '12px 14px',
+    background: 'var(--color-surface-3)',
+    border: '1px solid var(--color-border)',
+    borderRadius: '8px',
+    color: 'var(--color-white)',
+    fontFamily: 'var(--font-body)',
+    fontSize: '14px',
+    outline: 'none',
+    transition: 'border-color 0.2s, box-shadow 0.2s',
+    boxSizing: 'border-box',
+};
+
+export default function LoginPage() {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const { login } = useAuth();
+
+    const [formData, setFormData] = useState({ loginIdentifier: '', password: '' });
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [focused, setFocused] = useState('');
 
-    const { login } = useAuth();
-    const navigate = useNavigate();
-
-    const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
-        // setError(''); // Clear error when user types
-    };
-
-    // const handleSubmit = async (e) => {
-    //     e.preventDefault();
-    //     setLoading(true);
-
-    //     try {
-    //         const response = await fetch('http://localhost:8081/api/auth/login', {
-    //             method: 'POST',
-    //             headers: {
-    //                 'Content-Type': 'application/json',
-    //             },
-    //             body: JSON.stringify(formData)
-    //         });
-
-    //         const data = await response.json();
-
-    //         // Debug: Log the response to see what we're getting
-    //         // console.log('Login response:', data);
-
-    //         if (response.ok) {
-    //             if (data.token && data.refreshToken) {
-    //                 console.log('Login successful, data received:', data);
-    //                 login(data);
-    //                 navigate('/dashboard');
-    //             } else {
-    //                 console.error('Missing tokens in response:', data);
-    //                 toast.error('Invalid response from server. Please try again.');
-    //             }
-    //         } else {
-    //             toast.error(data.message || 'Invalid credentials');
-    //         }
-    //     } catch (err) {
-    //         console.error('Login error:', err);
-    //         toast.error('Unable to connect to server. Please try again.');
-    //     } finally {
-    //         setLoading(false);
-    //     }
-    // };
+    const handleChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-
         try {
             const response = await fetch('http://localhost:8081/api/auth/login', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData)
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData),
             });
-
             const data = await response.json();
-
-            if (response.ok) {
-                if (data.token && data.refreshToken) {
-                    console.log('✅ Login successful');
-                    const loginSuccess = login(data);
-
-                    if (loginSuccess !== false) {
-                        toast.success('Login successful!');
-
-                        // Redirect to the page they were trying to access, or dashboard
-                        const from = location.state?.from?.pathname || '/dashboard';
-                        navigate(from, { replace: true });
-                    } else {
-                        toast.error('Failed to save login session');
-                    }
+            if (response.ok && data.token && data.refreshToken) {
+                const ok = login(data);
+                if (ok !== false) {
+                    toast.success('Welcome back!');
+                    navigate(location.state?.from?.pathname || '/dashboard', { replace: true });
                 } else {
-                    console.error('❌ Missing tokens in response');
-                    toast.error('Invalid response from server. Please try again.');
+                    toast.error('Failed to save login session.');
                 }
             } else {
-                toast.error(data.message || 'Invalid credentials');
+                toast.error(data.message || "We couldn't log you in. Check your email and password and try again.");
             }
-        } catch (err) {
-            console.error('❌ Login error:', err);
-            toast.error('Unable to connect to server. Please try again.');
+        } catch {
+            toast.error('Something went wrong on our end. Refresh the page — your data is safe.');
         } finally {
             setLoading(false);
         }
     };
 
+    const getInputStyle = (name) => ({
+        ...inputBaseStyle,
+        borderColor: focused === name ? 'var(--color-orange)' : 'var(--color-border)',
+        boxShadow: focused === name ? '0 0 0 3px rgba(249,115,22,0.15)' : 'none',
+        background: focused === name ? '#1a1a1a' : 'var(--color-surface-3)',
+    });
+
     return (
-        <div className="bg-background-light dark:bg-background-dark flex items-center justify-center p-4">
-            {/* Central Auth Card */}
-            <main className="w-full max-w-5xl bg-white dark:bg-gray-900 rounded-xl shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[600px]">
-                {/* Left Panel: Brand & Illustration */}
-                <section className="hidden md:flex md:w-1/2 bg-primary/10 dark:bg-primary/5 p-12 flex-col justify-between relative overflow-hidden">
-                    {/* Background Decorative Elements */}
-                    <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-primary/10"></div>
-                    <div className="absolute bottom-0 left-0 -ml-12 -mb-12 w-48 h-48 rounded-full bg-primary/5"></div>
-                    <div className="relative z-10">
-                        <div className="flex items-center gap-2 mb-8">
-                            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                                <span className="material-icons text-white">explore</span>
-                            </div>
-                            <span className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">CareerPilot</span>
+        <div style={{
+            minHeight: '100vh',
+            background: 'var(--color-bg)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px',
+            fontFamily: 'var(--font-body)',
+        }}>
+            <style>{`
+                @media (max-width: 768px) {
+                    .login-left-panel { display: none !important; }
+                    .login-card { max-width: 440px !important; }
+                }
+            `}</style>
+
+            <div
+                className="login-card"
+                style={{
+                    width: '100%',
+                    maxWidth: '900px',
+                    background: 'var(--color-surface-1)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: '20px',
+                    overflow: 'hidden',
+                    display: 'flex',
+                    minHeight: '560px',
+                }}
+            >
+                {/* Left panel — brand splash */}
+                <div
+                    className="login-left-panel"
+                    style={{
+                        flex: 1,
+                        background: 'linear-gradient(145deg, rgba(249,115,22,0.14) 0%, rgba(8,8,8,0) 60%)',
+                        borderRight: '1px solid var(--color-border)',
+                        padding: '48px 40px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        position: 'relative',
+                        overflow: 'hidden',
+                    }}
+                >
+                    {/* Glow orb */}
+                    <div style={{
+                        position: 'absolute', top: '-60px', left: '-60px',
+                        width: '300px', height: '300px',
+                        background: 'radial-gradient(circle, rgba(249,115,22,0.15) 0%, transparent 70%)',
+                        borderRadius: '50%', pointerEvents: 'none',
+                    }} />
+
+                    <div style={{ position: 'relative', zIndex: 1 }}>
+                        <div style={{
+                            fontFamily: 'var(--font-display)', fontWeight: 800,
+                            fontSize: '24px', color: 'var(--color-white)',
+                            letterSpacing: '-0.02em', marginBottom: '48px',
+                        }}>
+                            Track<span style={{ color: 'var(--color-orange)' }}>H</span>ire
                         </div>
-                        <h1 className="text-4xl font-bold text-gray-900 dark:text-white leading-tight mb-4">
-                            Take the captain's seat in your <span className="text-primary">career journey.</span>
+                        <h1 style={{
+                            fontFamily: 'var(--font-display)', fontWeight: 800,
+                            fontSize: '32px', letterSpacing: '-0.025em',
+                            lineHeight: 1.15, color: 'var(--color-white)',
+                            margin: '0 0 16px',
+                        }}>
+                            Welcome back.
                         </h1>
-                        <p className="text-gray-600 dark:text-gray-400 text-lg">
-                            The all-in-one platform to organize, track, and land your next big role.
+                        <p style={{
+                            fontFamily: 'var(--font-body)', fontSize: '15px',
+                            color: 'var(--color-white-65)', lineHeight: 1.7, margin: 0,
+                        }}>
+                            Your pipeline is waiting.
                         </p>
                     </div>
-                    <div className="relative z-10 mt-5">
-                        <img
-                            alt="Dashboard preview showing job tracking metrics"
-                            className="rounded-xl shadow-lg border border-white/20 h-[350px] w-full"
-                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBeQUeNONcvSVIYOoy3n6ozX4mP-WcIHFgNn80Bky9AkkP42CS7odE9wSXsXKoGsNexg9Qpl0QFthfpsWmoEQJkxDWGZ1oloDWKzZhabH9pYfnG2UZsGnD3OkWTJkcS4Uhy3qIlZyIIU9sjQdN3pqaMbbK8c9K3LrvEWhffjzRU_9xfdBnia9pTxS_xrr6ctEgyHNH-ouAso7Na-_WaOFm57HDPUb6s6kKZ_HiyIeF2F_f64B0Cqy1AHI22bcQlLwHLkk_NZvNy8cMg"
-                        />
-                    </div>
-                </section>
 
-                {/* Right Panel: Login Form */}
-                <section className="w-full md:w-1/2 p-8 md:p-16 flex flex-col justify-center">
-                    <div className="max-w-md mx-auto w-full">
-                        {/* Mobile Logo */}
-                        <div className="flex md:hidden items-center gap-2 mb-8">
-                            <div className="w-8 h-8 bg-primary rounded flex items-center justify-center">
-                                <span className="material-icons text-white text-sm">explore</span>
+                    {/* Stats strip */}
+                    <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        {[
+                            { stat: '500+', label: 'Companies monitored' },
+                            { stat: '< 5 min', label: 'Alert delivery' },
+                            { stat: '9 min/day', label: 'Avg daily time' },
+                        ].map(({ stat, label }) => (
+                            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <span style={{
+                                    fontFamily: 'var(--font-mono)', fontWeight: 700,
+                                    fontSize: '16px', color: 'var(--color-orange)',
+                                    minWidth: '72px',
+                                }}>{stat}</span>
+                                <span style={{
+                                    fontFamily: 'var(--font-body)', fontSize: '13px',
+                                    color: 'var(--color-white-40)',
+                                }}>{label}</span>
                             </div>
-                            <span className="text-xl font-bold text-gray-900 dark:text-white">CareerPilot</span>
-                        </div>
-                        <div className="mb-10">
-                            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Welcome Back</h2>
-                            <p className="text-gray-500 dark:text-gray-400">Please enter your details to login.</p>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Right panel — form */}
+                <div style={{
+                    flex: 1, padding: '48px 40px',
+                    display: 'flex', flexDirection: 'column', justifyContent: 'center',
+                }}>
+                    <h2 style={{
+                        fontFamily: 'var(--font-display)', fontWeight: 800,
+                        fontSize: '28px', letterSpacing: '-0.025em',
+                        color: 'var(--color-white)', margin: '0 0 8px',
+                    }}>
+                        Sign In
+                    </h2>
+                    <p style={{
+                        fontFamily: 'var(--font-body)', fontSize: '14px',
+                        color: 'var(--color-white-65)', margin: '0 0 32px',
+                    }}>
+                        New to TrackHire?{' '}
+                        <Link to="/register" style={{ color: 'var(--color-orange)', fontWeight: 500, textDecoration: 'none' }}>
+                            Create a free account →
+                        </Link>
+                    </p>
+
+                    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        {/* Email */}
+                        <div>
+                            <label style={{
+                                display: 'block',
+                                fontFamily: 'var(--font-body)', fontWeight: 500,
+                                fontSize: '13px', color: 'var(--color-white-65)',
+                                marginBottom: '8px',
+                            }}>
+                                Email address
+                            </label>
+                            <input
+                                type="text"
+                                name="loginIdentifier"
+                                placeholder="name@company.com"
+                                required
+                                value={formData.loginIdentifier}
+                                onChange={handleChange}
+                                onFocus={() => setFocused('email')}
+                                onBlur={() => setFocused('')}
+                                style={getInputStyle('email')}
+                            />
                         </div>
 
-                        {/* Error Message - Removed as we use toast now */}
-
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            {/* Email/Username Input */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="loginIdentifier">
-                                    Email or Username
+                        {/* Password */}
+                        <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                <label style={{
+                                    fontFamily: 'var(--font-body)', fontWeight: 500,
+                                    fontSize: '13px', color: 'var(--color-white-65)',
+                                }}>
+                                    Password
                                 </label>
+                                <a href="#" style={{
+                                    fontFamily: 'var(--font-body)', fontSize: '13px',
+                                    color: 'var(--color-white-40)', textDecoration: 'none',
+                                    transition: 'color 0.2s',
+                                }}
+                                    onMouseEnter={e => e.target.style.color = 'var(--color-orange)'}
+                                    onMouseLeave={e => e.target.style.color = 'var(--color-white-40)'}
+                                >
+                                    Forgot password?
+                                </a>
+                            </div>
+                            <div style={{ position: 'relative' }}>
                                 <input
-                                    className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
-                                    id="loginIdentifier"
-                                    name="loginIdentifier"
-                                    placeholder="name@company.com"
+                                    type={showPassword ? 'text' : 'password'}
+                                    name="password"
+                                    placeholder="••••••••"
                                     required
-                                    type="text"
-                                    value={formData.loginIdentifier}
+                                    value={formData.password}
                                     onChange={handleChange}
+                                    onFocus={() => setFocused('password')}
+                                    onBlur={() => setFocused('')}
+                                    style={{ ...getInputStyle('password'), paddingRight: '44px' }}
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(p => !p)}
+                                    style={{
+                                        position: 'absolute', right: '12px', top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        background: 'none', border: 'none',
+                                        cursor: 'pointer', color: 'var(--color-white-40)',
+                                        fontSize: '14px', padding: '4px',
+                                    }}
+                                >
+                                    {showPassword ? '🙈' : '👁'}
+                                </button>
                             </div>
+                        </div>
 
-                            {/* Password Input */}
-                            <div>
-                                <div className="flex justify-between items-center mb-2">
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300" htmlFor="password">
-                                        Password
-                                    </label>
-                                </div>
-                                <div className="relative">
-                                    <input
-                                        className="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
-                                        id="password"
-                                        name="password"
-                                        placeholder="••••••••"
-                                        required
-                                        type={showPassword ? "text" : "password"}
-                                        value={formData.password}
-                                        onChange={handleChange}
-                                    />
-                                    <button
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                    >
-                                        <span className="material-icons text-xl">
-                                            {showPassword ? 'visibility_off' : 'visibility'}
-                                        </span>
-                                    </button>
-                                </div>
-                            </div>
+                        {/* Submit */}
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            style={{
+                                ...primaryBtn,
+                                opacity: loading ? 0.7 : 1,
+                                cursor: loading ? 'not-allowed' : 'pointer',
+                            }}
+                            onMouseEnter={e => { if (!loading) e.currentTarget.style.background = 'var(--color-orange-hover)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-orange)'; }}
+                        >
+                            {loading ? 'Signing in…' : 'Sign In'}
+                        </button>
+                    </form>
 
-                            {/* Login Button */}
-                            <button
-                                className="w-full bg-primary hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-                                type="submit"
-                                disabled={loading}
-                            >
-                                {loading ? (
-                                    <>
-                                        <span className="material-icons animate-spin mr-2">refresh</span>
-                                        Signing in...
-                                    </>
-                                ) : (
-                                    'Login'
-                                )}
-                            </button>
-
-                            {/* Divider */}
-                            <div className="relative flex items-center py-2">
-                                <div className="flex-grow border-t border-gray-200 dark:border-gray-700"></div>
-                                <span className="flex-shrink mx-4 text-gray-400 text-sm font-medium">Or continue with</span>
-                                <div className="flex-grow border-t border-gray-200 dark:border-gray-700"></div>
-                            </div>
-                        </form>
-
-                        {/* Footer Sign Up Link */}
-                        <p className="mt-8 text-center text-sm text-gray-600 dark:text-gray-400">
-                            Don't have an account?
-                            <Link to="/register" className="font-bold text-primary hover:underline ml-1">Register</Link>
-                        </p>
-                    </div>
-                </section>
-            </main>
+                    <p style={{
+                        fontFamily: 'var(--font-body)', fontSize: '13px',
+                        color: 'var(--color-white-40)', textAlign: 'center',
+                        marginTop: '24px',
+                    }}>
+                        Don't have an account?{' '}
+                        <Link to="/register" style={{ color: 'var(--color-white-65)', fontWeight: 500, textDecoration: 'none' }}
+                            onMouseEnter={e => e.target.style.color = 'var(--color-white)'}
+                            onMouseLeave={e => e.target.style.color = 'var(--color-white-65)'}
+                        >
+                            Sign up →
+                        </Link>
+                    </p>
+                </div>
+            </div>
         </div>
     );
-};
-
-export default LoginPage;
+}

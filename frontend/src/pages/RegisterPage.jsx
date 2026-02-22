@@ -3,388 +3,344 @@ import { toast } from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-const Register = () => {
+const inputBaseStyle = {
+    width: '100%',
+    padding: '12px 14px',
+    background: 'var(--color-surface-3)',
+    border: '1px solid var(--color-border)',
+    borderRadius: '8px',
+    color: 'var(--color-white)',
+    fontFamily: 'var(--font-body)',
+    fontSize: '14px',
+    outline: 'none',
+    transition: 'border-color 0.2s, box-shadow 0.2s',
+    boxSizing: 'border-box',
+};
+
+const STRENGTHS = ['', 'Weak', 'Fair', 'Good', 'Strong'];
+const STRENGTH_COLORS = ['', '#f87171', '#fbbf24', '#2dd4bf', '#4ade80'];
+
+function calcStrength(pw) {
+    let s = 0;
+    if (pw.length >= 8) s++;
+    if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) s++;
+    if (/\d/.test(pw)) s++;
+    if (/[!@#$%^&*(),.?":{}|<>]/.test(pw)) s++;
+    return Math.min(s, 4);
+}
+
+export default function RegisterPage() {
+    const navigate = useNavigate();
+    const { login } = useAuth();
+
     const [formData, setFormData] = useState({
-        username: '',
-        email: '',
-        phoneNumber: '',
-        password: '',
-        confirmPassword: ''
+        username: '', email: '', phoneNumber: '', password: '', confirmPassword: '',
     });
     const [loading, setLoading] = useState(false);
-    const [passwordStrength, setPasswordStrength] = useState(0);
     const [agreedToTerms, setAgreedToTerms] = useState(false);
-
-    const { login } = useAuth();
-    const navigate = useNavigate();
-
-    const calculatePasswordStrength = (password) => {
-        let strength = 0;
-        if (password.length >= 8) strength++;
-        if (password.length >= 12) strength++;
-        if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
-        if (/\d/.test(password)) strength++;
-        if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength++;
-        return Math.min(strength, 4);
-    };
+    const [focused, setFocused] = useState('');
+    const [strength, setStrength] = useState(0);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData({
-            ...formData,
-            [name]: value
-        });
-
-        if (name === 'password') {
-            setPasswordStrength(calculatePasswordStrength(value));
-        }
-
-        // setError(''); // Clear error when user types
+        setFormData(prev => ({ ...prev, [name]: value }));
+        if (name === 'password') setStrength(calcStrength(value));
     };
 
-    const validateForm = () => {
-        if (!formData.username.trim()) {
-            toast.error('Username is required');
-            return false;
-        }
-        if (!formData.email.trim()) {
-            toast.error('Email is required');
-            return false;
-        }
-        if (!/\S+@\S+\.\S+/.test(formData.email)) {
-            toast.error('Please enter a valid email address');
-            return false;
-        }
-        if (formData.password.length < 8) {
-            toast.error('Password must be at least 8 characters long');
-            return false;
-        }
-        if (formData.password !== formData.confirmPassword) {
-            toast.error('Passwords do not match');
-            return false;
-        }
-        if (!agreedToTerms) {
-            toast.error('You must agree to the Terms of Service and Privacy Policy');
-            return false;
-        }
+    const validate = () => {
+        if (!formData.username.trim()) { toast.error('Full name is required.'); return false; }
+        if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) { toast.error('Enter a valid email address.'); return false; }
+        if (formData.password.length < 8) { toast.error('Password must be at least 8 characters.'); return false; }
+        if (formData.password !== formData.confirmPassword) { toast.error('Passwords do not match.'); return false; }
+        if (!agreedToTerms) { toast.error('Agree to the Terms of Service to continue.'); return false; }
         return true;
     };
 
-    const handleRegister = async () => {
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!validate()) return;
         setLoading(true);
-
         try {
-            const registerData = {
-                username: formData.username,
-                email: formData.email,
-                phoneNumber: formData.phoneNumber || null,
-                password: formData.password
-            };
-
-            const response = await fetch('http://localhost:8081/api/auth/register', {
+            const res = await fetch('http://localhost:8081/api/auth/register', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(registerData)
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: formData.username, email: formData.email,
+                    phoneNumber: formData.phoneNumber || null, password: formData.password,
+                }),
             });
-
-            const data = await response.json();
-            console.log(data)
-
-            if (response.ok) {
-                await handleAutoLogin();
-            } else {
-                toast.error(data.message || 'Registration failed');
-                setLoading(false);
-            }
-        } catch (err) {
-            console.error('Registration error:', err);
-            toast.error('Unable to connect to server. Please try again.');
-            setLoading(false);
-        }
-    };
-
-    const handleAutoLogin = async () => {
-        try {
-            const loginData = {
-                loginIdentifier: formData.username,
-                password: formData.password
-            };
-
-            console.log('Auto-login request:', loginData);
-
-            const response = await fetch('http://localhost:8081/api/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(loginData)
-            });
-
-            const data = await response.json();
-            console.log('Auto-login response:', data);
-
-            if (response.ok) {
-                // Verify that we have the required fields
-                if (data.token && data.refreshToken) {
-                    // Login successful - save tokens and user data
-                    login(data);
-                    // Redirect to dashboard
+            const data = await res.json();
+            if (res.ok) {
+                // Auto-login
+                const lr = await fetch('http://localhost:8081/api/auth/login', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ loginIdentifier: formData.username, password: formData.password }),
+                });
+                const ld = await lr.json();
+                if (lr.ok && ld.token && ld.refreshToken) {
+                    login(ld);
+                    toast.success('Account created! Welcome to TrackHire.');
                     navigate('/dashboard');
                 } else {
-                    console.error('Missing tokens in auto-login response:', data);
-                    toast.success('Registration successful! Please log in.');
-                    setTimeout(() => {
-                        navigate('/login');
-                    }, 2000);
+                    toast.success('Account created! Sign in to continue.');
+                    navigate('/login');
                 }
             } else {
-                // Auto-login failed, redirect to login page
-                toast.success('Registration successful! Please log in.');
-                setTimeout(() => {
-                    navigate('/login');
-                }, 2000);
+                toast.error(data.message || 'Registration failed.');
             }
-        } catch (err) {
-            console.error('Auto-login error:', err);
-            toast.success('Registration successful! Please log in.');
-            setTimeout(() => {
-                navigate('/login');
-            }, 2000);
+        } catch {
+            toast.error('Something went wrong on our end. Refresh the page — your data is safe.');
         } finally {
             setLoading(false);
         }
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const inputStyle = (name) => ({
+        ...inputBaseStyle,
+        borderColor: focused === name ? 'var(--color-orange)' : 'var(--color-border)',
+        boxShadow: focused === name ? '0 0 0 3px rgba(249,115,22,0.15)' : 'none',
+        background: focused === name ? '#1a1a1a' : 'var(--color-surface-3)',
+    });
 
-        if (validateForm()) {
-            await handleRegister();
-        }
-    };
-
-    const getPasswordStrengthText = () => {
-        const strengths = ['Weak', 'Fair', 'Medium', 'Strong', 'Very Strong'];
-        return strengths[passwordStrength] || 'Weak';
-    };
-
-    const getPasswordStrengthColor = () => {
-        const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-green-500', 'bg-green-600'];
-        return colors[passwordStrength] || 'bg-red-500';
+    const labelStyle = {
+        display: 'block',
+        fontFamily: 'var(--font-body)', fontWeight: 500,
+        fontSize: '13px', color: 'var(--color-white-65)',
+        marginBottom: '8px',
     };
 
     return (
-        <div className="bg-background-light dark:bg-background-dark flex items-center justify-center p-4">
-            {/* Main Card Container */}
-            <div className="max-w-5xl w-full bg-white dark:bg-slate-900 rounded-xl shadow-2xl overflow-hidden flex flex-col md:flex-row min-h-[600px] max-h-[700px]">
-                {/* Left Side: Illustration & Branding */}
-                <div className="hidden md:flex md:w-1/2 bg-primary/10 dark:bg-primary/5 flex-col justify-between p-12 relative overflow-hidden">
-                    {/* Background Decorative Element */}
-                    <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-primary/5 rounded-full"></div>
-                    <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-48 h-48 bg-primary/10 rounded-full"></div>
-                    <div className="relative z-10">
-                        <div className="flex items-center gap-2 mb-8">
-                            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                                <span className="material-icons text-white">explore</span>
-                            </div>
-                            <span className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">CareerPilot</span>
+        <div style={{
+            minHeight: '100vh',
+            background: 'var(--color-bg)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '24px', fontFamily: 'var(--font-body)',
+        }}>
+            <style>{`
+                @media (max-width: 768px) {
+                    .register-left-panel { display: none !important; }
+                    .register-card { max-width: 480px !important; }
+                }
+                @media (min-width: 769px) {
+                    .register-form-grid { grid-template-columns: 1fr 1fr !important; }
+                }
+            `}</style>
+
+            <div
+                className="register-card"
+                style={{
+                    width: '100%', maxWidth: '960px',
+                    background: 'var(--color-surface-1)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: '20px', overflow: 'hidden',
+                    display: 'flex',
+                }}
+            >
+                {/* Left panel */}
+                <div
+                    className="register-left-panel"
+                    style={{
+                        width: '340px', flexShrink: 0,
+                        background: 'linear-gradient(145deg, rgba(249,115,22,0.14) 0%, rgba(8,8,8,0) 70%)',
+                        borderRight: '1px solid var(--color-border)',
+                        padding: '48px 36px',
+                        display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                        position: 'relative', overflow: 'hidden',
+                    }}
+                >
+                    <div style={{
+                        position: 'absolute', top: '-80px', right: '-80px',
+                        width: '280px', height: '280px',
+                        background: 'radial-gradient(circle, rgba(249,115,22,0.12) 0%, transparent 70%)',
+                        borderRadius: '50%', pointerEvents: 'none',
+                    }} />
+                    <div style={{ position: 'relative', zIndex: 1 }}>
+                        <div style={{
+                            fontFamily: 'var(--font-display)', fontWeight: 800,
+                            fontSize: '22px', color: 'var(--color-white)',
+                            letterSpacing: '-0.02em', marginBottom: '40px',
+                        }}>
+                            Track<span style={{ color: 'var(--color-orange)' }}>H</span>ire
                         </div>
-                        <h1 className="text-3xl font-bold text-slate-900 dark:text-white leading-tight mb-4">
-                            Elevate your career journey.
+                        <h1 style={{
+                            fontFamily: 'var(--font-display)', fontWeight: 800,
+                            fontSize: '28px', letterSpacing: '-0.025em',
+                            lineHeight: 1.2, color: 'var(--color-white)',
+                            margin: '0 0 16px',
+                        }}>
+                            Start tracking smarter.
                         </h1>
-                        <p className="text-mg text-slate-600 dark:text-slate-400">
-                            Join thousands of professionals tracking their path to success with our intuitive job tracking platform.
+                        <p style={{
+                            fontFamily: 'var(--font-body)', fontSize: '14px',
+                            color: 'var(--color-white-65)', lineHeight: 1.7, margin: 0,
+                        }}>
+                            Set up in 3 minutes. Free forever.
                         </p>
                     </div>
-                    <div className="relative z-10">
-                        <img
-                            alt="Professional team collaborating"
-                            className="mt-3 h-[350px] rounded-xl shadow-lg border border-primary/10"
-                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2Zc1GR_MF9jUQHgz-HUqu5FhgmL5BErUH4O-qqvGZSEJN1beovZlfhHmhK1R1spOKMT1_2OQ6Bb3e_IjOnH35Sit6cX5GZzXCSnrTjmBdPRuiToS1YoClldi1v59TYUlgJrKttSbr2HFUL73H8bQNHUQ9uRC6b5X2V-45-T_cl8MQ_KSAsZlX9u0mUV6w3LNiiTLGIq3QGBAxhDpLPuPLKeC9qYbzRtrWZ8_6CUZZCqJB-sMyfrspPrWDwej09TpXU6AI2tgDrFhE"
-                        />
-                        <div className="mt-8 flex items-center space-x-4">
-                            <div className="flex -space-x-2">
-                                <img alt="User 1" className="inline-block h-10 w-10 rounded-full ring-2 ring-white dark:ring-slate-900" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC57Zii-VZZhuljpyFI2PyZp1CIWRbU9g4qVS_R_L7PbIZILEetjqWi_acCeADRY8RiGzXrmv47ZaAtY3l63Px-SOIIKJLtfNrfwmuYsZ7PcBOxsgVUUFEj7zU38I_lI8f6LFaXw7Rj09tyFXUTqJ_WdI7-_vAwGRD-acqOLutjgdXO2kHatq0UwBJOVNj1wTjmwr70VrutMFjapBXAP7-_lG4QcGCx5RnScSTZ8w-VvipslzOp11a6Bmp7h_Kc-w1Hu4AL1YEfBo1k" />
-                                <img alt="User 2" className="inline-block h-10 w-10 rounded-full ring-2 ring-white dark:ring-slate-900" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAyVMMKgsgjaELbCx_GRYJE6axqEjQWUWppX9QeXd7TSpuQRa5KDS_JS9XnmQ0teq08fr1FuL5Os5fMfwsf_RE9idsYVXaNzhcZvHmMqpWqFR9CdZf8XmraJbNecDezplzcVUYKvYwyL5r4DFacdsyaybqKMNKtt9X0P0quvJDh3gm8gaUhvrQwZixT_AWByIOhJ6b9hfX5kYRUSse_uTSD-eYYgZ9OL1Q2AgNDMAT7h8IBq5MGDwgk_JMiXz_TjTfKJlsMq39K66-" />
-                                <img alt="User 3" className="inline-block h-10 w-10 rounded-full ring-2 ring-white dark:ring-slate-900" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAK1ANkyaxB8MTjaJTpSS72xiSkqt2NevIH1ik8hyOFF0MqHT2Rib9JCYQ4R9-iNG1_lzALsg87NO6bMYwPVoCJ5-6XJvEJy1kepSPZupEVp1eySrvgwM-YTux8C2yGcIGcwtMAGeRXdyPO8ugNYY9lZYjR_S-iJQxW0oTmT-k2--sKbIdVk-ffYqupyXzeV0UXIFMoMrliN7KjUhJIFbmGel9HF6jXCG92dfz-QMml6VN9_VTlZC-miQAd77Gg49SiaB7lJc1Hihdh" />
+                    <div style={{ position: 'relative', zIndex: 1 }}>
+                        {[
+                            { icon: '⚡', text: 'Alerts in < 5 minutes' },
+                            { icon: '🎯', text: '500+ companies tracked' },
+                            { icon: '📊', text: 'Pipeline built for you' },
+                        ].map(({ icon, text }) => (
+                            <div key={text} style={{
+                                display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px',
+                            }}>
+                                <span style={{ fontSize: '18px' }}>{icon}</span>
+                                <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-65)' }}>{text}</span>
                             </div>
-                            <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">Joined by 10k+ users this month</span>
-                        </div>
+                        ))}
+                        <p style={{
+                            fontFamily: 'var(--font-body)', fontSize: '12px',
+                            color: 'var(--color-white-20)', marginTop: '16px', margin: '16px 0 0',
+                        }}>
+                            No credit card required. Free plan available.
+                        </p>
                     </div>
                 </div>
 
-                {/* Right Side: Form */}
-                <div className="w-full md:w-1/2 p-8 md:p-12 lg:p-16 flex flex-col justify-center">
-                    <div className="mb-6 text-center md:text-left">
-                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Create an account</h2>
-                    </div>
+                {/* Right panel — form */}
+                <div style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
+                    <h2 style={{
+                        fontFamily: 'var(--font-display)', fontWeight: 800,
+                        fontSize: '24px', letterSpacing: '-0.02em',
+                        color: 'var(--color-white)', margin: '0 0 6px',
+                    }}>
+                        Create Free Account
+                    </h2>
+                    <p style={{
+                        fontFamily: 'var(--font-body)', fontSize: '14px',
+                        color: 'var(--color-white-65)', margin: '0 0 28px',
+                    }}>
+                        Already have an account?{' '}
+                        <Link to="/login" style={{ color: 'var(--color-orange)', fontWeight: 500, textDecoration: 'none' }}>
+                            Sign in →
+                        </Link>
+                    </p>
 
-                    {/* Error Message - Removed as we use toast now */}
-
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                        <div className="grid grid-cols-1 gap-5">
-                            {/* Username */}
+                    <form onSubmit={handleSubmit}>
+                        <div
+                            className="register-form-grid"
+                            style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', marginBottom: '16px' }}
+                        >
+                            {/* Full name */}
                             <div>
-                                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5" htmlFor="username">
-                                    Username
-                                </label>
+                                <label style={labelStyle}>Full name</label>
                                 <input
-                                    className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all duration-200"
-                                    id="username"
-                                    name="username"
-                                    placeholder="johndoe"
-                                    type="text"
-                                    value={formData.username}
-                                    onChange={handleChange}
-                                    required
+                                    type="text" name="username" required
+                                    placeholder="e.g. Alex Johnson"
+                                    value={formData.username} onChange={handleChange}
+                                    onFocus={() => setFocused('username')} onBlur={() => setFocused('')}
+                                    style={inputStyle('username')}
                                 />
                             </div>
 
                             {/* Email */}
                             <div>
-                                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5" htmlFor="email">
-                                    Email
-                                </label>
+                                <label style={labelStyle}>Email address</label>
                                 <input
-                                    className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all duration-200"
-                                    id="email"
-                                    name="email"
-                                    placeholder="john@company.com"
-                                    type="email"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    required
-                                />
-                            </div>
-
-                            {/* Phone Number (Optional) */}
-                            <div>
-                                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5" htmlFor="phoneNumber">
-                                    Phone Number
-                                </label>
-                                <input
-                                    className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all duration-200"
-                                    id="phoneNumber"
-                                    name="phoneNumber"
-                                    placeholder="+91 1234567890"
-                                    type="tel"
-                                    value={formData.phoneNumber}
-                                    onChange={handleChange}
+                                    type="email" name="email" required
+                                    placeholder="name@company.com"
+                                    value={formData.email} onChange={handleChange}
+                                    onFocus={() => setFocused('email')} onBlur={() => setFocused('')}
+                                    style={inputStyle('email')}
                                 />
                             </div>
 
                             {/* Password */}
                             <div>
-                                <div className="flex justify-between items-center mb-1.5">
-                                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300" htmlFor="password">
-                                        Create Password
-                                    </label>
-                                </div>
+                                <label style={labelStyle}>Password</label>
                                 <input
-                                    className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all duration-200"
-                                    id="password"
-                                    name="password"
+                                    type="password" name="password" required
                                     placeholder="••••••••"
-                                    type="password"
-                                    value={formData.password}
-                                    onChange={handleChange}
-                                    required
+                                    value={formData.password} onChange={handleChange}
+                                    onFocus={() => setFocused('password')} onBlur={() => setFocused('')}
+                                    style={inputStyle('password')}
                                 />
-                                {/* Password Strength Indicator */}
+                                {/* Strength bar */}
                                 {formData.password && (
-                                    <div className="mt-2.5">
-                                        <div className="flex space-x-1.5 h-1.5 w-full">
-                                            {[...Array(4)].map((_, index) => (
-                                                <div
-                                                    key={index}
-                                                    className={`w-1/4 rounded-full ${index < passwordStrength
-                                                        ? getPasswordStrengthColor()
-                                                        : 'bg-slate-200 dark:bg-slate-700'
-                                                        }`}
-                                                ></div>
+                                    <div style={{ marginTop: '8px' }}>
+                                        <div style={{ display: 'flex', gap: '4px', height: '3px' }}>
+                                            {[1, 2, 3, 4].map(i => (
+                                                <div key={i} style={{
+                                                    flex: 1, borderRadius: '4px',
+                                                    background: i <= strength ? STRENGTH_COLORS[strength] : 'var(--color-border)',
+                                                    transition: 'background 0.3s',
+                                                }} />
                                             ))}
                                         </div>
-                                        <div className="flex justify-between mt-1.5">
-                                            <span className="text-[10px] font-semibold text-primary uppercase">
-                                                Strength: {getPasswordStrengthText()}
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
+                                            <span style={{ fontFamily: 'var(--font-display)', fontSize: '11px', fontWeight: 700, color: STRENGTH_COLORS[strength] || 'var(--color-white-40)', letterSpacing: '0.06em' }}>
+                                                {STRENGTHS[strength] || 'Weak'}
                                             </span>
-                                            <span className="text-[10px] text-slate-400">Min. 8 characters</span>
+                                            <span style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--color-white-40)' }}>
+                                                At least 8 characters.
+                                            </span>
                                         </div>
                                     </div>
                                 )}
                             </div>
 
-                            {/* Confirm Password */}
+                            {/* Confirm password */}
                             <div>
-                                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5" htmlFor="confirmPassword">
-                                    Confirm Password
-                                </label>
+                                <label style={labelStyle}>Confirm password</label>
                                 <input
-                                    className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all duration-200"
-                                    id="confirmPassword"
-                                    name="confirmPassword"
+                                    type="password" name="confirmPassword" required
                                     placeholder="••••••••"
-                                    type="password"
-                                    value={formData.confirmPassword}
-                                    onChange={handleChange}
-                                    required
+                                    value={formData.confirmPassword} onChange={handleChange}
+                                    onFocus={() => setFocused('confirm')} onBlur={() => setFocused('')}
+                                    style={{
+                                        ...inputStyle('confirm'),
+                                        borderColor: formData.confirmPassword && formData.confirmPassword !== formData.password
+                                            ? '#ef4444'
+                                            : focused === 'confirm' ? 'var(--color-orange)' : 'var(--color-border)',
+                                    }}
                                 />
                             </div>
                         </div>
 
-                        {/* Terms and Conditions */}
-                        <div className="flex items-start mt-2">
-                            <div className="flex items-center h-5">
-                                <input
-                                    className="h-4 w-4 text-primary border-slate-300 dark:border-slate-600 rounded focus:ring-primary"
-                                    id="terms"
-                                    name="terms"
-                                    type="checkbox"
-                                    checked={agreedToTerms}
-                                    onChange={(e) => setAgreedToTerms(e.target.checked)}
-                                />
-                            </div>
-                            <div className="ml-3 text-sm">
-                                <label className="text-slate-500 dark:text-slate-400" htmlFor="terms">
-                                    I agree to the <a className="text-primary hover:underline font-medium" href="#">Terms of Service</a> and <a className="text-primary hover:underline font-medium" href="#">Privacy Policy</a>.
-                                </label>
-                            </div>
-                        </div>
+                        {/* Terms */}
+                        <label style={{
+                            display: 'flex', alignItems: 'flex-start', gap: '10px',
+                            cursor: 'pointer', marginBottom: '24px',
+                        }}>
+                            <input
+                                type="checkbox"
+                                checked={agreedToTerms}
+                                onChange={e => setAgreedToTerms(e.target.checked)}
+                                style={{ marginTop: '2px', accentColor: 'var(--color-orange)', width: '16px', height: '16px', flexShrink: 0 }}
+                            />
+                            <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-65)', lineHeight: 1.5 }}>
+                                I agree to the{' '}
+                                <a href="#" style={{ color: 'var(--color-orange)', textDecoration: 'none' }}>Terms of Service</a>
+                                {' '}and{' '}
+                                <a href="#" style={{ color: 'var(--color-orange)', textDecoration: 'none' }}>Privacy Policy</a>
+                            </span>
+                        </label>
 
-                        {/* Submit Button */}
+                        {/* Submit */}
                         <button
-                            className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3 px-4 rounded-lg shadow-lg shadow-primary/20 transition duration-200 mt-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                             type="submit"
                             disabled={loading}
+                            style={{
+                                width: '100%',
+                                fontFamily: 'var(--font-display)', fontWeight: 700,
+                                fontSize: '14px', color: '#000',
+                                background: loading ? 'var(--color-orange-hover)' : 'var(--color-orange)',
+                                padding: '13px 24px',
+                                borderRadius: '8px', border: 'none',
+                                cursor: loading ? 'not-allowed' : 'pointer',
+                                opacity: loading ? 0.8 : 1,
+                                transition: 'background 0.2s',
+                            }}
+                            onMouseEnter={e => { if (!loading) e.currentTarget.style.background = 'var(--color-orange-hover)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-orange)'; }}
                         >
-                            {loading ? (
-                                <>
-                                    <span className="material-icons animate-spin mr-2">refresh</span>
-                                    Creating Account...
-                                </>
-                            ) : (
-                                'Create Account'
-                            )}
+                            {loading ? 'Creating Account…' : 'Create Free Account'}
                         </button>
-
-                        {/* Login Link */}
-                        <p className="text-center text-sm text-slate-600 dark:text-slate-400 mt-6">
-                            Already have an account?
-                            <Link to="/login" className="text-primary font-bold hover:underline ml-1">Log in here</Link>
-                        </p>
                     </form>
                 </div>
             </div>
-
-            {/* Background Decoration for the whole page */}
-            <div className="fixed top-0 left-0 w-full h-full -z-10 pointer-events-none opacity-50">
-                <div className="absolute top-[10%] left-[5%] w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-[10%] right-[5%] w-96 h-96 bg-primary/10 rounded-full blur-3xl"></div>
-            </div>
         </div>
     );
-};
-
-export default Register;
+}
