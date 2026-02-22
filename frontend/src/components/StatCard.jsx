@@ -1,25 +1,56 @@
 import React from 'react';
 
-const StatCard = ({ title, value, icon, iconColor, trend, trendValue, trendLabel }) => {
+export default function StatCard({ title, value, icon, accentColor = 'var(--color-orange)' }) {
     return (
-        <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-            <div className="flex justify-between items-start">
-                <div>
-                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">{title}</p>
-                    <h3 className="text-3xl font-bold mt-1 text-slate-900 dark:text-white">{value}</h3>
-                </div>
-                <div className={`p-2 rounded-lg ${iconColor} bg-opacity-10`}>
-                    <span className={`material-icons ${iconColor.replace('bg-', 'text-')}`}>{icon}</span>
-                </div>
+        <div style={{
+            background: 'var(--color-surface-2)',
+            border: '1px solid var(--color-border)',
+            borderRadius: '14px',
+            padding: '24px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px',
+        }}>
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+            }}>
+                <p style={{
+                    fontFamily: 'var(--font-display)',
+                    fontWeight: 700,
+                    fontSize: '11px',
+                    letterSpacing: '0.12em',
+                    textTransform: 'uppercase',
+                    color: 'var(--color-white-40)',
+                    margin: 0,
+                }}>
+                    {title}
+                </p>
+                {icon && (
+                    <div style={{
+                        width: '32px', height: '32px',
+                        background: `rgba(${accentColor === 'var(--color-orange)' ? '249,115,22' : '96,165,250'}, 0.10)`,
+                        border: `1px solid rgba(${accentColor === 'var(--color-orange)' ? '249,115,22' : '96,165,250'}, 0.18)`,
+                        borderRadius: '8px',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '16px',
+                    }}>
+                        {icon}
+                    </div>
+                )}
             </div>
-            <p className={`text-xs mt-4 flex items-center font-medium ${trend === 'up' ? 'text-emerald-500' : 'text-slate-500'
-                }`}>
-                {trend === 'up' && <span className="material-icons text-xs mr-1">trending_up</span>}
-                {trend === 'neutral' && <span className="material-icons text-xs mr-1">remove</span>}
-                <span className="mr-1">{trendValue}</span> {trendLabel}
+            <p style={{
+                fontFamily: 'var(--font-mono)',
+                fontWeight: 700,
+                fontSize: '32px',
+                letterSpacing: '-0.02em',
+                lineHeight: 1,
+                color: 'var(--color-white)',
+                margin: 0,
+            }}>
+                {value ?? 0}
             </p>
         </div>
     );
-};
-
-export default StatCard;
+}

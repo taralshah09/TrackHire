@@ -1,133 +1,188 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
+import AppHeader from '../components/AppHeader';
 import JobCard from '../components/JobCard';
 import api from '../service/ApiService';
 import { Link } from 'react-router-dom';
 import Cookies from 'js-cookie';
+import { FaBookmark } from 'react-icons/fa';
 
-const SavedJobsPage = () => {
+export default function SavedJobsPage() {
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [totalElements, setTotalElements] = useState(0);
     const [sort, setSort] = useState('savedAt');
+    const [direction, setDirection] = useState('DESC');
+    const username = Cookies.get('username') || '';
 
-    const fetchSavedJobs = async () => {
+    const fetchJobs = async () => {
         setLoading(true);
         try {
-            const params = {
-                page,
-                size: 9, // Grid size
-                sort: sort,
-                direction: 'DESC'
-            };
-
-            const response = await api.getSavedJobs(params);
-            const data = response.json ? await response.json() : response;
-            console.log(data.content)
-            setJobs(data.content || []);
-            setTotalPages(data.totalPages || 0);
-            setTotalElements(data.totalElements || 0);
-        } catch (error) {
-            console.error('Error fetching saved jobs:', error);
-        } finally {
-            setLoading(false);
-        }
+            const res = await api.getSavedJobs({ page, size: 9, sort, direction });
+            const d = res.json ? await res.json() : res;
+            setJobs(d.content || d || []);
+            setTotalPages(d.totalPages || 0);
+            setTotalElements(d.totalElements || 0);
+        } catch (e) { console.error(e); } finally { setLoading(false); }
     };
 
-    useEffect(() => {
-        fetchSavedJobs();
-    }, [page, sort]);
-
-    const handlePageChange = (newPage) => {
-        if (newPage >= 0 && newPage < totalPages) {
-            setPage(newPage);
-        }
-    };
+    useEffect(() => { fetchJobs(); }, [page, sort, direction]);
 
     return (
-        <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased h-screen flex overflow-hidden">
+        <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
+            <style>{`
+                @media (max-width: 768px) {
+                    .saved-main-inner { padding: 72px 16px 24px !important; }
+                    .saved-jobs-grid { grid-template-columns: 1fr !important; }
+                }
+                @media (min-width: 769px) and (max-width: 1024px) {
+                    .saved-jobs-grid { grid-template-columns: 1fr 1fr !important; }
+                }
+            `}</style>
+
             <Sidebar />
 
-            <main className="flex-1 flex flex-col h-full overflow-hidden">
+            <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                 {/* Header */}
-                <header className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 shrink-0">
-                    <div className="flex items-center gap-4">
-                        <Link to="/dashboard" className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
-                            <span className="material-icons-round">arrow_back</span>
-                        </Link>
-                        <h1 className="text-xl font-semibold">Saved Jobs</h1>
+                <AppHeader left={
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)' }}>
+                        <Link to="/dashboard" style={{ color: 'var(--color-white-40)', textDecoration: 'none' }}
+                            onMouseEnter={e => e.target.style.color = 'var(--color-orange)'}
+                            onMouseLeave={e => e.target.style.color = 'var(--color-white-40)'}
+                        >Dashboard</Link>
+                        <span>/</span>
+                        <span style={{ color: 'var(--color-white-65)' }}>Saved Jobs</span>
                     </div>
-                    <div className="flex items-center gap-3 pl-2">
-                        <div className="text-right hidden sm:block">
-                            <p className="text-sm font-semibold">{Cookies.get("username")}</p>
-                        </div>
-                        <img alt="User Profile" className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-700 object-cover" src={`https://ui-avatars.com/api/?name=${Cookies.get("username") || 'User'}&background=random`} />
-                    </div>
-                </header>
+                } />
 
-                <div className="flex-1 overflow-y-auto p-8 bg-slate-50/50 dark:bg-background-dark">
-                    <div className="max-w-7xl mx-auto">
-                        <div className="flex justify-between items-center mb-6">
-                            <p className="text-slate-500">You have saved {totalElements} jobs</p>
-                            <select
-                                className="bg-white dark:bg-slate-800 border-none rounded-lg text-sm px-3 py-1.5 focus:ring-2 focus:ring-primary shadow-sm outline-none"
-                                onChange={(e) => setSort(e.target.value)}
-                                value={sort}
-                            >
-                                <option value="savedAt">Recently Saved</option>
-                                <option value="postedAt">Newest Jobs</option>
-                            </select>
-                        </div>
+                <div style={{ flex: 1, overflowY: 'auto' }}>
+                    <div className="saved-main-inner" style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px' }}>
 
-                        {loading ? (
-                            <div className="flex justify-center p-12">
-                                <span className="material-icons-round animate-spin text-4xl text-primary">refresh</span>
+                        {/* Title + sort */}
+                        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+                            <div>
+                                <h1 style={{
+                                    fontFamily: 'var(--font-display)', fontWeight: 800,
+                                    fontSize: 'clamp(22px, 3vw, 32px)', letterSpacing: '-0.025em',
+                                    color: 'var(--color-white)', margin: 0,
+                                }}>Saved Jobs</h1>
+                                <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--color-white-40)', marginTop: '4px' }}>
+                                    {loading ? 'Loading…' : `${totalElements} jobs saved`}
+                                </p>
                             </div>
-                        ) : jobs.length === 0 ? (
-                            <div className="text-center p-12 text-slate-500">
-                                <span className="material-icons-round text-4xl mb-2 text-slate-300">bookmark_border</span>
-                                <p>No saved jobs yet. Browse jobs to save them here.</p>
-                                <Link to="/jobs" className="inline-block mt-4 text-primary font-semibold hover:underline">Browse Jobs</Link>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {jobs.map((job) => (
-                                    <JobCard key={job.id} job={{ ...job, isSaved: true }} />
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                {[
+                                    { label: 'Date Saved', val: 'savedAt' },
+                                    { label: 'Newest Jobs', val: 'postedAt' },
+                                ].map(({ label, val }) => (
+                                    <button key={val}
+                                        onClick={() => { setSort(val); setPage(0); }}
+                                        style={{
+                                            padding: '8px 14px',
+                                            border: `1px solid ${sort === val ? 'var(--color-orange-border)' : 'var(--color-border)'}`,
+                                            borderRadius: '8px',
+                                            background: sort === val ? 'var(--color-orange-dim)' : 'var(--color-surface-2)',
+                                            color: sort === val ? 'var(--color-orange)' : 'var(--color-white-65)',
+                                            cursor: 'pointer',
+                                            fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '12px',
+                                            transition: 'all 0.2s',
+                                        }}
+                                    >
+                                        {label}
+                                    </button>
                                 ))}
                             </div>
-                        )}
+                        </div>
 
-                        {/* Pagination */}
-                        {!loading && jobs.length > 0 && (
-                            <div className="flex items-center justify-between pt-8 border-t border-slate-200 dark:border-slate-800 mt-8">
-                                <button
-                                    className="p-2 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
-                                    onClick={() => handlePageChange(page - 1)}
-                                    disabled={page === 0}
-                                >
-                                    <span className="material-icons-round text-lg leading-none">chevron_left</span>
-                                </button>
-
-                                <span className="text-sm text-slate-500">
-                                    Page {page + 1} of {totalPages}
-                                </span>
-
-                                <button
-                                    className="p-2 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
-                                    onClick={() => handlePageChange(page + 1)}
-                                    disabled={page >= totalPages - 1}
-                                >
-                                    <span className="material-icons-round text-lg leading-none">chevron_right</span>
-                                </button>
+                        {/* Grid or empty state */}
+                        {loading ? (
+                            <div style={{ textAlign: 'center', padding: '80px', color: 'var(--color-white-40)', fontFamily: 'var(--font-body)', fontSize: '15px' }}>
+                                Loading…
                             </div>
+                        ) : jobs.length === 0 ? (
+                            <div style={{
+                                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                                minHeight: '320px', border: '1px dashed var(--color-border)',
+                                borderRadius: '14px', textAlign: 'center', padding: '48px',
+                            }}>
+                                <div style={{ fontSize: '48px', marginBottom: '16px', color: 'var(--color-orange)' }}><FaBookmark /></div>
+                                <p style={{
+                                    fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '18px',
+                                    color: 'var(--color-white-65)', margin: '0 0 8px',
+                                }}>
+                                    No saved jobs yet.
+                                </p>
+                                <p style={{
+                                    fontFamily: 'var(--font-body)', fontSize: '14px',
+                                    color: 'var(--color-white-40)', margin: '0 0 24px',
+                                }}>
+                                    Browse jobs and save roles that interest you.
+                                </p>
+                                <Link to="/jobs" style={{
+                                    fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px',
+                                    color: '#000', background: 'var(--color-orange)',
+                                    textDecoration: 'none', padding: '10px 20px',
+                                    borderRadius: '8px', border: 'none',
+                                    transition: 'background 0.2s',
+                                }}
+                                    onMouseEnter={e => e.currentTarget.style.background = 'var(--color-orange-hover)'}
+                                    onMouseLeave={e => e.currentTarget.style.background = 'var(--color-orange)'}
+                                >
+                                    Browse Jobs →
+                                </Link>
+                            </div>
+                        ) : (
+                            <>
+                                <div
+                                    className="saved-jobs-grid"
+                                    style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '32px' }}
+                                >
+                                    {jobs.map((job, i) => <JobCard key={job.id || i} job={job} />)}
+                                </div>
+
+                                {/* Pagination */}
+                                {totalPages > 1 && (
+                                    <div style={{
+                                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                        paddingTop: '24px', borderTop: '1px solid var(--color-border)',
+                                        flexWrap: 'wrap', gap: '12px',
+                                    }}>
+                                        <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)' }}>
+                                            Page {page + 1} of {totalPages}
+                                        </span>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <button
+                                                onClick={() => setPage(p => Math.max(0, p - 1))}
+                                                disabled={page === 0}
+                                                style={{
+                                                    padding: '8px 14px',
+                                                    border: '1px solid var(--color-border)', borderRadius: '8px',
+                                                    background: 'var(--color-surface-2)', color: 'var(--color-white-65)',
+                                                    cursor: page === 0 ? 'not-allowed' : 'pointer', opacity: page === 0 ? 0.4 : 1,
+                                                    fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px',
+                                                }}
+                                            >← Prev</button>
+                                            <button
+                                                onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                                                disabled={page >= totalPages - 1}
+                                                style={{
+                                                    padding: '8px 14px',
+                                                    border: '1px solid var(--color-border)', borderRadius: '8px',
+                                                    background: 'var(--color-surface-2)', color: 'var(--color-white-65)',
+                                                    cursor: page >= totalPages - 1 ? 'not-allowed' : 'pointer', opacity: page >= totalPages - 1 ? 0.4 : 1,
+                                                    fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px',
+                                                }}
+                                            >Next →</button>
+                                        </div>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
                 </div>
             </main>
         </div>
     );
-};
-
-export default SavedJobsPage;
+}
