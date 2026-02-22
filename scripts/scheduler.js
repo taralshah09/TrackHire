@@ -81,17 +81,48 @@ async function runSkillhubPipeline() {
     }
 }
 
-// Handle Graceful Shutdown
-process.on('SIGINT', async () => {
-    console.log('🛑 Shutting down...');
-    await dbSync.pool.end();
-    process.exit(0);
-});
+// ─── Entry Point ─────────────────────────────────────────────────────────────
 
-// Entry point flags (used by Railway cron commands)
-if (process.argv.includes("--run-adzuna")) {
-    runAdzunaPipeline(false);
+async function main() {
+    const args = process.argv.slice(2);
+
+    console.log("===========================================");
+    console.log("  Job Pipeline Runner");
+    console.log(`  Started at: ${new Date().toISOString()}`);
+    console.log(`  Arguments : ${args.length ? args.join(", ") : "(none — running all pipelines)"}`);
+    console.log("===========================================\n");
+
+    const runAdzuna = args.includes("--run-adzuna");
+    const runSkillhub = args.includes("--run-skillhub");
+    const runAll = !runAdzuna && !runSkillhub;
+
+    let exitCode = 0;
+
+    try {
+        if (runAll || runAdzuna) {
+            console.log("▶ Running Adzuna pipeline...");
+            await runAdzunaPipeline(false);
+            console.log("✅ Adzuna pipeline complete.\n");
+        }
+
+        if (runAll || runSkillhub) {
+            console.log("▶ Running SkillCareerHub pipeline...");
+            await runSkillhubPipeline();
+            console.log("✅ SkillCareerHub pipeline complete.\n");
+        }
+
+        console.log("===========================================");
+        console.log("  All selected pipelines finished successfully.");
+        console.log("===========================================");
+    } catch (err) {
+        console.error("❌ Unexpected top-level error:", err);
+        exitCode = 1;
+    } finally {
+        console.log("\nClosing database connections...");
+        await dbSync.pool.end();
+        console.log("Database pool closed. Exiting.");
+        process.exit(exitCode);
+    }
 }
-if (process.argv.includes("--run-skillhub")) {
-    runSkillhubPipeline();
-}
+
+main();
