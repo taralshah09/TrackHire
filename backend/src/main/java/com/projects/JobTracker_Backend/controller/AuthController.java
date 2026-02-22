@@ -71,8 +71,12 @@ public class AuthController {
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
+            System.err.println("❌ Login failed for identifier: " + loginDTO.getLoginIdentifier());
+            System.err.println("❌ Exception type: " + e.getClass().getSimpleName());
+            System.err.println("❌ Exception message: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("message", "Invalid credentials"));
+                    .body(Map.of("message", "Invalid credentials", "error", e.getClass().getSimpleName() + ": " + e.getMessage()));
         }
     }
 
