@@ -18,7 +18,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@CrossOrigin("http://localhost:5173")
 @RestController
 @RequestMapping("/api/jobs")
 @RequiredArgsConstructor

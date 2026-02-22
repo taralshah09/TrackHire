@@ -24,7 +24,6 @@ import jakarta.validation.Valid;
 
 import java.util.Map;
 
-@CrossOrigin("http://localhost:5173")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
