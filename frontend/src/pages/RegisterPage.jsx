@@ -61,7 +61,7 @@ export default function RegisterPage() {
         if (!validate()) return;
         setLoading(true);
         try {
-            const res = await fetch('http://localhost:8081/api/auth/register', {
+            const res = await fetch(import.meta.env.VITE_API_URL + '/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -72,7 +72,7 @@ export default function RegisterPage() {
             const data = await res.json();
             if (res.ok) {
                 // Auto-login
-                const lr = await fetch('http://localhost:8081/api/auth/login', {
+                const lr = await fetch(import.meta.env.VITE_API_URL + '/auth/login', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ loginIdentifier: formData.username, password: formData.password }),
                 });
