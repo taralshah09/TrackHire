@@ -1,243 +1,248 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
+import AppHeader from '../components/AppHeader';
 import JobCard from '../components/JobCard';
 import api from '../service/ApiService';
-import Cookies from 'js-cookie'
+import Cookies from 'js-cookie';
+import { FaSearch, FaBuilding, FaBolt, FaMapMarkerAlt } from 'react-icons/fa';
 
-const JobsPage = () => {
+export default function JobsPage() {
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [totalElements, setTotalElements] = useState(0);
-
-    // Filters State
     const [filters, setFilters] = useState({
-        position: '',
-        company: '',
-        skills: '',
-        locations: '',
-        experienceLevels: '',
-        sort: 'postedAt',
-        direction: 'DESC'
+        position: '', company: '', skills: '', locations: '',
+        experienceLevels: '', sort: 'postedAt', direction: 'DESC',
     });
+    const [inputFocus, setInputFocus] = useState('');
 
     const fetchJobs = async () => {
         setLoading(true);
         try {
-            const params = {
-                page,
-                size: 9, // Grid size
-                sort: filters.sort,
-                direction: filters.direction
-            };
-
+            const params = { page, size: 9, sort: filters.sort, direction: filters.direction };
             if (filters.position) params.position = filters.position;
             if (filters.company) params.companies = filters.company;
             if (filters.skills) params.skills = filters.skills;
             if (filters.locations) params.locations = filters.locations;
             if (filters.experienceLevels) params.experienceLevels = filters.experienceLevels;
-
             const response = await api.filterJobs(params);
-
             const data = response.json ? await response.json() : response;
             setJobs(data.content || []);
             setTotalPages(data.totalPages || 0);
             setTotalElements(data.totalElements || 0);
-
-        } catch (error) {
-            console.error('Error fetching jobs:', error);
+        } catch (e) {
+            console.error(e);
         } finally {
             setLoading(false);
         }
     };
 
-    useEffect(() => {
-        fetchJobs();
-    }, [page, filters]); // Re-fetch when page or filters change
-
-
+    useEffect(() => { fetchJobs(); }, [page, filters]);
 
     const handleFilterChange = (key, value) => {
-
         setFilters(prev => ({ ...prev, [key]: value }));
         setPage(0);
     };
 
     const handlePageChange = (newPage) => {
-        if (newPage >= 0 && newPage < totalPages) {
-            setPage(newPage);
-        }
+        if (newPage >= 0 && newPage < totalPages) setPage(newPage);
     };
 
+    const inputStyle = (name) => ({
+        flex: 1, minWidth: '160px',
+        padding: '10px 14px 10px 36px',
+        background: 'var(--color-surface-3)',
+        border: `1px solid ${inputFocus === name ? 'var(--color-orange)' : 'var(--color-border)'}`,
+        borderRadius: '8px',
+        color: 'var(--color-white)',
+        fontFamily: 'var(--font-body)', fontSize: '14px',
+        outline: 'none',
+        boxShadow: inputFocus === name ? '0 0 0 3px rgba(249,115,22,0.15)' : 'none',
+        transition: 'border-color 0.2s, box-shadow 0.2s',
+        boxSizing: 'border-box',
+    });
+
+    const SEARCH_FIELDS = [
+        { key: 'position', icon: <FaSearch />, placeholder: 'Job title, skill, or company...' },
+        { key: 'company', icon: <FaBuilding />, placeholder: 'Company name...' },
+        { key: 'skills', icon: <FaBolt />, placeholder: 'Skills or keywords...' },
+        { key: 'locations', icon: <FaMapMarkerAlt />, placeholder: 'Location (e.g. Remote)' },
+    ];
+
     return (
-        <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased h-screen flex overflow-hidden">
+        <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
+            <style>{`
+                @media (max-width: 768px) {
+                    .jobs-search-row { flex-direction: column !important; }
+                    .jobs-grid { grid-template-columns: 1fr !important; }
+                    .jobs-main-inner { padding: 72px 16px 24px !important; }
+                }
+                @media (min-width: 769px) and (max-width: 1024px) {
+                    .jobs-grid { grid-template-columns: 1fr 1fr !important; }
+                }
+            `}</style>
+
             <Sidebar />
 
-            {/* Main Content */}
-            <main className="flex-1 flex flex-col h-full overflow-hidden">
-                {/* Top Bar */}
-                <header className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 shrink-0">
-                    <div className="flex-1 max-w-xl relative">
-                        {/* Global Search Removed in favor of granular filters below */}
+            <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                {/* Header */}
+                <AppHeader left={
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)' }}>
+                        <span>Browse Jobs</span>
                     </div>
-                    <div className="flex items-center gap-4">
-                        <button className="w-10 h-10 flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors relative">
-                            <span className="material-icons-round">notifications_none</span>
-                            <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white dark:border-slate-900"></span>
-                        </button>
-                        <div className="h-8 w-px bg-slate-200 dark:border-slate-700"></div>
-                        <div className="flex items-center gap-3 pl-2">
-                            <div className="text-right hidden sm:block">
-                                <p className="text-sm font-semibold">{Cookies.get("username")}</p>
-                                {/* <p className="text-xs text-slate-500">Premium User</p> */}
+                } />
+
+                <div style={{ flex: 1, overflowY: 'auto' }}>
+                    <div className="jobs-main-inner" style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px' }}>
+
+                        {/* Page title */}
+                        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+                            <div>
+                                <h1 style={{
+                                    fontFamily: 'var(--font-display)', fontWeight: 800,
+                                    fontSize: 'clamp(24px, 3vw, 36px)', letterSpacing: '-0.025em',
+                                    color: 'var(--color-white)', margin: 0,
+                                }}>Browse Jobs</h1>
+                                <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--color-white-40)', marginTop: '4px' }}>
+                                    {loading ? 'Searching…' : `${totalElements} jobs found`}
+                                </p>
                             </div>
-                            <img alt="User Profile" className="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-700 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCs-IvhRUBwAqQWmQpjMY49CMQK7PcMg7T9x9MBoY3sCMyopUYs-Gya3NYjvmJ0BdLa1sKgCK61VVymdj4HEV-q-r_c3G0CfzbmQ6d-dtlo0CqHhQ8y0rMjB4OWpOhsF-uW8VL7g7HEgc92rT4kn15zjVwWMkVo4kxrJ3NTmMDpw5qWrr-DxF6ZaKgFp-BUN8-GiNDVLHr7JdVpHPfNBVBp-5z-3tvOwJAczAMMrCuIftohGKL4R6jMkGkuhet-m2djV9BGknh1XMnN" />
-                        </div>
-                    </div>
-                </header>
-
-                {/* View Content */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar p-8">
-                    <div className="max-w-7xl mx-auto space-y-8">
-                        {/* Page Header & Filters */}
-                        <div className="space-y-6">
-                            <div className="flex items-end justify-between">
-                                <div>
-                                    <h1 className="text-3xl font-bold tracking-tight">Discover Jobs</h1>
-                                    <p className="text-slate-500 mt-1">Found {totalElements} matching opportunities for your profile.</p>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <span className="text-sm text-slate-500">Sort by:</span>
-                                    <select
-                                        className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-lg text-sm py-1.5 focus:ring-primary outline-none"
-                                        onChange={(e) => handleFilterChange('sort', e.target.value)}
-                                        value={filters.sort}
-                                    >
-                                        <option value="postedAt">Newest First</option>
-                                        <option value="salary">Salary</option>
-                                        <option value="relevance">Relevant</option>
-                                    </select>
-                                </div>
-                            </div>
-                            {/* Search & Filter Bar */}
-                            <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                    {/* Position */}
-                                    <div className="relative">
-                                        <span className="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">work_outline</span>
-                                        <input
-                                            type="text"
-                                            placeholder="Job Title / Position"
-                                            className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-lg pl-9 p-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
-                                            value={filters.position}
-                                            onChange={(e) => handleFilterChange('position', e.target.value)}
-                                            onKeyDown={(e) => e.key === 'Enter' && fetchJobs()}
-                                        />
-                                    </div>
-
-                                    {/* Company */}
-                                    <div className="relative">
-                                        <span className="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">business</span>
-                                        <input
-                                            type="text"
-                                            placeholder="Company"
-                                            className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-lg pl-9 p-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
-                                            value={filters.company}
-                                            onChange={(e) => handleFilterChange('company', e.target.value)}
-                                            onKeyDown={(e) => e.key === 'Enter' && fetchJobs()}
-                                        />
-                                    </div>
-
-                                    {/* Skills */}
-                                    <div className="relative">
-                                        <span className="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">psychology</span>
-                                        <input
-                                            type="text"
-                                            placeholder="Skills / Keywords"
-                                            className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-lg pl-9 p-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
-                                            value={filters.skills}
-                                            onChange={(e) => handleFilterChange('skills', e.target.value)}
-                                            onKeyDown={(e) => e.key === 'Enter' && fetchJobs()}
-                                        />
-                                    </div>
-
-                                    {/* Location */}
-                                    <div className="relative">
-                                        <span className="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">location_on</span>
-                                        <input
-                                            type="text"
-                                            placeholder="Location (e.g. Remote)"
-                                            className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-lg pl-9 p-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
-                                            value={filters.locations}
-                                            onChange={(e) => handleFilterChange('locations', e.target.value)}
-                                            onKeyDown={(e) => e.key === 'Enter' && fetchJobs()}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-4 justify-between">
-                                    {/* Experience Level */}
-
-                                    <button
-                                        className="bg-primary text-white px-8 py-2.5 rounded-lg font-semibold flex items-center gap-2 hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
-                                        onClick={fetchJobs}
-                                    >
-                                        <span className="material-icons-round text-sm">search</span>
-                                        Search Jobs
-                                    </button>
-                                </div>
+                            {/* Sort */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)' }}>Sort by</span>
+                                <select
+                                    value={filters.sort}
+                                    onChange={e => handleFilterChange('sort', e.target.value)}
+                                    style={{
+                                        background: 'var(--color-surface-2)',
+                                        border: '1px solid var(--color-border)',
+                                        borderRadius: '8px',
+                                        color: 'var(--color-white)',
+                                        fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '13px',
+                                        padding: '8px 12px', outline: 'none', cursor: 'pointer',
+                                    }}
+                                >
+                                    <option value="postedAt">Newest First</option>
+                                    <option value="salary">Salary</option>
+                                    <option value="relevance">Relevant</option>
+                                </select>
                             </div>
                         </div>
 
-                        {/* Job Grid */}
-                        {loading ? (
-                            <div className="flex justify-center p-12">
-                                <span className="material-icons-round animate-spin text-4xl text-primary">refresh</span>
-                            </div>
-                        ) : jobs.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {jobs.map((job, index) => (
-                                    <JobCard key={job.id || index} job={job} />
+                        {/* Search bar */}
+                        <div style={{
+                            background: 'var(--color-surface-2)',
+                            border: '1px solid var(--color-border)',
+                            borderRadius: '14px',
+                            padding: '20px',
+                            marginBottom: '32px',
+                        }}>
+                            <div className="jobs-search-row" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                                {SEARCH_FIELDS.map(({ key, icon, placeholder }) => (
+                                    <div key={key} style={{ position: 'relative', flex: '1 1 180px' }}>
+                                        <span style={{
+                                            position: 'absolute', left: '10px', top: '50%',
+                                            transform: 'translateY(-50%)',
+                                            fontSize: '14px', pointerEvents: 'none',
+                                        }}>{icon}</span>
+                                        <input
+                                            type="text"
+                                            placeholder={placeholder}
+                                            value={filters[key]}
+                                            onChange={e => setFilters(prev => ({ ...prev, [key]: e.target.value }))}
+                                            onFocus={() => setInputFocus(key)}
+                                            onBlur={() => setInputFocus('')}
+                                            onKeyDown={e => e.key === 'Enter' && fetchJobs()}
+                                            style={inputStyle(key)}
+                                        />
+                                    </div>
                                 ))}
                             </div>
+                            <button
+                                onClick={fetchJobs}
+                                style={{
+                                    background: 'var(--color-orange)',
+                                    border: 'none', borderRadius: '8px',
+                                    color: '#000',
+                                    fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px',
+                                    padding: '10px 24px', cursor: 'pointer',
+                                    transition: 'background 0.2s, transform 0.15s',
+                                }}
+                                onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-orange-hover)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-orange)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                            >
+                                Search Jobs →
+                            </button>
+                        </div>
+
+                        {/* Job grid */}
+                        {loading ? (
+                            <div style={{ textAlign: 'center', padding: '64px', color: 'var(--color-white-40)', fontFamily: 'var(--font-body)', fontSize: '15px' }}>
+                                Searching…
+                            </div>
+                        ) : jobs.length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: '64px' }}>
+                                <p style={{ fontFamily: 'var(--font-body)', fontSize: '15px', color: 'var(--color-white-65)', margin: '0 0 4px' }}>No jobs match your filters.</p>
+                                <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)', margin: 0 }}>Try adjusting your search.</p>
+                            </div>
                         ) : (
-                            <div className="text-center p-12 text-slate-500">
-                                No jobs found matching your criteria.
+                            <div
+                                className="jobs-grid"
+                                style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '32px' }}
+                            >
+                                {jobs.map((job, i) => <JobCard key={job.id || i} job={job} />)}
                             </div>
                         )}
 
                         {/* Pagination */}
-                        {/* Pagination */}
-                        <div className="flex items-center justify-between pt-6 border-t border-slate-200 dark:border-slate-800">
-                            <p className="text-sm text-slate-500">Showing {jobs.length} of {totalElements} jobs</p>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    className="p-2 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
-                                    onClick={() => handlePageChange(page - 1)}
-                                    disabled={page === 0}
-                                >
-                                    <span className="material-icons-round text-lg leading-none">chevron_left</span>
-                                </button>
-
-                                <span className="px-4 text-sm font-semibold text-slate-700 dark:text-slate-300">
-                                    Page {page + 1} of {totalPages}
+                        {!loading && jobs.length > 0 && (
+                            <div style={{
+                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                paddingTop: '24px', borderTop: '1px solid var(--color-border)',
+                                flexWrap: 'wrap', gap: '12px',
+                            }}>
+                                <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)' }}>
+                                    Showing {jobs.length} of {totalElements} jobs
                                 </span>
-
-                                <button
-                                    className="p-2 border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
-                                    onClick={() => handlePageChange(page + 1)}
-                                    disabled={page >= totalPages - 1}
-                                >
-                                    <span className="material-icons-round text-lg leading-none">chevron_right</span>
-                                </button>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <button
+                                        onClick={() => handlePageChange(page - 1)}
+                                        disabled={page === 0}
+                                        style={{
+                                            padding: '8px 14px',
+                                            background: 'var(--color-surface-2)',
+                                            border: '1px solid var(--color-border)',
+                                            borderRadius: '8px', color: 'var(--color-white-65)',
+                                            cursor: page === 0 ? 'not-allowed' : 'pointer',
+                                            opacity: page === 0 ? 0.4 : 1,
+                                            fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px',
+                                            transition: 'background 0.2s',
+                                        }}
+                                    >← Prev</button>
+                                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--color-white-65)' }}>
+                                        {page + 1} / {totalPages}
+                                    </span>
+                                    <button
+                                        onClick={() => handlePageChange(page + 1)}
+                                        disabled={page >= totalPages - 1}
+                                        style={{
+                                            padding: '8px 14px',
+                                            background: 'var(--color-surface-2)',
+                                            border: '1px solid var(--color-border)',
+                                            borderRadius: '8px', color: 'var(--color-white-65)',
+                                            cursor: page >= totalPages - 1 ? 'not-allowed' : 'pointer',
+                                            opacity: page >= totalPages - 1 ? 0.4 : 1,
+                                            fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px',
+                                        }}
+                                    >Next →</button>
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </div>
                 </div>
             </main>
         </div>
     );
-};
-
-export default JobsPage;
+}

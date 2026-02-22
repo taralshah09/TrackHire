@@ -1,34 +1,76 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500&family=Space+Mono:wght@400;700&display=swap');
 @import "tailwindcss";
 @config "../tailwind.config.js";
 
-@layer base {
-  body {
-    @apply bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display antialiased;
-  }
+/* ── TrackHire Brand CSS Tokens ── */
+:root {
+  --color-bg: #080808;
+  --color-surface-1: #101010;
+  --color-surface-2: #181818;
+  --color-surface-3: #222222;
+  --color-border: #2e2e2e;
+  --color-orange: #f97316;
+  --color-orange-hover: #ea580c;
+  --color-orange-dim: rgba(249, 115, 22, 0.10);
+  --color-orange-border: rgba(249, 115, 22, 0.22);
+  --color-white: #ffffff;
+  --color-white-65: rgba(255, 255, 255, 0.65);
+  --color-white-40: rgba(255, 255, 255, 0.40);
+  --color-white-20: rgba(255, 255, 255, 0.20);
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'Space Mono', monospace;
 }
 
-/* Custom Scrollbar from Stitch */
+/* ── Global Reset for brand pages ── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
-/* Custom Scrollbar from Stitch */
-.custom-scrollbar::-webkit-scrollbar {
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-bg);
+  color: var(--color-white);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* ── Branded scrollbar ── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+*::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-track {
+*::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #e2e8f0;
+*::-webkit-scrollbar-thumb {
+  background: var(--color-border);
   border-radius: 10px;
 }
 
-.sidebar-link:hover {
-  background-color: rgba(19, 91, 236, 0.08);
+*::-webkit-scrollbar-thumb:hover {
+  background: #3a3a3a;
 }
 
-.job-card:hover {
-  transform: translateY(-2px);
-  transition: all 0.2s ease;
-  border-color: #135bec;
+/* ── Hide Spline watermark ── */
+canvas~div[style*="position: fixed"],
+canvas~a[style*="position: fixed"],
+[class*="logo"][style*="position: fixed"],
+div[style*="z-index: 2147483647"] {
+  display: none !important;
 }

@@ -1,9 +1,53 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
+import AppHeader from '../components/AppHeader';
 import api from '../service/ApiService';
+import {
+    FaArrowLeft, FaBookmark, FaRegBookmark, FaExternalLinkAlt,
+    FaMapMarkerAlt, FaBriefcase, FaDollarSign, FaCalendarAlt,
+    FaLayerGroup, FaLink, FaChevronDown, FaCheck, FaTimes,
+} from 'react-icons/fa';
 
-const JobPage = () => {
+/* ── Brand status tokens (mirrors DashboardPage) ── */
+const STATUS_STYLES = {
+    APPLIED: { bg: 'rgba(59,130,246,0.12)', color: '#60a5fa', border: 'rgba(59,130,246,0.20)' },
+    INTERVIEW: { bg: 'rgba(249,115,22,0.12)', color: '#f97316', border: 'rgba(249,115,22,0.22)' },
+    OFFER: { bg: 'rgba(34,197,94,0.12)', color: '#4ade80', border: 'rgba(34,197,94,0.20)' },
+    REJECTED: { bg: 'rgba(239,68,68,0.10)', color: '#f87171', border: 'rgba(239,68,68,0.18)' },
+    PHONE_SCREEN: { bg: 'rgba(20,184,166,0.12)', color: '#2dd4bf', border: 'rgba(20,184,166,0.20)' },
+    WITHDRAWN: { bg: 'rgba(100,116,139,0.12)', color: '#94a3b8', border: 'rgba(100,116,139,0.20)' },
+};
+
+const STATUS_OPTIONS = [
+    { value: 'APPLIED', label: 'Applied', icon: <FaCheck /> },
+    { value: 'INTERVIEW', label: 'Interview', icon: <FaCalendarAlt /> },
+    { value: 'OFFER', label: 'Offer', icon: <FaCheck /> },
+    { value: 'REJECTED', label: 'Rejected', icon: <FaTimes /> },
+    { value: 'PHONE_SCREEN', label: 'Phone Screen', icon: <FaCheck /> },
+];
+
+/* ── Shared inline style helpers ── */
+const card = {
+    background: 'var(--color-surface-2)',
+    border: '1px solid var(--color-border)',
+    borderRadius: '14px',
+    padding: '24px',
+};
+
+const labelStyle = {
+    fontFamily: 'var(--font-display)', fontWeight: 700,
+    fontSize: '10px', letterSpacing: '0.12em',
+    textTransform: 'uppercase', color: 'var(--color-white-40)',
+    marginBottom: '4px',
+};
+
+const valueStyle = {
+    fontFamily: 'var(--font-body)', fontSize: '14px',
+    color: 'var(--color-white-65)',
+};
+
+export default function JobPage() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [job, setJob] = useState(null);
@@ -11,367 +55,554 @@ const JobPage = () => {
     const [saved, setSaved] = useState(false);
     const [applied, setApplied] = useState(false);
     const [applicationStatus, setApplicationStatus] = useState(null);
-    const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [actionLoading, setActionLoading] = useState(false);
     const dropdownRef = useRef(null);
 
-    const statusOptions = [
-        { value: 'APPLIED', label: 'Applied', icon: 'send', color: 'text-blue-600' },
-        { value: 'INTERVIEW', label: 'Interview', icon: 'people', color: 'text-amber-600' },
-        { value: 'OFFER', label: 'Offer', icon: 'workspace_premium', color: 'text-green-600' },
-        { value: 'REJECTED', label: 'Rejected', icon: 'cancel', color: 'text-red-600' }
-    ];
-
+    /* fetch ── */
     useEffect(() => {
-        const fetchJobDetails = async () => {
+        if (!id) return;
+        (async () => {
             try {
                 setLoading(true);
-                const jobRes = await api.getJobById(id);
-                const jobData = await jobRes.json();
-
-                setJob(jobData);
-                setSaved(jobData.isSaved || false);
-                setApplied(jobData.isApplied || false);
-                setApplicationStatus(jobData.applicationStatus || null);
-
-            } catch (error) {
-                console.error('Error fetching job details:', error);
+                const res = await api.getJobById(id);
+                const data = await res.json();
+                setJob(data);
+                setSaved(data.isSaved || false);
+                setApplied(data.isApplied || false);
+                setApplicationStatus(data.applicationStatus || null);
+            } catch (e) {
+                console.error(e);
             } finally {
                 setLoading(false);
             }
-        };
-
-        if (id) {
-            fetchJobDetails();
-        }
+        })();
     }, [id]);
 
+    /* close dropdown on outside click */
     useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setShowStatusDropdown(false);
-            }
+        const handler = (e) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target))
+                setShowDropdown(false);
         };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
     }, []);
 
+    /* ── handlers ── */
     const handleSaveToggle = async () => {
         try {
-            if (saved) {
-                await api.unsaveJob(id);
-                setSaved(false);
-            } else {
-                await api.saveJob(id);
-                setSaved(true);
-            }
-        } catch (error) {
-            console.error('Error toggling save status:', error);
-        }
+            setActionLoading(true);
+            if (saved) { await api.unsaveJob(id); setSaved(false); }
+            else { await api.saveJob(id); setSaved(true); }
+        } catch (e) { console.error(e); }
+        finally { setActionLoading(false); }
     };
 
-    const handleApplyClick = async () => {
-        if (applied) {
-            // If already applied, show dropdown to change status
-            setShowStatusDropdown(!showStatusDropdown);
-        } else {
-            // First time applying - set to APPLIED status
-            await handleStatusChange('APPLIED');
-        }
+    const handleApplyClick = () => {
+        if (applied) setShowDropdown(d => !d);
+        else handleStatusChange('APPLIED');
     };
 
-    const handleStatusChange = async (newStatus) => {
+    const handleStatusChange = async (status) => {
         try {
-            await api.updateJobStatus(id, newStatus);
+            setActionLoading(true);
+            await api.updateJobStatus(id, status);
             setApplied(true);
-            setApplicationStatus(newStatus);
-            setShowStatusDropdown(false);
-        } catch (error) {
-            console.error('Error updating application status:', error);
-        }
+            setApplicationStatus(status);
+            setShowDropdown(false);
+        } catch (e) { console.error(e); }
+        finally { setActionLoading(false); }
     };
 
-    const handleWithdrawApplication = async () => {
+    const handleWithdraw = async () => {
         try {
+            setActionLoading(true);
             await api.withdrawApplication(id);
             setApplied(false);
             setApplicationStatus(null);
-            setShowStatusDropdown(false);
-        } catch (error) {
-            console.error('Error withdrawing application:', error);
-        }
+            setShowDropdown(false);
+        } catch (e) { console.error(e); }
+        finally { setActionLoading(false); }
     };
 
+    /* ── formatters ── */
     const formatSalary = () => {
-        if (!job) return "Salary not disclosed";
+        if (!job) return 'Not disclosed';
         const { minSalary = 0, maxSalary = 0 } = job;
-
-        if (minSalary > 0 && maxSalary > 0) {
-            return `₹${minSalary.toLocaleString()} - ₹${maxSalary.toLocaleString()}`;
-        } else if (minSalary > 0) {
-            return `₹${minSalary.toLocaleString()}+`;
-        } else if (maxSalary > 0) {
-            return `Up to ₹${maxSalary.toLocaleString()}`;
-        }
-        return "Salary not disclosed";
+        if (minSalary > 0 && maxSalary > 0) return `₹${minSalary.toLocaleString()} – ₹${maxSalary.toLocaleString()}`;
+        if (minSalary > 0) return `₹${minSalary.toLocaleString()}+`;
+        if (maxSalary > 0) return `Up to ₹${maxSalary.toLocaleString()}`;
+        return 'Not disclosed';
     };
 
-    const formatPostedDate = (dateString) => {
-        if (!dateString) return "Recently";
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffTime = Math.abs(now - date);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-        if (diffDays === 0) return "Today";
-        if (diffDays === 1) return "Yesterday";
-        if (diffDays < 7) return `${diffDays} days ago`;
-        if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-        return `${Math.floor(diffDays / 30)} months ago`;
+    const formatDate = (ds) => {
+        if (!ds) return 'Recently';
+        const diff = Math.ceil((Date.now() - new Date(ds)) / 86400000);
+        if (diff === 0) return 'Today';
+        if (diff === 1) return 'Yesterday';
+        if (diff < 7) return `${diff} days ago`;
+        if (diff < 30) return `${Math.floor(diff / 7)} weeks ago`;
+        return `${Math.floor(diff / 30)} months ago`;
     };
 
-    const getCategoryIcon = () => {
-        if (!job) return { icon: 'work', color: 'bg-blue-50' };
+    /* ── current status display meta ── */
+    const statusMeta = applicationStatus ? STATUS_STYLES[applicationStatus] || STATUS_STYLES.APPLIED : null;
+    const currentStatusLabel = STATUS_OPTIONS.find(s => s.value === applicationStatus)?.label || 'Applied';
 
-        switch (job.jobCategory) {
-            case 'DISCOVER':
-                return { icon: 'explore', color: 'bg-blue-50 dark:bg-blue-900/20' };
-            case 'RECOMMENDED':
-                return { icon: 'stars', color: 'bg-purple-50 dark:bg-purple-900/20' };
-            case 'TRENDING':
-                return { icon: 'trending_up', color: 'bg-green-50 dark:bg-green-900/20' };
-            default:
-                return { icon: 'work', color: 'bg-blue-50 dark:bg-blue-900/20' };
-        }
-    };
-
-    const getStatusDisplay = () => {
-        if (!applied) return {
-            label: 'Apply Now',
-            icon: 'send',
-            bgColor: 'bg-primary',
-            hoverColor: 'hover:bg-blue-700'
-        };
-
-        const currentStatus = statusOptions.find(s => s.value === applicationStatus);
-        if (!currentStatus) return {
-            label: 'Applied',
-            icon: 'check_circle',
-            bgColor: 'bg-blue-600',
-            hoverColor: 'hover:bg-blue-700'
-        };
-
-        return {
-            label: currentStatus.label,
-            icon: currentStatus.icon,
-            bgColor: applicationStatus === 'APPLIED' ? 'bg-blue-600' :
-                applicationStatus === 'INTERVIEW' ? 'bg-amber-600' :
-                    applicationStatus === 'OFFER' ? 'bg-green-600' : 'bg-red-600',
-            hoverColor: applicationStatus === 'APPLIED' ? 'hover:bg-blue-700' :
-                applicationStatus === 'INTERVIEW' ? 'hover:bg-amber-700' :
-                    applicationStatus === 'OFFER' ? 'hover:bg-green-700' : 'hover:bg-red-700'
-        };
-    };
-
+    /* ── loading skeleton ── */
     if (loading) {
         return (
-            <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased h-screen flex overflow-hidden">
+            <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
                 <Sidebar />
-                <div className="flex-1 flex items-center justify-center">
-                    <span className="material-icons-round animate-spin text-4xl text-primary">refresh</span>
-                </div>
+                <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{
+                            width: '40px', height: '40px', borderRadius: '50%',
+                            border: '3px solid var(--color-border)',
+                            borderTopColor: 'var(--color-orange)',
+                            animation: 'spin 0.7s linear infinite',
+                            margin: '0 auto 16px',
+                        }} />
+                        <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--color-white-40)' }}>
+                            Loading job…
+                        </p>
+                        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+                    </div>
+                </main>
             </div>
         );
     }
 
+    /* ── job not found ── */
     if (!job) {
         return (
-            <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased h-screen flex overflow-hidden">
+            <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
                 <Sidebar />
-                <div className="flex-1 flex flex-col items-center justify-center">
-                    <h2 className="text-2xl font-bold mb-4">Job not found</h2>
-                    <button onClick={() => navigate('/jobs')} className="text-primary hover:underline">Back to Jobs</button>
-                </div>
+                <main style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+                    <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '18px', color: 'var(--color-white)' }}>
+                        Job not found.
+                    </p>
+                    <button onClick={() => navigate('/jobs')} style={{
+                        fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '14px',
+                        color: 'var(--color-orange)', background: 'transparent', border: 'none',
+                        cursor: 'pointer', textDecoration: 'underline',
+                    }}>
+                        ← Back to Browse Jobs
+                    </button>
+                </main>
             </div>
         );
     }
 
-    const categoryIcon = getCategoryIcon();
-    const statusDisplay = getStatusDisplay();
     const tags = [job.employmentType, job.jobCategory].filter(Boolean);
 
     return (
-        <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased h-screen flex overflow-hidden">
+        <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
+            <style>{`
+                @keyframes spin { to { transform: rotate(360deg); } }
+                @media (max-width: 900px) {
+                    .job-layout { flex-direction: column !important; }
+                    .job-sidebar { width: 100% !important; }
+                }
+                @media (max-width: 768px) {
+                    .job-main-inner { padding: 80px 16px 32px !important; }
+                }
+            `}</style>
+
             <Sidebar />
-            <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-                <div className="flex-1 overflow-y-auto custom-scrollbar p-8">
-                    <div className="max-w-4xl mx-auto">
-                        <button onClick={() => navigate(-1)} className="mb-6 flex items-center text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors">
-                            <span className="material-icons-round mr-2">arrow_back</span>
+
+            <main style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+
+                {/* ── Sticky top header ── */}
+                <AppHeader left={
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <button
+                            onClick={() => navigate(-1)}
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: '8px',
+                                background: 'transparent', border: 'none', cursor: 'pointer',
+                                fontFamily: 'var(--font-display)', fontWeight: 600,
+                                fontSize: '14px', color: 'var(--color-white-65)',
+                                transition: 'color 0.2s',
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.color = 'var(--color-white)'}
+                            onMouseLeave={e => e.currentTarget.style.color = 'var(--color-white-65)'}
+                        >
+                            <FaArrowLeft style={{ fontSize: '13px' }} />
                             Back
                         </button>
+                        <span style={{ color: 'var(--color-border)' }}>|</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)' }}>
+                            <Link to="/jobs" style={{ color: 'var(--color-white-40)', textDecoration: 'none' }}
+                                onMouseEnter={e => e.target.style.color = 'var(--color-orange)'}
+                                onMouseLeave={e => e.target.style.color = 'var(--color-white-40)'}
+                            >Browse Jobs</Link>
+                            <span>/</span>
+                            <span style={{ color: 'var(--color-white-65)' }}>{job.title}</span>
+                        </div>
+                    </div>
+                } />
 
-                        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-8 mb-8">
-                            <div className="flex flex-col md:flex-row justify-between items-start gap-6">
-                                <div className="flex gap-4">
-                                    <div className={`w-16 h-16 rounded-xl ${categoryIcon.color} flex items-center justify-center shrink-0`}>
-                                        <span className="material-icons-round text-3xl text-primary">{categoryIcon.icon}</span>
+                {/* ── Page content ── */}
+                <div className="job-main-inner" style={{ maxWidth: '1100px', margin: '0 auto', padding: '32px', width: '100%', boxSizing: 'border-box' }}>
+
+                    {/* ── Hero card ── */}
+                    <div style={{ ...card, marginBottom: '24px' }}>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+
+                            {/* Job identity */}
+                            <div style={{ flex: 1, minWidth: '240px' }}>
+                                {/* Company logo placeholder */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                                    <div style={{
+                                        width: '56px', height: '56px', borderRadius: '12px',
+                                        background: 'var(--color-surface-3)', border: '1px solid var(--color-border)',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        fontSize: '22px', fontWeight: 700,
+                                        fontFamily: 'var(--font-display)', color: 'var(--color-orange)',
+                                        flexShrink: 0,
+                                    }}>
+                                        {job.company?.[0]?.toUpperCase() || '?'}
                                     </div>
                                     <div>
-                                        <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{job.title}</h1>
-                                        <div className="flex items-center gap-2 text-slate-500 mb-4">
-                                            <span className="font-semibold text-primary">{job.company}</span>
-                                            <span>•</span>
-                                            <span>{job.location}</span>
-                                            <span>•</span>
-                                            <span>{formatPostedDate(job.postedAt)}</span>
-                                        </div>
-                                        <div className="flex flex-wrap gap-2">
-                                            {tags.map((tag, i) => (
-                                                <span key={i} className="px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-xs font-bold uppercase text-slate-600 dark:text-slate-400">
-                                                    {tag}
-                                                </span>
-                                            ))}
-                                            <span className="px-3 py-1 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-full text-xs font-bold uppercase">
-                                                {formatSalary()}
-                                            </span>
-                                        </div>
+                                        <h1 style={{
+                                            fontFamily: 'var(--font-display)', fontWeight: 800,
+                                            fontSize: 'clamp(18px, 3vw, 26px)', letterSpacing: '-0.02em',
+                                            color: 'var(--color-white)', margin: '0 0 4px',
+                                        }}>
+                                            {job.title}
+                                        </h1>
+                                        <p style={{
+                                            fontFamily: 'var(--font-body)', fontSize: '15px',
+                                            color: 'var(--color-orange)', margin: 0, fontWeight: 500,
+                                        }}>
+                                            {job.company}
+                                        </p>
                                     </div>
                                 </div>
 
-                                <div className="flex gap-3 w-full md:w-auto">
-                                    <button
-                                        onClick={handleSaveToggle}
-                                        className={`flex-1 md:flex-none p-3 rounded-xl border-2 transition-colors flex items-center justify-center gap-2 font-semibold
-                                            ${saved
-                                                ? 'border-primary bg-primary/10 text-primary'
-                                                : 'border-slate-200 dark:border-slate-700 hover:border-primary text-slate-600 dark:text-slate-400 hover:text-primary'
-                                            }`}
-                                    >
-                                        <span className="material-icons-round">{saved ? 'bookmark' : 'bookmark_border'}</span>
-                                        {saved ? 'Saved' : 'Save'}
-                                    </button>
-
-                                    <div className="relative flex-1 md:flex-none" ref={dropdownRef}>
-                                        <button
-                                            onClick={handleApplyClick}
-                                            className={`w-full px-8 py-3 rounded-xl font-bold text-white shadow-lg transition-all flex items-center justify-center gap-2
-                                                ${statusDisplay.bgColor} ${statusDisplay.hoverColor}`}
-                                        >
-                                            <span className="material-icons-round">{statusDisplay.icon}</span>
-                                            {statusDisplay.label}
-                                            {applied && <span className="material-icons-round text-sm">expand_more</span>}
-                                        </button>
-
-                                        {showStatusDropdown && applied && (
-                                            <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-2 z-10">
-                                                <div className="px-3 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-slate-700">
-                                                    Update Status
-                                                </div>
-                                                {statusOptions.map((option) => (
-                                                    <button
-                                                        key={option.value}
-                                                        onClick={() => handleStatusChange(option.value)}
-                                                        className={`w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors
-                                                            ${applicationStatus === option.value ? 'bg-slate-50 dark:bg-slate-700' : ''}`}
-                                                    >
-                                                        <span className={`material-icons-round text-xl ${option.color}`}>{option.icon}</span>
-                                                        <span className="font-medium text-slate-900 dark:text-white">{option.label}</span>
-                                                        {applicationStatus === option.value && (
-                                                            <span className="material-icons-round text-primary ml-auto">check</span>
-                                                        )}
-                                                    </button>
-                                                ))}
-                                                <div className="border-t border-slate-200 dark:border-slate-700 mt-2 pt-2">
-                                                    <button
-                                                        onClick={handleWithdrawApplication}
-                                                        className="w-full px-4 py-3 text-left flex items-center gap-3 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                                                    >
-                                                        <span className="material-icons-round text-xl">delete_outline</span>
-                                                        <span className="font-medium">Withdraw Application</span>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                            <div className="md:col-span-2 space-y-8">
-                                <div className="prose dark:prose-invert max-w-none">
-                                    <h3 className="text-xl font-bold mb-4 text-slate-900 dark:text-white">Description</h3>
-                                    <div className="text-slate-600 dark:text-slate-400 whitespace-pre-wrap">
-                                        {job.description || "No description provided."}
-                                    </div>
+                                {/* Meta pills */}
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+                                    {job.location && (
+                                        <span style={{
+                                            display: 'flex', alignItems: 'center', gap: '5px',
+                                            fontFamily: 'var(--font-body)', fontSize: '13px',
+                                            color: 'var(--color-white-65)',
+                                            background: 'var(--color-surface-3)',
+                                            border: '1px solid var(--color-border)',
+                                            padding: '4px 10px', borderRadius: '999px',
+                                        }}>
+                                            <FaMapMarkerAlt style={{ fontSize: '11px', color: 'var(--color-white-40)' }} />
+                                            {job.location}
+                                        </span>
+                                    )}
+                                    {tags.map((t, i) => (
+                                        <span key={i} style={{
+                                            fontFamily: 'var(--font-display)', fontWeight: 700,
+                                            fontSize: '10px', letterSpacing: '0.08em',
+                                            textTransform: 'uppercase',
+                                            color: 'var(--color-white-65)',
+                                            background: 'var(--color-surface-3)',
+                                            border: '1px solid var(--color-border)',
+                                            padding: '4px 10px', borderRadius: '999px',
+                                        }}>
+                                            {t}
+                                        </span>
+                                    ))}
+                                    <span style={{
+                                        fontFamily: 'var(--font-display)', fontWeight: 700,
+                                        fontSize: '10px', letterSpacing: '0.08em',
+                                        textTransform: 'uppercase',
+                                        color: 'var(--color-white-40)',
+                                        fontStyle: 'italic',
+                                        display: 'flex', alignItems: 'center', gap: '4px',
+                                        padding: '4px 0',
+                                    }}>
+                                        <FaCalendarAlt style={{ fontSize: '10px' }} />
+                                        {formatDate(job.postedAt)}
+                                    </span>
                                 </div>
 
-                                {job.applyUrl && (
-                                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
-                                        <h3 className="text-lg font-bold mb-2 text-slate-900 dark:text-white">External Application</h3>
-                                        <p className="text-slate-600 dark:text-slate-400 mb-4">This job requires applying through the company's website.</p>
-
-                                        <a href={job.applyUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-                                        >
-                                            Apply on Company Site
-                                            <span className="material-icons-round text-sm">open_in_new</span>
-                                        </a>
-                                    </div>
+                                {/* Applied badge */}
+                                {applied && statusMeta && (
+                                    <span style={{
+                                        display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                        background: statusMeta.bg, color: statusMeta.color,
+                                        border: `1px solid ${statusMeta.border}`,
+                                        padding: '4px 12px', borderRadius: '999px',
+                                        fontFamily: 'var(--font-display)', fontWeight: 700,
+                                        fontSize: '11px', letterSpacing: '0.06em',
+                                    }}>
+                                        <FaCheck style={{ fontSize: '9px' }} />
+                                        {currentStatusLabel}
+                                    </span>
                                 )}
                             </div>
 
-                            <div className="space-y-6">
-                                <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800">
-                                    <h3 className="font-bold mb-4 text-slate-900 dark:text-white">Job Overview</h3>
-                                    <div className="space-y-4">
-                                        <div className="flex items-start gap-3">
-                                            <span className="material-icons-round text-slate-400">calendar_today</span>
-                                            <div>
-                                                <div className="text-xs text-slate-500 uppercase font-bold">Posted Date</div>
-                                                <div className="font-medium text-slate-900 dark:text-white">{formatPostedDate(job.postedAt)}</div>
+                            {/* Action buttons */}
+                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'flex-start', flexShrink: 0 }}>
+                                {/* Save */}
+                                <button
+                                    onClick={handleSaveToggle}
+                                    disabled={actionLoading}
+                                    style={{
+                                        display: 'flex', alignItems: 'center', gap: '8px',
+                                        padding: '10px 18px', borderRadius: '8px', cursor: 'pointer',
+                                        fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px',
+                                        transition: 'all 0.2s',
+                                        background: saved ? 'rgba(168,85,247,0.10)' : 'transparent',
+                                        color: saved ? '#c084fc' : 'var(--color-white-65)',
+                                        border: saved ? '1px solid rgba(168,85,247,0.25)' : '1px solid var(--color-border)',
+                                    }}
+                                    onMouseEnter={e => { if (!saved) { e.currentTarget.style.borderColor = 'rgba(168,85,247,0.25)'; e.currentTarget.style.color = '#c084fc'; } }}
+                                    onMouseLeave={e => { if (!saved) { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.color = 'var(--color-white-65)'; } }}
+                                >
+                                    {saved ? <FaBookmark style={{ fontSize: '13px' }} /> : <FaRegBookmark style={{ fontSize: '13px' }} />}
+                                    {saved ? 'Saved' : 'Save Job'}
+                                </button>
+
+                                {/* Apply / Status */}
+                                <div style={{ position: 'relative' }} ref={dropdownRef}>
+                                    <button
+                                        onClick={handleApplyClick}
+                                        disabled={actionLoading}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: '8px',
+                                            padding: '10px 20px', borderRadius: '8px', cursor: 'pointer',
+                                            fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px',
+                                            transition: 'all 0.2s',
+                                            background: applied ? (statusMeta?.bg || 'rgba(59,130,246,0.12)') : 'var(--color-orange)',
+                                            color: applied ? (statusMeta?.color || '#60a5fa') : '#000',
+                                            border: applied ? `1px solid ${statusMeta?.border || 'rgba(59,130,246,0.20)'}` : 'none',
+                                        }}
+                                        onMouseEnter={e => { if (!applied) e.currentTarget.style.background = 'var(--color-orange-hover)'; }}
+                                        onMouseLeave={e => { if (!applied) e.currentTarget.style.background = 'var(--color-orange)'; }}
+                                    >
+                                        {applied ? currentStatusLabel : 'Apply Now'}
+                                        {applied && <FaChevronDown style={{ fontSize: '11px' }} />}
+                                    </button>
+
+                                    {/* Status dropdown */}
+                                    {showDropdown && applied && (
+                                        <div style={{
+                                            position: 'absolute', right: 0, top: 'calc(100% + 8px)',
+                                            width: '220px', zIndex: 100,
+                                            background: 'var(--color-surface-2)',
+                                            border: '1px solid var(--color-border)',
+                                            borderRadius: '12px', overflow: 'hidden',
+                                            boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                                        }}>
+                                            <div style={{
+                                                padding: '10px 14px',
+                                                borderBottom: '1px solid var(--color-border)',
+                                                fontFamily: 'var(--font-display)', fontWeight: 700,
+                                                fontSize: '10px', letterSpacing: '0.12em',
+                                                textTransform: 'uppercase', color: 'var(--color-white-40)',
+                                            }}>Update Status</div>
+                                            {STATUS_OPTIONS.map(opt => {
+                                                const s = STATUS_STYLES[opt.value];
+                                                const isCurrent = applicationStatus === opt.value;
+                                                return (
+                                                    <button
+                                                        key={opt.value}
+                                                        onClick={() => handleStatusChange(opt.value)}
+                                                        style={{
+                                                            display: 'flex', alignItems: 'center', gap: '10px',
+                                                            width: '100%', padding: '10px 14px',
+                                                            background: isCurrent ? s.bg : 'transparent',
+                                                            border: 'none', cursor: 'pointer',
+                                                            fontFamily: 'var(--font-body)', fontSize: '13px',
+                                                            color: isCurrent ? s.color : 'var(--color-white-65)',
+                                                            textAlign: 'left', transition: 'background 0.15s',
+                                                        }}
+                                                        onMouseEnter={e => { if (!isCurrent) e.currentTarget.style.background = 'var(--color-surface-3)'; }}
+                                                        onMouseLeave={e => { if (!isCurrent) e.currentTarget.style.background = 'transparent'; }}
+                                                    >
+                                                        <span style={{ fontSize: '11px', color: s.color }}>{opt.icon}</span>
+                                                        {opt.label}
+                                                        {isCurrent && <FaCheck style={{ marginLeft: 'auto', fontSize: '10px' }} />}
+                                                    </button>
+                                                );
+                                            })}
+                                            <div style={{ borderTop: '1px solid var(--color-border)' }}>
+                                                <button
+                                                    onClick={handleWithdraw}
+                                                    style={{
+                                                        display: 'flex', alignItems: 'center', gap: '10px',
+                                                        width: '100%', padding: '10px 14px',
+                                                        background: 'transparent', border: 'none', cursor: 'pointer',
+                                                        fontFamily: 'var(--font-body)', fontSize: '13px',
+                                                        color: '#f87171', textAlign: 'left', transition: 'background 0.15s',
+                                                    }}
+                                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
+                                                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                                >
+                                                    <FaTimes style={{ fontSize: '11px' }} />
+                                                    Withdraw Application
+                                                </button>
                                             </div>
                                         </div>
-                                        <div className="flex items-start gap-3">
-                                            <span className="material-icons-round text-slate-400">work_outline</span>
-                                            <div>
-                                                <div className="text-xs text-slate-500 uppercase font-bold">Type</div>
-                                                <div className="font-medium text-slate-900 dark:text-white">{job.employmentType || 'Full Time'}</div>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-start gap-3">
-                                            <span className="material-icons-round text-slate-400">payments</span>
-                                            <div>
-                                                <div className="text-xs text-slate-500 uppercase font-bold">Salary Range</div>
-                                                <div className="font-medium text-slate-900 dark:text-white">{formatSalary()}</div>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-start gap-3">
-                                            <span className="material-icons-round text-slate-400">category</span>
-                                            <div>
-                                                <div className="text-xs text-slate-500 uppercase font-bold">Category</div>
-                                                <div className="font-medium text-slate-900 dark:text-white">{job.jobCategory}</div>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-start gap-3">
-                                            <span className="material-icons-round text-slate-400">source</span>
-                                            <div>
-                                                <div className="text-xs text-slate-500 uppercase font-bold">Source</div>
-                                                <div className="font-medium text-slate-900 dark:text-white">{job.source || 'N/A'}</div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    )}
                                 </div>
+
+                                {/* External apply link */}
+                                {job.applyUrl && (
+                                    <a
+                                        href={job.applyUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: '7px',
+                                            padding: '10px 16px', borderRadius: '8px',
+                                            fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px',
+                                            color: 'var(--color-white-65)',
+                                            background: 'transparent',
+                                            border: '1px solid var(--color-border)',
+                                            textDecoration: 'none', transition: 'all 0.2s',
+                                        }}
+                                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-white-40)'; e.currentTarget.style.color = 'var(--color-white)'; }}
+                                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.color = 'var(--color-white-65)'; }}
+                                    >
+                                        <FaExternalLinkAlt style={{ fontSize: '11px' }} />
+                                        Apply on Site
+                                    </a>
+                                )}
                             </div>
                         </div>
                     </div>
-                </div>
-            </main >
-        </div >
-    );
-};
 
-export default JobPage;
+                    {/* ── Two-column layout ── */}
+                    <div className="job-layout" style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
+
+                        {/* Left — description */}
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '24px', minWidth: 0 }}>
+
+                            {/* Description */}
+                            <div style={card}>
+                                <h2 style={{
+                                    fontFamily: 'var(--font-display)', fontWeight: 700,
+                                    fontSize: '16px', color: 'var(--color-white)',
+                                    margin: '0 0 20px', letterSpacing: '-0.01em',
+                                }}>
+                                    Job Description
+                                </h2>
+                                <div style={{
+                                    fontFamily: 'var(--font-body)', fontSize: '14px', lineHeight: 1.8,
+                                    color: 'var(--color-white-65)', whiteSpace: 'pre-wrap',
+                                }}>
+                                    {job.description || 'No description provided.'}
+                                </div>
+                            </div>
+
+                            {/* Skills */}
+                            {job.skills && job.skills.length > 0 && (
+                                <div style={card}>
+                                    <h2 style={{
+                                        fontFamily: 'var(--font-display)', fontWeight: 700,
+                                        fontSize: '16px', color: 'var(--color-white)',
+                                        margin: '0 0 16px', letterSpacing: '-0.01em',
+                                    }}>
+                                        Required Skills
+                                    </h2>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                        {job.skills.map((skill, i) => (
+                                            <span key={i} style={{
+                                                fontFamily: 'var(--font-display)', fontWeight: 700,
+                                                fontSize: '11px', letterSpacing: '0.06em',
+                                                textTransform: 'uppercase',
+                                                background: 'var(--color-orange-dim)',
+                                                color: 'var(--color-orange)',
+                                                border: '1px solid var(--color-orange-border)',
+                                                padding: '5px 12px', borderRadius: '999px',
+                                            }}>
+                                                {skill}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Right sidebar — job overview */}
+                        <div className="job-sidebar" style={{ width: '300px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+                            {/* Overview */}
+                            <div style={card}>
+                                <h2 style={{
+                                    fontFamily: 'var(--font-display)', fontWeight: 700,
+                                    fontSize: '14px', color: 'var(--color-white)',
+                                    margin: '0 0 20px', letterSpacing: '-0.01em',
+                                }}>
+                                    Job Overview
+                                </h2>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                    {[
+                                        { icon: <FaCalendarAlt />, label: 'Posted', value: formatDate(job.postedAt) },
+                                        { icon: <FaBriefcase />, label: 'Job Type', value: job.employmentType || 'Full-time' },
+                                        { icon: <FaDollarSign />, label: 'Salary', value: formatSalary() },
+                                        { icon: <FaMapMarkerAlt />, label: 'Location', value: job.location || 'Not specified' },
+                                        { icon: <FaLayerGroup />, label: 'Category', value: job.jobCategory || '—' },
+                                        { icon: <FaLink />, label: 'Source', value: job.source || '—' },
+                                    ].map(({ icon, label, value }) => (
+                                        <div key={label} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                                            <div style={{
+                                                width: '32px', height: '32px', borderRadius: '8px',
+                                                background: 'var(--color-surface-3)',
+                                                border: '1px solid var(--color-border)',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                color: 'var(--color-white-40)', fontSize: '12px', flexShrink: 0,
+                                            }}>
+                                                {icon}
+                                            </div>
+                                            <div>
+                                                <div style={labelStyle}>{label}</div>
+                                                <div style={valueStyle}>{value}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Applied? track it card */}
+                            {!applied && (
+                                <div style={{
+                                    background: 'linear-gradient(135deg, rgba(249,115,22,0.14) 0%, rgba(249,115,22,0.05) 100%)',
+                                    border: '1px solid var(--color-orange-border)',
+                                    borderRadius: '14px', padding: '20px', textAlign: 'center',
+                                }}>
+                                    <p style={{
+                                        fontFamily: 'var(--font-display)', fontWeight: 700,
+                                        fontSize: '14px', color: 'var(--color-white)', margin: '0 0 8px',
+                                    }}>
+                                        Applied externally?
+                                    </p>
+                                    <p style={{
+                                        fontFamily: 'var(--font-body)', fontSize: '13px',
+                                        color: 'var(--color-white-65)', margin: '0 0 16px', lineHeight: 1.6,
+                                    }}>
+                                        Track this application → in your pipeline.
+                                    </p>
+                                    <button
+                                        onClick={() => handleStatusChange('APPLIED')}
+                                        style={{
+                                            fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px',
+                                            color: '#000', background: 'var(--color-orange)',
+                                            border: 'none', borderRadius: '8px',
+                                            padding: '10px 20px', cursor: 'pointer',
+                                            transition: 'background 0.2s',
+                                        }}
+                                        onMouseEnter={e => e.currentTarget.style.background = 'var(--color-orange-hover)'}
+                                        onMouseLeave={e => e.currentTarget.style.background = 'var(--color-orange)'}
+                                    >
+                                        Mark as Applied →
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    );
+}

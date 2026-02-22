@@ -10,6 +10,7 @@ import Profile from './pages/Profile';
 import AppliedJobsPage from './pages/AppliedJobsPage';
 import SavedJobsPage from './pages/SavedJobsPage';
 import LandingPage from './pages/LandingPage';
+import NewLandingPage from './pages/NewLandingPage';
 
 function App() {
   return (
@@ -18,7 +19,8 @@ function App() {
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<NewLandingPage />} />
+        <Route path="/old-landing" element={<LandingPage />} />
 
         {/* Protected Routes */}
         <Route
