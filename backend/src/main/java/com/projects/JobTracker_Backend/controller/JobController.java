@@ -196,9 +196,13 @@ public class JobController {
     @GetMapping("/saved")
     public ResponseEntity<Page<JobDTO>> getSavedJobs(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "savedAt") String sort,
+            @RequestParam(defaultValue = "DESC") String direction
     ) {
-        Pageable pageable = PageRequest.of(page, size);
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC") ?
+                Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
         Page<JobDTO> jobs = jobService.getSavedJobs(pageable, securityUtil.getCurrentUser());
         return ResponseEntity.ok(jobs);
     }
@@ -259,11 +263,15 @@ public class JobController {
     public ResponseEntity<Page<JobDTO>> getAppliedJobs(
             @RequestParam(required = false) String statuses,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "appliedAt") String sort,
+            @RequestParam(defaultValue = "DESC") String direction
     ) {
         List<AppliedJob.ApplicationStatus> statusList = parseEnumList(statuses, AppliedJob.ApplicationStatus.class);
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "appliedAt"));
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC") ?
+                Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
         Page<JobDTO> jobs = jobService.getAppliedJobs(statusList, pageable, securityUtil.getCurrentUser());
         return ResponseEntity.ok(jobs);
     }

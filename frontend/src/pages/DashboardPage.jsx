@@ -51,8 +51,10 @@ export default function DashboardPage() {
                 setStats(sr.json ? await sr.json() : sr);
                 const ad = ar.json ? await ar.json() : ar;
                 const sd = svr.json ? await svr.json() : svr;
-                setAppliedJobs(ad.content || ad || []);
-                setSavedJobs(sd.content || sd || []);
+                const appliedArr = ad.content || (Array.isArray(ad) ? ad : []);
+                const savedArr = sd.content || (Array.isArray(sd) ? sd : []);
+                setAppliedJobs(appliedArr);
+                setSavedJobs(savedArr);
             } catch (e) {
                 console.error(e);
             } finally {
