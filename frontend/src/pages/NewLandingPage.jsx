@@ -170,7 +170,7 @@ function Navbar({ scrolled }) {
                         onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-orange-hover)'; e.currentTarget.style.transform = 'scale(1.02)'; }}
                         onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-orange)'; e.currentTarget.style.transform = 'scale(1)'; }}
                     >
-                        Browse Jobs →
+                        Dashboard
                     </Link>
                 ) : (
                     <>
