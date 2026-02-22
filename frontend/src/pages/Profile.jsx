@@ -231,8 +231,6 @@ export default function Profile() {
                 {/* ── Header ── */}
                 <AppHeader left={
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)' }}>
-                        <span>Settings</span>
-                        <span>/</span>
                         <span style={{ color: 'var(--color-white-65)' }}>Profile</span>
                     </div>
                 } />

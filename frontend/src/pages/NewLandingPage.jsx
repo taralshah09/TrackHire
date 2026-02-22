@@ -1,7 +1,10 @@
 import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaBolt, FaBullseye, FaClipboardList, FaChartBar } from 'react-icons/fa';
+import { FaBolt, FaBullseye, FaClipboardList, FaChartBar, FaGithub, FaStar } from 'react-icons/fa';
 import Cookies from 'js-cookie';
+
+const GITHUB_REPO = 'https://github.com/taralshah09/TrackHire';
+const AUTHOR_URL = 'https://taralshah.vercel.app/';
 
 /* ─────────────────────────────────────────
    Lazy-load Spline to avoid blocking render
@@ -161,8 +164,42 @@ function Navbar({ scrolled }) {
                 <a href="#testimonials" style={navLinkStyle}>Testimonials</a>
             </div>
 
-            {/* Auth actions — swap based on login state */}
-            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+            {/* Right side — GitHub star + auth */}
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+
+                {/* GitHub star button */}
+                <a
+                    href={GITHUB_REPO}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '6px',
+                        fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px',
+                        color: 'var(--color-white-65)',
+                        background: 'var(--color-surface-2)',
+                        border: '1px solid var(--color-border)',
+                        borderRadius: '8px',
+                        padding: '7px 14px',
+                        textDecoration: 'none',
+                        transition: 'border-color 0.2s, color 0.2s, background 0.2s',
+                        whiteSpace: 'nowrap',
+                    }}
+                    onMouseEnter={e => {
+                        e.currentTarget.style.borderColor = 'var(--color-orange-border)';
+                        e.currentTarget.style.color = 'var(--color-orange)';
+                        e.currentTarget.style.background = 'var(--color-orange-dim)';
+                    }}
+                    onMouseLeave={e => {
+                        e.currentTarget.style.borderColor = 'var(--color-border)';
+                        e.currentTarget.style.color = 'var(--color-white-65)';
+                        e.currentTarget.style.background = 'var(--color-surface-2)';
+                    }}
+                >
+                    <FaStar style={{ fontSize: '12px' }} />
+                    Star us on GitHub
+                </a>
+
+                {/* Auth actions — swap based on login state */}
                 {isLoggedIn ? (
                     <Link
                         to="/dashboard"
@@ -174,9 +211,10 @@ function Navbar({ scrolled }) {
                     </Link>
                 ) : (
                     <>
-                        <Link to="/login" style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '14px', color: 'var(--color-white-65)', textDecoration: 'none', transition: 'color 0.2s' }}
-                            onMouseEnter={e => e.target.style.color = 'var(--color-white)'}
-                            onMouseLeave={e => e.target.style.color = 'var(--color-white-65)'}>
+                        <Link to="/login"
+                            style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '14px', color: 'var(--color-white-65)', textDecoration: 'none', transition: 'color 0.2s' }}
+                            onMouseEnter={e => e.currentTarget.style.color = 'var(--color-white)'}
+                            onMouseLeave={e => e.currentTarget.style.color = 'var(--color-white-65)'}>
                             Log in
                         </Link>
                         <Link to="/register" style={primaryBtnStyle}
@@ -676,19 +714,39 @@ function Footer() {
                             fontSize: '13px',
                             color: 'var(--color-white-40)',
                             lineHeight: 1.65,
-                            margin: '0 0 16px'
+                            margin: '0 0 20px'
                         }}>
                             Track every opportunity.<br />Miss nothing. Apply smarter.
                         </p>
 
-                        <p style={{
-                            fontFamily: 'var(--font-body)',
-                            fontSize: '12px',
-                            color: 'var(--color-white-20)',
-                            margin: 0
-                        }}>
-                            © 2026 TrackHire. All rights reserved.
-                        </p>
+                        {/* GitHub button */}
+                        <a
+                            href={GITHUB_REPO}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                                display: 'inline-flex', alignItems: 'center', gap: '8px',
+                                fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px',
+                                color: 'var(--color-white-65)',
+                                background: 'var(--color-surface-3)',
+                                border: '1px solid var(--color-border)',
+                                borderRadius: '8px',
+                                padding: '9px 16px',
+                                textDecoration: 'none',
+                                transition: 'border-color 0.2s, color 0.2s',
+                            }}
+                            onMouseEnter={e => {
+                                e.currentTarget.style.borderColor = 'var(--color-orange-border)';
+                                e.currentTarget.style.color = 'var(--color-orange)';
+                            }}
+                            onMouseLeave={e => {
+                                e.currentTarget.style.borderColor = 'var(--color-border)';
+                                e.currentTarget.style.color = 'var(--color-white-65)';
+                            }}
+                        >
+                            <FaGithub style={{ fontSize: '15px' }} />
+                            View on GitHub
+                        </a>
                     </div>
 
                     {/* Right — Quote */}
@@ -697,7 +755,7 @@ function Footer() {
                         fontFamily: 'var(--font-body)',
                         fontSize: '14px',
                         lineHeight: 1.7,
-                        color: 'var(--color-white-60)',
+                        color: 'rgba(255,255,255,0.45)',
                         fontStyle: 'italic'
                     }}>
                         “Change will not come if we wait for some other person or some other time.
@@ -706,12 +764,53 @@ function Footer() {
                             marginTop: '12px',
                             fontStyle: 'normal',
                             fontWeight: 600,
-                            color: 'var(--color-white-80)'
+                            color: 'rgba(255,255,255,0.6)'
                         }}>
                             — Barack Obama
                         </div>
                     </div>
 
+                </div>
+
+                {/* Bottom bar */}
+                <div style={{
+                    paddingTop: '24px',
+                    borderTop: '1px solid var(--color-border)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '12px',
+                }}>
+                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--color-white-20)', margin: 0 }}>
+                        © 2026 TrackHire. All rights reserved.
+                    </p>
+                    <a
+                        href={AUTHOR_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                            display: 'inline-flex', alignItems: 'center', gap: '6px',
+                            fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '12px',
+                            color: 'var(--color-white-65)',
+                            background: 'var(--color-surface-3)',
+                            border: '1px solid var(--color-border)',
+                            borderRadius: '7px',
+                            padding: '7px 14px',
+                            textDecoration: 'none',
+                            transition: 'border-color 0.2s, color 0.2s',
+                        }}
+                        onMouseEnter={e => {
+                            e.currentTarget.style.borderColor = 'var(--color-orange-border)';
+                            e.currentTarget.style.color = 'var(--color-orange)';
+                        }}
+                        onMouseLeave={e => {
+                            e.currentTarget.style.borderColor = 'var(--color-border)';
+                            e.currentTarget.style.color = 'var(--color-white-65)';
+                        }}
+                    >
+                        Made by Taral Shah →
+                    </a>
                 </div>
 
             </div>

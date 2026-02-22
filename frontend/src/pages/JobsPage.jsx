@@ -51,7 +51,7 @@ export default function JobsPage() {
     };
 
     const inputStyle = (name) => ({
-        flex: 1, minWidth: '160px',
+        width: '100%',
         padding: '10px 14px 10px 36px',
         background: 'var(--color-surface-3)',
         border: `1px solid ${inputFocus === name ? 'var(--color-orange)' : 'var(--color-border)'}`,
@@ -75,7 +75,7 @@ export default function JobsPage() {
         <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
             <style>{`
                 @media (max-width: 768px) {
-                    .jobs-search-row { flex-direction: column !important; }
+                    .jobs-search-grid { grid-template-columns: 1fr !important; }
                     .jobs-grid { grid-template-columns: 1fr !important; }
                     .jobs-main-inner { padding: 72px 16px 24px !important; }
                 }
@@ -139,13 +139,24 @@ export default function JobsPage() {
                             padding: '20px',
                             marginBottom: '32px',
                         }}>
-                            <div className="jobs-search-row" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                            {/* 2-column grid — all inputs equal width */}
+                            <div
+                                className="jobs-search-grid"
+                                style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: '1fr 1fr',
+                                    gap: '10px',
+                                    marginBottom: '12px',
+                                }}
+                            >
                                 {SEARCH_FIELDS.map(({ key, icon, placeholder }) => (
-                                    <div key={key} style={{ position: 'relative', flex: '1 1 180px' }}>
+                                    <div key={key} style={{ position: 'relative' }}>
                                         <span style={{
                                             position: 'absolute', left: '10px', top: '50%',
                                             transform: 'translateY(-50%)',
                                             fontSize: '14px', pointerEvents: 'none',
+                                            color: inputFocus === key ? 'var(--color-orange)' : 'var(--color-white-40)',
+                                            transition: 'color 0.2s',
                                         }}>{icon}</span>
                                         <input
                                             type="text"
@@ -160,20 +171,24 @@ export default function JobsPage() {
                                     </div>
                                 ))}
                             </div>
+
+                            {/* Full-width search button */}
                             <button
                                 onClick={fetchJobs}
                                 style={{
+                                    width: '100%',
                                     background: 'var(--color-orange)',
                                     border: 'none', borderRadius: '8px',
                                     color: '#000',
-                                    fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px',
-                                    padding: '10px 24px', cursor: 'pointer',
+                                    fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '14px',
+                                    padding: '11px 24px', cursor: 'pointer',
                                     transition: 'background 0.2s, transform 0.15s',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                                 }}
                                 onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-orange-hover)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
                                 onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-orange)'; e.currentTarget.style.transform = 'translateY(0)'; }}
                             >
-                                Search Jobs →
+                                <FaSearch style={{ fontSize: '13px' }} /> Search Jobs
                             </button>
                         </div>
 

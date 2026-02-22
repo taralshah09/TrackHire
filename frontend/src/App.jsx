@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute';
+import GuestRoute from './components/GuestRoute';
 import LoginPage from './pages/LoginPage';
 import Register from './pages/RegisterPage';
 import JobsPage from './pages/JobsPage';
@@ -16,11 +17,10 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Public Routes */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<Register />} />
+        {/* Public (guest-only) Routes — redirect to /dashboard if already logged in */}
+        <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
+        <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
         <Route path="/" element={<NewLandingPage />} />
-        <Route path="/old-landing" element={<LandingPage />} />
 
         {/* Protected Routes */}
         <Route

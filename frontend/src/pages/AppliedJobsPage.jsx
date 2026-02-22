@@ -55,11 +55,7 @@ export default function AppliedJobsPage() {
                 {/* Header */}
                 <AppHeader left={
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)' }}>
-                        <Link to="/dashboard" style={{ color: 'var(--color-white-40)', textDecoration: 'none' }}
-                            onMouseEnter={e => e.target.style.color = 'var(--color-orange)'}
-                            onMouseLeave={e => e.target.style.color = 'var(--color-white-40)'}
-                        >Dashboard</Link>
-                        <span>/</span>
+
                         <span style={{ color: 'var(--color-white-65)' }}>Applied Jobs</span>
                     </div>
                 } />
