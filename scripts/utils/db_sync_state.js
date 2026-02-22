@@ -17,6 +17,8 @@ const pool = new Pool({
     idleTimeoutMillis: 10000,
     ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
     options: `-c search_path=${DB_SCHEMA}`,
+    // Force IPv4 — Railway resolves hostnames to IPv6 which is unreachable in cron containers
+    family: 4,
 });
 
 const TABLE_NAME = "job_sync_history";

@@ -49,6 +49,7 @@ async function runAdzunaPipeline(fullSync = false) {
     } catch (err) {
         console.error(`Pipeline ${pipelineName} failed:`, err);
         if (syncId) await dbSync.failSync(syncId, err.message);
+        throw err; // propagate so main() can set exit code 1
     }
 }
 
@@ -78,6 +79,7 @@ async function runSkillhubPipeline() {
     } catch (err) {
         console.error(`Pipeline ${pipelineName} failed:`, err);
         if (syncId) await dbSync.failSync(syncId, err.message);
+        throw err; // propagate so main() can set exit code 1
     }
 }
 
