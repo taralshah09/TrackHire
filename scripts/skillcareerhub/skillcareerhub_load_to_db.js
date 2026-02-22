@@ -6,20 +6,20 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const DB_SCHEMA = process.env.DB_SCHEMA || "jobs_tracker_v1";
 
-const pool = new Pool({
+const dbConfig = {
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    port: process.env.DB_PORT,
-    max: 5,
-    idleTimeoutMillis: 10000,
-    ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
-});
+    port: parseInt(process.env.DB_PORT),
+    max: 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
+    ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false
+};
 
-pool.on("connect", (client) => {
-    client.query(`SET search_path TO ${DB_SCHEMA}`);
-});
+
+
 
 const BATCH_SIZE = 500;
 
@@ -39,11 +39,14 @@ async function run(filePath) {
     console.log(`Loaded ${jobs.length} jobs from ${filePath}.`);
 
     const pool = new Pool(dbConfig);
-    const client = await pool.connect();
+    pool.on("connect", (client) => {
+        client.query(`SET search_path TO ${process.env.DB_SCHEMA}`);
+    });
     console.log("Connected to database.");
 
     let totalInserted = 0;
 
+    const client = await pool.connect();
     try {
         for (let i = 0; i < jobs.length; i += BATCH_SIZE) {
             const batch = jobs.slice(i, i + BATCH_SIZE);

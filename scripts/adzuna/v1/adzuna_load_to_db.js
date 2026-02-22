@@ -6,20 +6,17 @@ dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 const DB_SCHEMA = process.env.DB_SCHEMA || "jobs_tracker_v1";
 
-const pool = new Pool({
+const DB_CONFIG = {
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    port: process.env.DB_PORT,
-    max: 5,
-    idleTimeoutMillis: 10000,
-    ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
-});
-
-pool.on("connect", (client) => {
-    client.query(`SET search_path TO ${DB_SCHEMA}`);
-});
+    port: parseInt(process.env.DB_PORT) || 5432,
+    max: 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
+    ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false
+};
 
 const BATCH_SIZE = 500;
 const TABLE_NAME = "jobs";
@@ -98,13 +95,16 @@ async function run(filePath) {
     const jobs = await fs.readJson(filePath);
 
     const pool = new Pool(DB_CONFIG);
-    const client = await pool.connect();
+    pool.on("connect", (client) => {
+        client.query(`SET search_path TO ${process.env.DB_SCHEMA}`);
+    });
 
     console.log(`📦 Loading ${jobs.length} jobs from ${filePath}...`);
     let totalInserted = 0;
     let totalUpdated = 0;
     let totalSkipped = 0;
 
+    const client = await pool.connect();
     try {
         for (let i = 0; i < jobs.length; i += BATCH_SIZE) {
             const batch = jobs.slice(i, i + BATCH_SIZE);
@@ -182,7 +182,7 @@ async function run(filePath) {
         console.error("Error loading jobs:", err);
         throw err;
     } finally {
-        client.release();
+        if (client) client.release();
         await pool.end();
     }
 }
