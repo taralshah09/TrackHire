@@ -6,18 +6,20 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const DB_SCHEMA = process.env.DB_SCHEMA || "jobs_tracker_v1";
 
-const dbConfig = {
+const pool = new Pool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    port: parseInt(process.env.DB_PORT),
-    max: 20,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
+    port: process.env.DB_PORT,
+    max: 5,
+    idleTimeoutMillis: 10000,
     ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
-    options: `-c search_path=${DB_SCHEMA}`,
-};
+});
+
+pool.on("connect", (client) => {
+    client.query(`SET search_path TO ${DB_SCHEMA}`);
+});
 
 const BATCH_SIZE = 500;
 

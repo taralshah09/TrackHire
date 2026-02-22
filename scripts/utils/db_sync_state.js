@@ -18,7 +18,10 @@ const pool = new Pool({
     max: 5,
     idleTimeoutMillis: 10000,
     ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
-    options: `-c search_path=${DB_SCHEMA}`,
+});
+
+pool.on("connect", (client) => {
+    client.query(`SET search_path TO ${DB_SCHEMA}`);
 });
 
 const TABLE_NAME = "job_sync_history";
