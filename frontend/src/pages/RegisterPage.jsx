@@ -61,7 +61,7 @@ export default function RegisterPage() {
         if (!validate()) return;
         setLoading(true);
         try {
-            const res = await fetch(import.meta.env.VITE_API_URL + '/auth/register', {
+            const res = await fetch("https://jobtracker-backend.onrender.com/api" + '/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -72,7 +72,7 @@ export default function RegisterPage() {
             const data = await res.json();
             if (res.ok) {
                 // Auto-login
-                const lr = await fetch(import.meta.env.VITE_API_URL + '/auth/login', {
+                const lr = await fetch("https://jobtracker-backend.onrender.com/api" + '/auth/login', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ loginIdentifier: formData.username, password: formData.password }),
                 });
