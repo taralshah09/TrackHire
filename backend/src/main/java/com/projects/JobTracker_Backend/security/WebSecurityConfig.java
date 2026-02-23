@@ -50,7 +50,8 @@ public class WebSecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable()) // Disable CSRF
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Enable CORS with global config
+                .cors(cors -> {
+                }) // Enable CORS with global config
                 .exceptionHandling(exceptionHandling ->
                         exceptionHandling.authenticationEntryPoint(unauthorizedHandler)
                 )

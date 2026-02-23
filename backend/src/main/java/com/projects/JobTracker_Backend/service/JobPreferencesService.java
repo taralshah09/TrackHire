@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 
 @Service
 @RequiredArgsConstructor
@@ -49,13 +48,16 @@ public class JobPreferencesService {
                 });
 
         if (request.getJobTitles() != null) {
-            prefs.setJobTitles(new HashSet<>(request.getJobTitles()));
+            prefs.getJobTitles().clear();
+            prefs.getJobTitles().addAll(request.getJobTitles());
         }
         if (request.getSkills() != null) {
-            prefs.setSkills(new HashSet<>(request.getSkills()));
+            prefs.getSkills().clear();
+            prefs.getSkills().addAll(request.getSkills());
         }
         if (request.getRoleTypes() != null) {
-            prefs.setRoleTypes(new HashSet<>(request.getRoleTypes()));
+            prefs.getRoleTypes().clear();
+            prefs.getRoleTypes().addAll(request.getRoleTypes());
         }
         if (request.getEmailEnabled() != null) {
             prefs.setEmailEnabled(request.getEmailEnabled());
