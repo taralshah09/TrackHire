@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FaMapMarkerAlt, FaBriefcase, FaDollarSign } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaBriefcase } from 'react-icons/fa';
 
 /* Brand-accurate status badge styles per guidelines */
 const STATUS_STYLES = {
@@ -18,13 +18,7 @@ function getStatusStyle(status) {
     return STATUS_STYLES[status.toUpperCase().replace(' ', '_')] || STATUS_STYLES.APPLIED;
 }
 
-// function formatSalary(min, max) {
-//     const fmt = (n) => n >= 1000 ? `$${Math.round(n / 1000)}K` : `$${n}`;
-//     if (min > 0 && max > 0) return `${fmt(min)}–${fmt(max)}`;
-//     if (min > 0) return `${fmt(min)}+`;
-//     if (max > 0) return `Up to ${fmt(max)}`;
-//     return null;
-// }
+
 
 function formatPostedDate(dateString) {
     if (!dateString) return 'Recently';
@@ -44,7 +38,7 @@ export default function JobCard({ job }) {
         title = 'Software Engineer',
         company, companyName,
         location = 'Remote',
-        minSalary = 0, maxSalary = 0,
+
         employmentType,
         postedAt,
         isApplied = false,
@@ -54,7 +48,7 @@ export default function JobCard({ job }) {
 
     const companyLabel = companyName || company || 'Company';
     const statusStyle = isApplied && applicationStatus ? getStatusStyle(applicationStatus) : null;
-    const salary = formatSalary(minSalary, maxSalary);
+
 
     return (
         <div
@@ -133,7 +127,7 @@ export default function JobCard({ job }) {
                 {companyLabel}
             </p>
 
-            {/* Meta: location, type, salary */}
+            {/* Meta: location, type */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '16px', flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ fontSize: '12px', color: 'var(--color-white-40)', display: 'flex' }}><FaMapMarkerAlt /></span>
@@ -145,12 +139,6 @@ export default function JobCard({ job }) {
                         <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-65)' }}>{employmentType}</span>
                     </div>
                 )}
-                {/* {salary && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '12px', color: 'var(--color-white-40)', display: 'flex' }}><FaDollarSign /></span>
-                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-white-65)', letterSpacing: '0.02em' }}>{salary}</span>
-                    </div>
-                )} */}
             </div>
 
             {/* Divider */}

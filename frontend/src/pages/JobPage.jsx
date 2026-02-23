@@ -5,7 +5,7 @@ import AppHeader from '../components/AppHeader';
 import api from '../service/ApiService';
 import {
     FaArrowLeft, FaBookmark, FaRegBookmark, FaExternalLinkAlt,
-    FaMapMarkerAlt, FaBriefcase, FaDollarSign, FaCalendarAlt,
+    FaMapMarkerAlt, FaBriefcase, FaCalendarAlt,
     FaLayerGroup, FaLink, FaChevronDown, FaCheck, FaTimes,
 } from 'react-icons/fa';
 
@@ -127,14 +127,6 @@ export default function JobPage() {
     };
 
     /* ── formatters ── */
-    // const formatSalary = () => {
-    //     if (!job) return 'Not disclosed';
-    //     const { minSalary = 0, maxSalary = 0 } = job;
-    //     if (minSalary > 0 && maxSalary > 0) return `₹${minSalary.toLocaleString()} – ₹${maxSalary.toLocaleString()}`;
-    //     if (minSalary > 0) return `₹${minSalary.toLocaleString()}+`;
-    //     if (maxSalary > 0) return `Up to ₹${maxSalary.toLocaleString()}`;
-    //     return 'Not disclosed';
-    // };
 
     const formatDate = (ds) => {
         if (!ds) return 'Recently';
@@ -540,7 +532,7 @@ export default function JobPage() {
                                     {[
                                         { icon: <FaCalendarAlt />, label: 'Posted', value: formatDate(job.postedAt) },
                                         { icon: <FaBriefcase />, label: 'Job Type', value: job.employmentType || 'Full-time' },
-                                        // { icon: <FaDollarSign />, label: 'Salary', value: formatSalary() },
+
                                         { icon: <FaMapMarkerAlt />, label: 'Location', value: job.location || 'Not specified' },
                                         { icon: <FaLayerGroup />, label: 'Category', value: job.jobCategory || '—' },
                                         { icon: <FaLink />, label: 'Source', value: job.source || '—' },

@@ -133,7 +133,6 @@ export default function JobsPage() {
                                     }}
                                 >
                                     <option value="postedAt">Newest First</option>
-                                    <option value="salary">Salary</option>
                                     <option value="relevance">Relevant</option>
                                 </select>
                             </div>
