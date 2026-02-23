@@ -5,7 +5,6 @@ import com.projects.JobTracker_Backend.repository.RefreshTokenRepository;
 import com.projects.JobTracker_Backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -23,14 +22,9 @@ public class RefreshTokenService {
         this.userRepository = userRepo;
     }
 
-    @Transactional
     public RefreshToken createRefreshToken(Long userId) {
-        var user = userRepository.findById(userId).get();
-        // Remove any existing refresh token for this user (e.g. stale token after cookie clear)
-        refreshTokenRepository.deleteByUser(user);
-
         var token = new RefreshToken();
-        token.setUser(user);
+        token.setUser(userRepository.findById(userId).get());
         token.setExpiryDate(Instant.now().plusMillis(refreshTokenDurationMs));
         token.setToken(UUID.randomUUID().toString());
         return refreshTokenRepository.save(token);
