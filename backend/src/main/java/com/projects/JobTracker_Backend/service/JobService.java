@@ -192,6 +192,7 @@ public class JobService {
         savedJobRepository.deleteByUserIdAndJobId(user.getId(), jobId);
     }
 
+    @Transactional(readOnly = true)
     public Page<JobDTO> getSavedJobs(Pageable pageable, User user) {
         Page<SavedJob> savedJobs = savedJobRepository.findByUserIdOrderBySavedAtDesc(user.getId(), pageable);
         return savedJobs.map(savedJob -> {
@@ -286,6 +287,7 @@ public class JobService {
     /**
      * Get all applied jobs with optional status filter
      */
+    @Transactional(readOnly = true)
     public Page<JobDTO> getAppliedJobs(List<AppliedJob.ApplicationStatus> statuses,
                                        Pageable pageable, User user) {
         Page<AppliedJob> appliedJobs;
