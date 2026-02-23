@@ -109,10 +109,10 @@ async function runScheduler() {
     console.log("\n==============================================");
 
     const istNow = getISTTime();
-    const hour = istNow.getHours();
-    const minute = istNow.getMinutes();
+    const hour = istNow.getUTCHours();
+    const minute = istNow.getUTCMinutes();
 
-    console.log(`Current IST time: ${istNow.toISOString()}`);
+    console.log(`Current IST time: ${hour}:${String(minute).padStart(2, '0')} (${istNow.toISOString()})`);
 
     // Always ping Render
     await pingRenderServer();
@@ -126,7 +126,7 @@ async function runScheduler() {
     }
 
     // 🔹 18:00 IST → Emails
-    if (hour === 18 && minute < 10) {
+    if (hour === 18 && minute < 40) {
         console.log("⏰ Running email pipeline (18:00 IST window)");
 
         await runEmails();

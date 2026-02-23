@@ -249,19 +249,27 @@ export default function Profile() {
     }));
 
     const handleSaveEmailPrefs = async () => {
+        console.log('[handleSaveEmailPrefs] called, userId =', userId);
         if (!userId) return;
         setSavingPrefs(true);
         try {
-            const res = await api.saveJobPreferences(userId, {
+            const payload = {
                 jobTitles: emailPrefs.jobTitles,
                 skills: emailPrefs.skills,
                 roleTypes: emailPrefs.roleTypes,
                 emailEnabled: emailPrefs.emailEnabled,
-            });
+            };
+            console.log('[handleSaveEmailPrefs] payload =', JSON.stringify(payload));
+            const res = await api.saveJobPreferences(userId, payload);
+            console.log('[handleSaveEmailPrefs] response status =', res.status);
             if (res.ok) toast.success('Email preferences saved!');
-            else toast.error('Failed to save email preferences.');
+            else {
+                const errBody = await res.text();
+                console.error('[handleSaveEmailPrefs] error body =', errBody);
+                toast.error('Failed to save email preferences.');
+            }
         } catch (e) {
-            console.error(e);
+            console.error('[handleSaveEmailPrefs] exception =', e);
             toast.error('An error occurred.');
         } finally {
             setSavingPrefs(false);

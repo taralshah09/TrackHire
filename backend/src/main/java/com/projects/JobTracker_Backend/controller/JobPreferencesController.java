@@ -4,12 +4,14 @@ import com.projects.JobTracker_Backend.dto.JobPreferencesDTO;
 import com.projects.JobTracker_Backend.dto.SaveJobPreferencesRequest;
 import com.projects.JobTracker_Backend.service.JobPreferencesService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/preferences")
 @RequiredArgsConstructor
+@Slf4j
 public class JobPreferencesController {
 
     private final JobPreferencesService jobPreferencesService;
@@ -34,7 +36,11 @@ public class JobPreferencesController {
     public ResponseEntity<JobPreferencesDTO> savePreferences(
             @PathVariable Long userId,
             @RequestBody SaveJobPreferencesRequest request) {
+        log.info(">>> PUT /api/preferences/{} — request: titles={}, skills={}, roleTypes={}, emailEnabled={}",
+                userId, request.getJobTitles(), request.getSkills(), request.getRoleTypes(), request.getEmailEnabled());
         JobPreferencesDTO dto = jobPreferencesService.savePreferences(userId, request);
+        log.info("<<< PUT /api/preferences/{} — saved OK: titles={}, skills={}, roleTypes={}",
+                userId, dto.getJobTitles(), dto.getSkills(), dto.getRoleTypes());
         return ResponseEntity.ok(dto);
     }
 }
