@@ -107,13 +107,7 @@ async function run() {
     console.log("=".repeat(50) + "\n");
 
     // Verify SMTP before we start (fail fast)
-    try {
-        await verifyConnection();
-    } catch (err) {
-        console.error("❌ SMTP connection failed. Aborting.", err.message);
-        await pool.end();
-        process.exit(1);
-    }
+    await verifyConnection();
 
     const limit = pLimit(EMAIL_CONCURRENCY);
     const stats = { sent: 0, skipped: 0, errors: 0, usersProcessed: 0 };
@@ -168,8 +162,7 @@ async function run() {
     console.log(`  Finished at     : ${new Date().toISOString()}`);
     console.log("=".repeat(50));
 
-    await pool.end();
-    process.exit(stats.errors > 0 ? 1 : 0);
+    return stats;
 }
 
-run();
+module.exports = { run };
