@@ -46,14 +46,19 @@ async function fetchUserBatch(afterId) {
                 u.id          AS user_id,
                 u.email,
                 u.username,
-                p.job_titles,
-                p.skills
+                COALESCE(array_agg(DISTINCT jt.title)     FILTER (WHERE jt.title     IS NOT NULL), '{}') AS job_titles,
+                COALESCE(array_agg(DISTINCT sk.skill)     FILTER (WHERE sk.skill     IS NOT NULL), '{}') AS skills,
+                COALESCE(array_agg(DISTINCT rt.role_type) FILTER (WHERE rt.role_type IS NOT NULL), '{}') AS role_types
              FROM users u
              JOIN user_job_preferences p ON p.user_id = u.id
+             LEFT JOIN user_job_preference_titles     jt ON jt.preference_id = p.id
+             LEFT JOIN user_job_preference_skills     sk ON sk.preference_id = p.id
+             LEFT JOIN user_job_preference_role_types rt ON rt.preference_id = p.id
              WHERE u.id > $1
                AND p.email_enabled = TRUE
                AND u.email IS NOT NULL
                AND u.account_enabled = TRUE
+             GROUP BY u.id, u.email, u.username
              ORDER BY u.id ASC
              LIMIT $2`,
             [afterId, USER_BATCH_SIZE]
@@ -69,13 +74,14 @@ async function fetchUserBatch(afterId) {
  * Returns a result object for stats tracking.
  */
 async function processUser(user) {
-    const { user_id, email, username, job_titles, skills } = user;
+    const { user_id, email, username, job_titles, skills, role_types } = user;
 
     try {
         const matchedJobs = await findJobsForUser(
             user_id,
             job_titles || [],
             skills || [],
+            role_types || [],
             MAX_JOBS_PER_EMAIL
         );
 
