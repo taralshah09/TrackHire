@@ -39,11 +39,19 @@ export default function JobsPage() {
         }
     };
 
-    useEffect(() => { fetchJobs(); }, [page, filters]);
+    useEffect(() => { fetchJobs(); }, [page]);
+
+    const handleSearch = () => {
+        if (page === 0) {
+            fetchJobs();
+        } else {
+            setPage(0); // triggers useEffect → fetchJobs
+        }
+
+    };
 
     const handleFilterChange = (key, value) => {
         setFilters(prev => ({ ...prev, [key]: value }));
-        setPage(0);
     };
 
     const handlePageChange = (newPage) => {
@@ -165,7 +173,7 @@ export default function JobsPage() {
                                             onChange={e => setFilters(prev => ({ ...prev, [key]: e.target.value }))}
                                             onFocus={() => setInputFocus(key)}
                                             onBlur={() => setInputFocus('')}
-                                            onKeyDown={e => e.key === 'Enter' && fetchJobs()}
+                                            onKeyDown={e => e.key === 'Enter' && handleSearch()}
                                             style={inputStyle(key)}
                                         />
                                     </div>
@@ -174,7 +182,7 @@ export default function JobsPage() {
 
                             {/* Full-width search button */}
                             <button
-                                onClick={fetchJobs}
+                                onClick={handleSearch}
                                 style={{
                                     width: '100%',
                                     background: 'var(--color-orange)',
