@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -36,12 +35,12 @@ public class UserProfile {
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_skills", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "skill")
-    private List<String> skills;
+    private Set<String> skills;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_locations", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "location")
-    private List<String> openToLocations;
+    private Set<String> openToLocations;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_social_links", joinColumns = @JoinColumn(name = "user_id"))

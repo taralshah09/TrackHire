@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -18,7 +17,7 @@ public class UserProfileDTO {
     private Integer yearsOfExperience;
     private String currentLocation;
     private Set<WorkType> openToWorkTypes;
-    private List<String> skills;
-    private List<String> openToLocations;
+    private Set<String> skills;
+    private Set<String> openToLocations;
     private Map<String, String> socialProfileLinks;
 }

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 @Service
 @RequiredArgsConstructor
@@ -48,13 +49,13 @@ public class JobPreferencesService {
                 });
 
         if (request.getJobTitles() != null) {
-            prefs.setJobTitles(new ArrayList<>(request.getJobTitles()));
+            prefs.setJobTitles(new HashSet<>(request.getJobTitles()));
         }
         if (request.getSkills() != null) {
-            prefs.setSkills(new ArrayList<>(request.getSkills()));
+            prefs.setSkills(new HashSet<>(request.getSkills()));
         }
         if (request.getRoleTypes() != null) {
-            prefs.setRoleTypes(new ArrayList<>(request.getRoleTypes()));
+            prefs.setRoleTypes(new HashSet<>(request.getRoleTypes()));
         }
         if (request.getEmailEnabled() != null) {
             prefs.setEmailEnabled(request.getEmailEnabled());
@@ -69,9 +70,9 @@ public class JobPreferencesService {
     private JobPreferencesDTO toDTO(UserJobPreferences p) {
         return new JobPreferencesDTO(
                 p.getUser().getId(),
-                p.getJobTitles(),
-                p.getSkills(),
-                p.getRoleTypes(),
+                new ArrayList<>(p.getJobTitles()),
+                new ArrayList<>(p.getSkills()),
+                new ArrayList<>(p.getRoleTypes()),
                 p.getEmailEnabled(),
                 p.getUpdatedAt()
         );

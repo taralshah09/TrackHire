@@ -8,8 +8,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "user_job_preferences")
@@ -40,7 +40,7 @@ public class UserJobPreferences {
         joinColumns = @JoinColumn(name = "preference_id")
     )
     @Column(name = "title")
-    private List<String> jobTitles = new ArrayList<>();
+    private Set<String> jobTitles = new HashSet<>();
 
     /**
      * Preferred skills — e.g. ["Java", "Docker", "AWS"].
@@ -51,7 +51,7 @@ public class UserJobPreferences {
         joinColumns = @JoinColumn(name = "preference_id")
     )
     @Column(name = "skill")
-    private List<String> skills = new ArrayList<>();
+    private Set<String> skills = new HashSet<>();
 
     /**
      * Desired role types — e.g. ["Intern", "Full-time", "Contract"].
@@ -62,7 +62,7 @@ public class UserJobPreferences {
         joinColumns = @JoinColumn(name = "preference_id")
     )
     @Column(name = "role_type")
-    private List<String> roleTypes = new ArrayList<>();
+    private Set<String> roleTypes = new HashSet<>();
 
     /**
      * Whether the user wants to receive email digests.
