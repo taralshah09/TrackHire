@@ -10,6 +10,9 @@ import com.projects.JobTracker_Backend.repository.JobRepository;
 import com.projects.JobTracker_Backend.repository.SavedJobRepository;
 import com.projects.JobTracker_Backend.specification.JobSpecification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -169,6 +172,10 @@ public class JobService {
     // ================== SAVED JOBS ==================
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "savedJobs", allEntries = true),
+            @CacheEvict(value = "userStats", key = "#user.id")
+    })
     public void saveJob(Long jobId, User user) {
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new RuntimeException("Job not found with id: " + jobId));
@@ -184,6 +191,10 @@ public class JobService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "savedJobs", allEntries = true),
+            @CacheEvict(value = "userStats", key = "#user.id")
+    })
     public void unsaveJob(Long jobId, User user) {
         if (!savedJobRepository.existsByUserIdAndJobId(user.getId(), jobId)) {
             throw new RuntimeException("Job not saved");
@@ -193,6 +204,7 @@ public class JobService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "savedJobs", key = "#user.id + '-' + #pageable.pageNumber")
     public Page<JobDTO> getSavedJobs(Pageable pageable, User user) {
         Page<SavedJob> savedJobs = savedJobRepository.findByUserIdOrderBySavedAtDesc(user.getId(), pageable);
         return savedJobs.map(savedJob -> {
@@ -224,6 +236,11 @@ public class JobService {
      * - This is a single unified endpoint for all status changes
      */
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "appliedJobs", allEntries = true),
+            @CacheEvict(value = "savedJobs", allEntries = true),
+            @CacheEvict(value = "userStats", key = "#user.id")
+    })
     public AppliedStatusDTO updateJobStatus(Long jobId, AppliedJob.ApplicationStatus status, User user) {
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new RuntimeException("Job not found with id: " + jobId));
@@ -256,6 +273,11 @@ public class JobService {
      * Job returns to "Not Applied" state
      */
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "appliedJobs", allEntries = true),
+            @CacheEvict(value = "savedJobs", allEntries = true),
+            @CacheEvict(value = "userStats", key = "#user.id")
+    })
     public void withdrawApplication(Long jobId, User user) {
         if (!appliedJobRepository.existsByUserIdAndJobId(user.getId(), jobId)) {
             throw new RuntimeException("No application found to withdraw");
@@ -288,6 +310,7 @@ public class JobService {
      * Get all applied jobs with optional status filter
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "appliedJobs", key = "#user.id + '-' + #pageable.pageNumber + '-' + (#statuses != null ? #statuses.toString() : 'all')")
     public Page<JobDTO> getAppliedJobs(List<AppliedJob.ApplicationStatus> statuses,
                                        Pageable pageable, User user) {
         Page<AppliedJob> appliedJobs;
@@ -310,6 +333,7 @@ public class JobService {
 
     // ================== USER STATISTICS ==================
 
+    @Cacheable(value = "userStats", key = "#user.id")
     public UserStatsDTO getUserStats(User user) {
         long totalSaved = savedJobRepository.countByUserId(user.getId());
         long totalApplied = appliedJobRepository.countByUserId(user.getId());

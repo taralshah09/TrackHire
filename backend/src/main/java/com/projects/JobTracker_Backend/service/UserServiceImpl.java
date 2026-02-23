@@ -10,6 +10,8 @@ import com.projects.JobTracker_Backend.model.User;
 import com.projects.JobTracker_Backend.model.UserProfile;
 import com.projects.JobTracker_Backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +30,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "users", key = "'id:' + #id")
     public UserDTO getUserById(Long id) {
         User user = userRepository.findByIdWithProfile(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
@@ -36,6 +39,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "users", key = "'username:' + #username")
     public UserDTO getUserByUsername(String username) {
         User user = userRepository.findByUsernameWithProfile(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
@@ -52,6 +56,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "users", allEntries = true)
     public UserDTO createUser(CreateUserRequest request) {
         // Check for duplicate username
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -89,6 +94,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "users", allEntries = true)
     public UserDTO updateUser(Long id, UpdateUserRequest request) {
         User user = userRepository.findByIdWithProfile(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
@@ -136,6 +142,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "users", allEntries = true)
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
