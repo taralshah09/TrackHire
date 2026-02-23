@@ -27,23 +27,23 @@ public class UserProfile {
     private Integer yearsOfExperience;
     private String currentLocation;
 
-    @ElementCollection(targetClass = WorkType.class)
+    @ElementCollection(targetClass = WorkType.class, fetch = FetchType.EAGER)
     @CollectionTable(name = "user_work_types", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "work_type")
     @Enumerated(EnumType.STRING)
     private Set<WorkType> openToWorkTypes;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_skills", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "skill")
     private List<String> skills;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_locations", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "location")
     private List<String> openToLocations;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_social_links", joinColumns = @JoinColumn(name = "user_id"))
     @MapKeyColumn(name = "platform")
     @Column(name = "url")
