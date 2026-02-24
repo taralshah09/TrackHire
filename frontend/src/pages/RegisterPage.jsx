@@ -31,7 +31,7 @@ function calcStrength(pw) {
 
 export default function RegisterPage() {
     const navigate = useNavigate();
-    const { login } = useAuth();
+    const { login, isAuthenticated } = useAuth();
 
     const [formData, setFormData] = useState({
         username: '', email: '', phoneNumber: '', password: '', confirmPassword: '',
@@ -41,6 +41,16 @@ export default function RegisterPage() {
     const [focused, setFocused] = useState('');
     const [strength, setStrength] = useState(0);
     const [errorMsg, setErrorMsg] = useState('');
+
+    // Manual guest redirection: if already logged in, go to dashboard.
+    // We use a local flag to avoid redirecting to dashboard during the registration flow itself.
+    const [isRegistering, setIsRegistering] = useState(false);
+
+    React.useEffect(() => {
+        if (isAuthenticated && !isRegistering) {
+            navigate('/dashboard', { replace: true });
+        }
+    }, [isAuthenticated, isRegistering, navigate]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -62,6 +72,7 @@ export default function RegisterPage() {
         if (!validate()) return;
         setErrorMsg('');
         setLoading(true);
+        setIsRegistering(true);
         try {
             const res = await fetch(import.meta.env.VITE_API_BASE_URL + '/auth/register', {
                 method: 'POST',
@@ -81,11 +92,13 @@ export default function RegisterPage() {
                 const ld = await lr.json();
                 if (lr.ok && ld.token && ld.refreshToken) {
                     login(ld);
-                    toast.success('Account created! Welcome to TrackHire.');
-                    navigate('/onboarding');
+                    // Keep isRegistering=true so the useEffect guard doesn't
+                    // redirect to /dashboard before this navigation happens.
+                    navigate('/onboarding', { replace: true });
+                    return; // exit early — don't reset isRegistering
                 } else {
-                    toast.success('Account created! Sign in to continue.');
                     navigate('/login');
+                    return;
                 }
             } else {
                 const msg = data.message || 'Registration failed.';
@@ -93,9 +106,10 @@ export default function RegisterPage() {
             }
         } catch {
             setErrorMsg('Something went wrong on our end. Refresh the page — your data is safe.');
-        } finally {
-            setLoading(false);
         }
+        // Only reached on error — reset flags so the user can retry
+        setLoading(false);
+        setIsRegistering(false);
     };
 
     const inputStyle = (name) => ({

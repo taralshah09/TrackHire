@@ -87,15 +87,15 @@ export default function OnboardingPage() {
             const res = await api.saveJobPreferences(userId, payload);
             if (res.ok) {
                 toast.success("You're all set! Edit your preferences anytime from your profile.");
-                navigate('/profile');
+                navigate('/dashboard');
             } else {
                 toast.error('Failed to save preferences. You can set them later in Profile.');
-                navigate('/profile');
+                navigate('/dashboard');
             }
         } catch (e) {
             console.error(e);
             toast.error('Something went wrong. You can set preferences later in Profile.');
-            navigate('/profile');
+            navigate('/dashboard');
         } finally {
             setSaving(false);
         }
@@ -103,7 +103,7 @@ export default function OnboardingPage() {
 
     const handleSkip = () => {
         toast('You can set your preferences anytime from your Profile.', { icon: '💡' });
-        navigate('/profile');
+        navigate('/dashboard');
     };
 
     /* ── Tag helpers ── */

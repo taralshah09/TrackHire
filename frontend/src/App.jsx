@@ -20,11 +20,12 @@ function App() {
       <Routes>
         {/* Public (guest-only) Routes — redirect to /dashboard if already logged in */}
         <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
-        <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
+        <Route path="/register" element={<Register />} />
         <Route path="/" element={<NewLandingPage />} />
 
         {/* Onboarding (post-registration) */}
-        <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
+        {/* <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} /> */}
+        <Route path="/onboarding" element={<OnboardingPage />} />
 
         {/* Protected Routes */}
         <Route
