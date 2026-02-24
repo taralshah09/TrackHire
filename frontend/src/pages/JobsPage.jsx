@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import AppHeader from '../components/AppHeader';
 import JobCard from '../components/JobCard';
@@ -6,19 +7,52 @@ import api from '../service/ApiService';
 import Cookies from 'js-cookie';
 import { FaSearch, FaBuilding, FaBolt, FaMapMarkerAlt } from 'react-icons/fa';
 
+// Tab configuration — All / Intern / Full-Time
+const JOB_TABS = [
+    { key: 'all', label: 'All', apiValue: null },
+    { key: 'intern', label: 'Intern', apiValue: 'INTERNSHIP' },
+    { key: 'fulltime', label: 'Full-Time', apiValue: 'FULL_TIME' },
+];
+
 export default function JobsPage() {
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    // Read initial tab from URL, default to 'all'
+    const initialTab = JOB_TABS.find(t => t.key === searchParams.get('type'))?.key || 'all';
+
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(true);
+    
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [totalElements, setTotalElements] = useState(0);
+    const [activeTab, setActiveTab] = useState(initialTab);
+    const [tabCounts, setTabCounts] = useState({});
     const [filters, setFilters] = useState({
         position: '', company: '', skills: '', locations: '',
         experienceLevels: '', sort: 'postedAt', direction: 'DESC',
     });
     const [inputFocus, setInputFocus] = useState('');
 
-    const fetchJobs = async () => {
+    // Fetch tab badge counts on mount
+    useEffect(() => {
+        const fetchCounts = async () => {
+            try {
+                const res = await api.getEmploymentTypeCounts();
+                const data = res.json ? await res.json() : res;
+                setTabCounts({
+                    all: data.ALL || 0,
+                    intern: data.INTERNSHIP || 0,
+                    fulltime: data.FULL_TIME || 0,
+                });
+            } catch (e) {
+                console.error('Failed to fetch tab counts:', e);
+            }
+        };
+        fetchCounts();
+    }, []);
+
+    const fetchJobs = useCallback(async () => {
         setLoading(true);
         try {
             const params = { page, size: 9, sort: filters.sort, direction: filters.direction };
@@ -27,7 +61,18 @@ export default function JobsPage() {
             if (filters.skills) params.skills = filters.skills;
             if (filters.locations) params.locations = filters.locations;
             if (filters.experienceLevels) params.experienceLevels = filters.experienceLevels;
-            const response = await api.filterJobs(params);
+
+            // Choose endpoint by active tab
+            let response;
+            if (activeTab === 'intern') {
+                response = await api.getInternJobs(params);
+            } else if (activeTab === 'fulltime') {
+                response = await api.getFulltimeJobs(params);
+            } else {
+                const tab = JOB_TABS.find(t => t.key === activeTab);
+                if (tab && tab.apiValue) params.employmentTypes = tab.apiValue;
+                response = await api.filterJobs(params);
+            }
             const data = response.json ? await response.json() : response;
             setJobs(data.content || []);
             setTotalPages(data.totalPages || 0);
@@ -37,17 +82,29 @@ export default function JobsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [page, activeTab, filters]);
 
-    useEffect(() => { fetchJobs(); }, [page]);
+    useEffect(() => { fetchJobs(); }, [fetchJobs]);
+
+    const handleTabChange = (tabKey) => {
+        setActiveTab(tabKey);
+        setPage(0);
+        // Update URL query param
+        const newParams = new URLSearchParams(searchParams);
+        if (tabKey === 'all') {
+            newParams.delete('type');
+        } else {
+            newParams.set('type', tabKey);
+        }
+        setSearchParams(newParams, { replace: true });
+    };
 
     const handleSearch = () => {
         if (page === 0) {
             fetchJobs();
         } else {
-            setPage(0); // triggers useEffect → fetchJobs
+            setPage(0);
         }
-
     };
 
     const handleFilterChange = (key, value) => {
@@ -86,9 +143,25 @@ export default function JobsPage() {
                     .jobs-search-grid { grid-template-columns: 1fr !important; }
                     .jobs-grid { grid-template-columns: 1fr !important; }
                     .jobs-main-inner { padding: 72px 16px 24px !important; }
+                    .job-type-tabs { gap: 4px !important; }
+                    .job-type-tab { padding: 8px 12px !important; font-size: 12px !important; }
                 }
                 @media (min-width: 769px) and (max-width: 1024px) {
                     .jobs-grid { grid-template-columns: 1fr 1fr !important; }
+                }
+                .job-type-tab {
+                    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+                .job-type-tab:hover {
+                    background: var(--color-surface-3) !important;
+                }
+                .job-type-tab-active {
+                    background: var(--color-orange) !important;
+                    color: #000 !important;
+                    box-shadow: 0 2px 8px rgba(249,115,22,0.3);
+                }
+                .job-type-tab-active:hover {
+                    background: var(--color-orange-hover) !important;
                 }
             `}</style>
 
@@ -136,6 +209,61 @@ export default function JobsPage() {
                                     <option value="relevance">Relevant</option>
                                 </select>
                             </div>
+                        </div>
+
+                        {/* ===== Segmented Tabs ===== */}
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '4px',
+                            background: 'var(--color-surface-2)',
+                            border: '1px solid var(--color-border)',
+                            borderRadius: '12px',
+                            marginBottom: '24px',
+                            width: 'fit-content',
+                        }} className="job-type-tabs">
+                            {JOB_TABS.map(tab => {
+                                const isActive = activeTab === tab.key;
+                                const count = tabCounts[tab.key];
+                                return (
+                                    <button
+                                        key={tab.key}
+                                        onClick={() => handleTabChange(tab.key)}
+                                        className={`job-type-tab ${isActive ? 'job-type-tab-active' : ''}`}
+                                        style={{
+                                            padding: '9px 18px',
+                                            border: 'none',
+                                            borderRadius: '8px',
+                                            cursor: 'pointer',
+                                            fontFamily: 'var(--font-display)',
+                                            fontWeight: isActive ? 700 : 500,
+                                            fontSize: '13px',
+                                            color: isActive ? '#000' : 'var(--color-white-65)',
+                                            background: isActive ? 'var(--color-orange)' : 'transparent',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '6px',
+                                            whiteSpace: 'nowrap',
+                                        }}
+                                    >
+                                        {tab.label}
+                                        {count !== undefined && (
+                                            <span style={{
+                                                fontSize: '11px',
+                                                fontWeight: 600,
+                                                fontFamily: 'var(--font-mono)',
+                                                padding: '1px 6px',
+                                                borderRadius: '6px',
+                                                background: isActive ? 'rgba(0,0,0,0.15)' : 'var(--color-surface-3)',
+                                                color: isActive ? '#000' : 'var(--color-white-40)',
+                                            }}>
+                                                {count.toLocaleString()}
+                                            </span>
+                                        )}
+                                    </button>
+                                );
+                            })}
                         </div>
 
                         {/* Search bar */}

@@ -2,7 +2,11 @@ package com.projects.JobTracker_Backend.controller;
 
 import com.projects.JobTracker_Backend.dto.*;
 import com.projects.JobTracker_Backend.model.AppliedJob;
+import com.projects.JobTracker_Backend.model.FulltimeJobs;
+import com.projects.JobTracker_Backend.model.InternJobs;
 import com.projects.JobTracker_Backend.model.Job;
+import com.projects.JobTracker_Backend.service.FulltimeJobsService;
+import com.projects.JobTracker_Backend.service.InternJobsService;
 import com.projects.JobTracker_Backend.service.JobService;
 import com.projects.JobTracker_Backend.util.SecurityUtil;
 import jakarta.validation.Valid;
@@ -16,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -24,6 +29,8 @@ import java.util.stream.Collectors;
 public class JobController {
 
     private final JobService jobService;
+    private final InternJobsService internJobsService;
+    private final FulltimeJobsService fulltimeJobsService;
     private final SecurityUtil securityUtil;
 
     // ================== JOB BROWSING ==================
@@ -48,6 +55,94 @@ public class JobController {
     }
 
     /**
+     * GET /api/jobs/intern
+     * Get paginated intern jobs (served from intern_jobs table)
+     */
+    @GetMapping("/intern")
+    public ResponseEntity<Page<JobDTO>> getInternJobs(
+            @RequestParam(required = false) String keywords,
+            @RequestParam(required = false) String categories,
+            @RequestParam(required = false) String locations,
+            @RequestParam(required = false) String employmentTypes,
+            @RequestParam(required = false) String experienceLevels,
+            @RequestParam(required = false) Boolean isRemote,
+            @RequestParam(required = false) Integer minSalary,
+            @RequestParam(required = false) Integer maxSalary,
+            @RequestParam(required = false) String companies,
+            @RequestParam(required = false) String sources,
+            @RequestParam(required = false) String position,
+            @RequestParam(required = false) String skills,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "postedAt") String sort,
+            @RequestParam(defaultValue = "DESC") String direction
+    ) {
+        List<String> keywordList = parseCommaSeparated(keywords);
+        List<InternJobs.JobCategory> categoryList = parseEnumList(categories, InternJobs.JobCategory.class);
+        List<String> locationList = parseCommaSeparated(locations);
+        List<InternJobs.EmploymentType> employmentTypeList = parseEnumList(employmentTypes, InternJobs.EmploymentType.class);
+        List<InternJobs.ExperienceLevel> experienceLevelList = parseEnumList(experienceLevels, InternJobs.ExperienceLevel.class);
+        List<String> companyList = parseCommaSeparated(companies);
+        List<InternJobs.Source> sourceList = parseEnumList(sources, InternJobs.Source.class);
+        List<String> positionList = parseCommaSeparated(position);
+        List<String> skillList = parseCommaSeparated(skills);
+
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC") ?
+                Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
+
+        Page<JobDTO> jobs = internJobsService.filterJobs(
+                keywordList, categoryList, locationList, employmentTypeList, experienceLevelList,
+                isRemote, minSalary, maxSalary, companyList, sourceList, positionList, skillList, pageable, securityUtil.getCurrentUser()
+        );
+        return ResponseEntity.ok(jobs);
+    }
+
+    /**
+     * GET /api/jobs/fulltime
+     * Get paginated full-time jobs (served from fulltime_jobs table)
+     */
+    @GetMapping("/fulltime")
+    public ResponseEntity<Page<JobDTO>> getFulltimeJobs(
+            @RequestParam(required = false) String keywords,
+            @RequestParam(required = false) String categories,
+            @RequestParam(required = false) String locations,
+            @RequestParam(required = false) String employmentTypes,
+            @RequestParam(required = false) String experienceLevels,
+            @RequestParam(required = false) Boolean isRemote,
+            @RequestParam(required = false) Integer minSalary,
+            @RequestParam(required = false) Integer maxSalary,
+            @RequestParam(required = false) String companies,
+            @RequestParam(required = false) String sources,
+            @RequestParam(required = false) String position,
+            @RequestParam(required = false) String skills,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "postedAt") String sort,
+            @RequestParam(defaultValue = "DESC") String direction
+    ) {
+        List<String> keywordList = parseCommaSeparated(keywords);
+        List<FulltimeJobs.JobCategory> categoryList = parseEnumList(categories, FulltimeJobs.JobCategory.class);
+        List<String> locationList = parseCommaSeparated(locations);
+        List<FulltimeJobs.EmploymentType> employmentTypeList = parseEnumList(employmentTypes, FulltimeJobs.EmploymentType.class);
+        List<FulltimeJobs.ExperienceLevel> experienceLevelList = parseEnumList(experienceLevels, FulltimeJobs.ExperienceLevel.class);
+        List<String> companyList = parseCommaSeparated(companies);
+        List<FulltimeJobs.Source> sourceList = parseEnumList(sources, FulltimeJobs.Source.class);
+        List<String> positionList = parseCommaSeparated(position);
+        List<String> skillList = parseCommaSeparated(skills);
+
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC") ?
+                Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
+
+        Page<JobDTO> jobs = fulltimeJobsService.filterJobs(
+                keywordList, categoryList, locationList, employmentTypeList, experienceLevelList,
+                isRemote, minSalary, maxSalary, companyList, sourceList, positionList, skillList, pageable, securityUtil.getCurrentUser()
+        );
+        return ResponseEntity.ok(jobs);
+    }
+
+    /**
      * GET /api/jobs/category/{category}
      * Get jobs by category
      */
@@ -64,38 +159,6 @@ public class JobController {
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
 
         Page<JobDTO> jobs = jobService.getJobsByCategory(category, pageable, securityUtil.getCurrentUser());
-        return ResponseEntity.ok(jobs);
-    }
-
-    /**
-     * GET /api/jobs/{jobId}
-     * Get single job details
-     */
-    @GetMapping("/{jobId}")
-    public ResponseEntity<JobDTO> getJobById(@PathVariable Long jobId) {
-        JobDTO job = jobService.getJobById(jobId, securityUtil.getCurrentUser());
-        return ResponseEntity.ok(job);
-    }
-
-    /**
-     * GET /api/jobs/search
-     * Multi-keyword search across all jobs
-     */
-    @GetMapping("/search")
-    public ResponseEntity<Page<JobDTO>> searchJobs(
-            @RequestParam String keywords,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "postedAt") String sort,
-            @RequestParam(defaultValue = "DESC") String direction
-    ) {
-        List<String> keywordList = parseCommaSeparated(keywords);
-
-        Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC") ?
-                Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
-
-        Page<JobDTO> jobs = jobService.searchJobs(keywordList, pageable, securityUtil.getCurrentUser());
         return ResponseEntity.ok(jobs);
     }
 
@@ -165,6 +228,47 @@ public class JobController {
         );
 
         return ResponseEntity.ok(jobs);
+    }
+
+    /**
+     * GET /api/jobs/search
+     * Multi-keyword search across all jobs
+     */
+    @GetMapping("/search")
+    public ResponseEntity<Page<JobDTO>> searchJobs(
+            @RequestParam String keywords,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "postedAt") String sort,
+            @RequestParam(defaultValue = "DESC") String direction
+    ) {
+        List<String> keywordList = parseCommaSeparated(keywords);
+
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC") ?
+                Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
+
+        Page<JobDTO> jobs = jobService.searchJobs(keywordList, pageable, securityUtil.getCurrentUser());
+        return ResponseEntity.ok(jobs);
+    }
+
+    /**
+     * GET /api/jobs/{jobId}
+     * Get single job details
+     */
+    @GetMapping("/{jobId}")
+    public ResponseEntity<JobDTO> getJobById(@PathVariable Long jobId) {
+        JobDTO job = jobService.getJobById(jobId, securityUtil.getCurrentUser());
+        return ResponseEntity.ok(job);
+    }
+
+    /**
+     * GET /api/jobs/filter/counts
+     * Get job counts by employment type (for tab badges)
+     */
+    @GetMapping("/filter/counts")
+    public ResponseEntity<Map<String, Long>> getEmploymentTypeCounts() {
+        return ResponseEntity.ok(jobService.getEmploymentTypeCounts());
     }
 
     // ================== SAVED JOBS ==================

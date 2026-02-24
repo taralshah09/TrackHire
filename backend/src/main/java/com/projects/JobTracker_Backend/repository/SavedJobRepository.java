@@ -14,11 +14,11 @@ import java.util.Optional;
 @Repository
 public interface SavedJobRepository extends JpaRepository<SavedJob, Long> {
 
-    // Check if user has saved a specific job
-    boolean existsByUserIdAndJobId(Long userId, Long jobId);
+    // Check if user has saved a specific job with type
+    boolean existsByUserIdAndJobIdAndJobType(Long userId, Long jobId, String jobType);
 
-    // Find saved job by user and job
-    Optional<SavedJob> findByUserIdAndJobId(Long userId, Long jobId);
+    // Find saved job by user, job ID, and type
+    Optional<SavedJob> findByUserIdAndJobIdAndJobType(Long userId, Long jobId, String jobType);
 
     // Get all saved jobs for a user
     Page<SavedJob> findByUserIdOrderBySavedAtDesc(Long userId, Pageable pageable);
@@ -30,6 +30,9 @@ public interface SavedJobRepository extends JpaRepository<SavedJob, Long> {
     @Query("SELECT COUNT(s) FROM SavedJob s WHERE s.user.id = :userId AND s.savedAt >= :weekAgo")
     long countByUserIdAndSavedAtAfter(Long userId, LocalDateTime weekAgo);
 
-    // Delete saved job
-    void deleteByUserIdAndJobId(Long userId, Long jobId);
+    // Delete saved job by type
+    void deleteByUserIdAndJobIdAndJobType(Long userId, Long jobId, String jobType);
+
+    // Generic check for existence
+    boolean existsByUserIdAndJobId(Long userId, Long jobId);
 }

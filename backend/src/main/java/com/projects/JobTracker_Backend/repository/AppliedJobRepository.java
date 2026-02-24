@@ -14,11 +14,11 @@ import java.util.Optional;
 @Repository
 public interface AppliedJobRepository extends JpaRepository<AppliedJob, Long> {
 
-    // Check if user has applied to a specific job
-    boolean existsByUserIdAndJobId(Long userId, Long jobId);
+    // Check if user has applied to a specific job with type
+    boolean existsByUserIdAndJobIdAndJobType(Long userId, Long jobId, String jobType);
 
-    // Find applied job by user and job
-    Optional<AppliedJob> findByUserIdAndJobId(Long userId, Long jobId);
+    // Find applied job by user, job ID, and type
+    Optional<AppliedJob> findByUserIdAndJobIdAndJobType(Long userId, Long jobId, String jobType);
 
     // Get all applied jobs for a user
     Page<AppliedJob> findByUserIdOrderByAppliedAtDesc(Long userId, Pageable pageable);
@@ -37,6 +37,6 @@ public interface AppliedJobRepository extends JpaRepository<AppliedJob, Long> {
     // Count by status for user
     long countByUserIdAndStatus(Long userId, AppliedJob.ApplicationStatus status);
 
-    // Delete applied job
-    void deleteByUserIdAndJobId(Long userId, Long jobId);
+    // Delete applied job by type
+    void deleteByUserIdAndJobIdAndJobType(Long userId, Long jobId, String jobType);
 }

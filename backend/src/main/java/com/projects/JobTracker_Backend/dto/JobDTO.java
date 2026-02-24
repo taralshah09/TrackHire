@@ -1,5 +1,8 @@
 package com.projects.JobTracker_Backend.dto;
 
+import com.projects.JobTracker_Backend.model.BaseJob;
+import com.projects.JobTracker_Backend.model.FulltimeJobs;
+import com.projects.JobTracker_Backend.model.InternJobs;
 import com.projects.JobTracker_Backend.model.Job;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -40,6 +43,17 @@ public class JobDTO {
     private String applicationStatus;
     private LocalDateTime appliedAt;
 
+    public static JobDTO fromEntity(BaseJob baseJob) {
+        if (baseJob instanceof Job) {
+            return fromEntity((Job) baseJob);
+        } else if (baseJob instanceof InternJobs) {
+            return fromEntity((InternJobs) baseJob);
+        } else if (baseJob instanceof FulltimeJobs) {
+            return fromEntity((FulltimeJobs) baseJob);
+        }
+        throw new IllegalArgumentException("Unknown job type: " + baseJob.getClass());
+    }
+
     public static JobDTO fromEntity(Job job) {
         return JobDTO.builder()
                 .id(job.getId())
@@ -57,6 +71,60 @@ public class JobDTO {
                 .postedAt(job.getPostedAt())
                 .isRemote(job.getIsRemote())
                 .experienceLevel(job.getExperienceLevel())
+                .minSalary(job.getMinSalary())
+                .maxSalary(job.getMaxSalary())
+                .isActive(job.getIsActive())
+                .createdAt(job.getCreatedAt())
+                .updatedAt(job.getUpdatedAt())
+                .isSaved(false)
+                .isApplied(false)
+                .build();
+    }
+
+    public static JobDTO fromEntity(InternJobs job) {
+        return JobDTO.builder()
+                .id(job.getId())
+                .externalId(job.getExternalId())
+                .jobCategory(job.getJobCategory() != null ? Job.JobCategory.valueOf(job.getJobCategory().name()) : null)
+                .source(job.getSource() != null ? Job.Source.valueOf(job.getSource().name()) : null)
+                .company(job.getCompany())
+                .companyLogo(job.getCompanyLogo())
+                .title(job.getTitle())
+                .location(job.getLocation())
+                .department(job.getDepartment())
+                .employmentType(job.getEmploymentType() != null ? Job.EmploymentType.valueOf(job.getEmploymentType().name()) : null)
+                .description(job.getDescription())
+                .applyUrl(job.getApplyUrl())
+                .postedAt(job.getPostedAt())
+                .isRemote(job.getIsRemote())
+                .experienceLevel(job.getExperienceLevel() != null ? Job.ExperienceLevel.valueOf(job.getExperienceLevel().name()) : null)
+                .minSalary(job.getMinSalary())
+                .maxSalary(job.getMaxSalary())
+                .isActive(job.getIsActive())
+                .createdAt(job.getCreatedAt())
+                .updatedAt(job.getUpdatedAt())
+                .isSaved(false)
+                .isApplied(false)
+                .build();
+    }
+
+    public static JobDTO fromEntity(FulltimeJobs job) {
+        return JobDTO.builder()
+                .id(job.getId())
+                .externalId(job.getExternalId())
+                .jobCategory(job.getJobCategory() != null ? Job.JobCategory.valueOf(job.getJobCategory().name()) : null)
+                .source(job.getSource() != null ? Job.Source.valueOf(job.getSource().name()) : null)
+                .company(job.getCompany())
+                .companyLogo(job.getCompanyLogo())
+                .title(job.getTitle())
+                .location(job.getLocation())
+                .department(job.getDepartment())
+                .employmentType(job.getEmploymentType() != null ? Job.EmploymentType.valueOf(job.getEmploymentType().name()) : null)
+                .description(job.getDescription())
+                .applyUrl(job.getApplyUrl())
+                .postedAt(job.getPostedAt())
+                .isRemote(job.getIsRemote())
+                .experienceLevel(job.getExperienceLevel() != null ? Job.ExperienceLevel.valueOf(job.getExperienceLevel().name()) : null)
                 .minSalary(job.getMinSalary())
                 .maxSalary(job.getMaxSalary())
                 .isActive(job.getIsActive())

@@ -140,6 +140,19 @@ export const api = {
         return apiRequest(`/jobs/filter?${query}`, { method: 'GET' });
     },
 
+    getInternJobs: (params) => {
+        const query = new URLSearchParams(params).toString();
+        return apiRequest(`/jobs/intern?${query}`, { method: 'GET' });
+    },
+
+    getFulltimeJobs: (params) => {
+        const query = new URLSearchParams(params).toString();
+        return apiRequest(`/jobs/fulltime?${query}`, { method: 'GET' });
+    },
+
+    getEmploymentTypeCounts: () =>
+        apiRequest('/jobs/filter/counts', { method: 'GET' }),
+
     getJobsByCategory: (category, params) => {
         const query = new URLSearchParams(params).toString();
         return apiRequest(`/jobs/category/${category}?${query}`, { method: 'GET' });

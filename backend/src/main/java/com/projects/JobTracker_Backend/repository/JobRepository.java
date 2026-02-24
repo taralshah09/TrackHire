@@ -37,4 +37,7 @@ public interface JobRepository extends JpaRepository<Job, Long>, JpaSpecificatio
 
     @Query("SELECT j.employmentType, COUNT(j) FROM Job j WHERE j.isActive = true GROUP BY j.employmentType")
     List<Object[]> countJobsByEmploymentType();
+
+    @Query("SELECT COUNT(j) FROM Job j WHERE j.isActive = true AND j.employmentType = :type")
+    long countActiveByEmploymentType(@Param("type") Job.EmploymentType type);
 }

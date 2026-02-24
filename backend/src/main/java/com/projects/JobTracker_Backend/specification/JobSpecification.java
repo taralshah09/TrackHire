@@ -9,19 +9,19 @@ import java.util.List;
 
 public class JobSpecification {
 
-    public static Specification<Job> filterJobs(
+    public static <T> Specification<T> filterJobs(
             List<String> keywords,
-            List<Job.JobCategory> categories,
+            List<?> categories,
             List<String> locations,
-            List<Job.EmploymentType> employmentTypes,
-            List<Job.ExperienceLevel> experienceLevels,
+            List<?> employmentTypes,
+            List<?> experienceLevels,
             Boolean isRemote,
             Integer minSalary,
             Integer maxSalary,
             List<String> companies,
-            List<Job.Source> sources,
-            List<String> positions, // Changed to List
-            List<String> skills     // Changed to List
+            List<?> sources,
+            List<String> positions,
+            List<String> skills
     ) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();

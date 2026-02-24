@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "jobs", indexes = {
+@Table(name = "intern_jobs", indexes = {
         @Index(name = "idx_category_active_posted", columnList = "job_category, is_active, posted_at"),
         @Index(name = "idx_active_posted", columnList = "is_active, posted_at"),
         @Index(name = "idx_company", columnList = "company"),
@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Job implements BaseJob {
+public class InternJobs implements BaseJob {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

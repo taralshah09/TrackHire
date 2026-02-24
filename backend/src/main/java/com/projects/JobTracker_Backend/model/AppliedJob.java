@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -23,9 +24,21 @@ public class AppliedJob {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @Any(fetch = FetchType.LAZY)
+    @AnyDiscriminator(DiscriminatorType.STRING)
+    @Column(name = "job_type")
+    @AnyDiscriminatorValue(discriminator = "LEGACY", entity = Job.class)
+    @AnyDiscriminatorValue(discriminator = "INTERN", entity = InternJobs.class)
+    @AnyDiscriminatorValue(discriminator = "FULLTIME", entity = FulltimeJobs.class)
+    @AnyKeyJavaClass(Long.class)
     @JoinColumn(name = "job_id", nullable = false)
-    private Job job;
+    private BaseJob job;
+
+    @Column(name = "job_id", insertable = false, updatable = false)
+    private Long jobId;
+
+    @Column(name = "job_type", insertable = false, updatable = false)
+    private String jobType;
 
     @CreationTimestamp
     @Column(name = "applied_at", nullable = false, updatable = false)
