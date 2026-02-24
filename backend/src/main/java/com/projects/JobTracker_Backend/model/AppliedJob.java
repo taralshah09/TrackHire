@@ -27,18 +27,13 @@ public class AppliedJob {
     @Any(fetch = FetchType.LAZY)
     @AnyDiscriminator(DiscriminatorType.STRING)
     @Column(name = "job_type")
-    @AnyDiscriminatorValue(discriminator = "LEGACY", entity = Job.class)
+    @AnyDiscriminatorValue(discriminator = "GENERAL", entity = Job.class)
     @AnyDiscriminatorValue(discriminator = "INTERN", entity = InternJobs.class)
     @AnyDiscriminatorValue(discriminator = "FULLTIME", entity = FulltimeJobs.class)
     @AnyKeyJavaClass(Long.class)
     @JoinColumn(name = "job_id", nullable = false)
     private BaseJob job;
 
-    @Column(name = "job_id", insertable = false, updatable = false)
-    private Long jobId;
-
-    @Column(name = "job_type", insertable = false, updatable = false)
-    private String jobType;
 
     @CreationTimestamp
     @Column(name = "applied_at", nullable = false, updatable = false)

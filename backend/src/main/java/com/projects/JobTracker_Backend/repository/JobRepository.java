@@ -40,4 +40,8 @@ public interface JobRepository extends JpaRepository<Job, Long>, JpaSpecificatio
 
     @Query("SELECT COUNT(j) FROM Job j WHERE j.isActive = true AND j.employmentType = :type")
     long countActiveByEmploymentType(@Param("type") Job.EmploymentType type);
+
+    @Query("SELECT j FROM Job j WHERE j.isActive = true " +
+           "ORDER BY CASE WHEN j.company IN :preferredCompanies THEN 0 ELSE 1 END, j.postedAt DESC")
+    Page<Job> findPreferredJobs(@Param("preferredCompanies") List<String> preferredCompanies, Pageable pageable);
 }

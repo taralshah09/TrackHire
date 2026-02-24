@@ -1,0 +1,228 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import Sidebar from '../components/Sidebar';
+import AppHeader from '../components/AppHeader';
+import JobCard from '../components/JobCard';
+import api from '../service/ApiService';
+import { FaBuilding, FaMapMarkerAlt, FaBriefcase, FaArrowRight } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
+
+const JOB_TABS = [
+    { key: 'all', label: 'All' },
+    { key: 'intern', label: 'Intern' },
+    { key: 'fulltime', label: 'Full-Time' },
+];
+
+export default function PreferredJobsPage() {
+    const [jobs, setJobs] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState('all');
+    const [page, setPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const [totalElements, setTotalElements] = useState(0);
+    const [preferredCompanies, setPreferredCompanies] = useState([]);
+
+    useEffect(() => {
+        const fetchPrefs = async () => {
+            try {
+                const res = await api.getPreferredCompanies();
+                const data = res.json ? await res.json() : res;
+                setPreferredCompanies(data || []);
+            } catch (e) {
+                console.error('Failed to fetch preferences:', e);
+            }
+        };
+        fetchPrefs();
+    }, []);
+
+    const fetchJobs = useCallback(async () => {
+        setLoading(true);
+        try {
+            const params = {
+                type: activeTab,
+                page,
+                size: 9
+            };
+
+            const response = await api.getPreferredJobs(params);
+            const data = response.json ? await response.json() : response;
+
+            setJobs(data.content || []);
+            setTotalPages(data.totalPages || 0);
+            setTotalElements(data.totalElements || 0);
+        } catch (e) {
+            console.error('Failed to fetch preferred jobs:', e);
+        } finally {
+            setLoading(false);
+        }
+    }, [page, activeTab]);
+
+    useEffect(() => {
+        fetchJobs();
+    }, [fetchJobs]);
+
+    const handleTabChange = (tabKey) => {
+        setActiveTab(tabKey);
+        setPage(0);
+    };
+
+    const handlePageChange = (newPage) => {
+        if (newPage >= 0 && newPage < totalPages) setPage(newPage);
+    };
+
+    return (
+        <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
+            <Sidebar />
+
+            <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <AppHeader left={
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)' }}>
+                        <span>Preferred Jobs</span>
+                    </div>
+                } />
+
+                <div style={{ flex: 1, overflowY: 'auto' }}>
+                    <div className="jobs-main-inner" style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px' }}>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
+                            <div>
+                                <h1 style={{
+                                    fontFamily: 'var(--font-display)', fontWeight: 800,
+                                    fontSize: 'clamp(24px, 3vw, 36px)', letterSpacing: '-0.025em',
+                                    color: 'var(--color-white)', margin: 0,
+                                }}>Your Personalized Feed</h1>
+                                <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--color-white-40)', marginTop: '4px' }}>
+                                    Jobs from your preferred companies are prioritized.
+                                </p>
+                            </div>
+                            <Link
+                                to="/company-preferences"
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: '8px',
+                                    padding: '10px 16px', borderRadius: '8px',
+                                    background: 'var(--color-surface-2)', border: '1px solid var(--color-border)',
+                                    color: 'var(--color-white-65)', textDecoration: 'none',
+                                    fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '13px',
+                                    transition: 'all 0.2s'
+                                }}
+                                onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-white-40)'}
+                                onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-border)'}
+                            >
+                                <FaBuilding /> Edit Preferences
+                            </Link>
+                        </div>
+
+                        {/* Preferred Companies Chips */}
+                        {preferredCompanies.length > 0 && (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '24px' }}>
+                                <span style={{ color: 'var(--color-white-40)', fontSize: '13px', alignSelf: 'center', marginRight: '8px' }}>Prioritizing:</span>
+                                {preferredCompanies.map(company => (
+                                    <span key={company} style={{
+                                        padding: '4px 12px', borderRadius: '20px',
+                                        background: 'rgba(249, 115, 22, 0.1)', border: '1px solid rgba(249, 115, 22, 0.2)',
+                                        color: 'var(--color-orange)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase'
+                                    }}>
+                                        {company}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Segmented Tabs */}
+                        <div style={{
+                            display: 'flex', alignItems: 'center', gap: '6px',
+                            padding: '4px', background: 'var(--color-surface-2)',
+                            border: '1px solid var(--color-border)', borderRadius: '12px',
+                            marginBottom: '32px', width: 'fit-content',
+                        }}>
+                            {JOB_TABS.map(tab => {
+                                const isActive = activeTab === tab.key;
+                                return (
+                                    <button
+                                        key={tab.key}
+                                        onClick={() => handleTabChange(tab.key)}
+                                        style={{
+                                            padding: '9px 18px', border: 'none', borderRadius: '8px',
+                                            cursor: 'pointer', fontFamily: 'var(--font-display)',
+                                            fontWeight: isActive ? 700 : 500, fontSize: '13px',
+                                            color: isActive ? '#000' : 'var(--color-white-65)',
+                                            background: isActive ? 'var(--color-orange)' : 'transparent',
+                                            transition: 'all 0.25s'
+                                        }}
+                                    >
+                                        {tab.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {/* Job grid */}
+                        {loading ? (
+                            <div style={{ textAlign: 'center', padding: '64px', color: 'var(--color-white-40)', fontFamily: 'var(--font-body)', fontSize: '15px' }}>
+                                Loading prioritized jobs…
+                            </div>
+                        ) : jobs.length === 0 ? (
+                            <div style={{
+                                textAlign: 'center', padding: '80px 32px',
+                                background: 'var(--color-surface-1)', borderRadius: '24px',
+                                border: '1px dashed var(--color-border)'
+                            }}>
+                                <FaBriefcase size={40} style={{ color: 'var(--color-white-10)', marginBottom: '16px' }} />
+                                <h3 style={{ fontFamily: 'var(--font-display)', color: 'var(--color-white)', marginBottom: '8px' }}>No jobs found</h3>
+                                <p style={{ fontFamily: 'var(--font-body)', fontSize: '15px', color: 'var(--color-white-40)', maxWidth: '400px', margin: '0 auto 24px' }}>
+                                    We couldn't find any jobs matching your preferences right now. Try expanding your preferred companies.
+                                </p>
+                                <Link to="/company-preferences" style={{ color: 'var(--color-orange)', textDecoration: 'none', fontWeight: 600 }}>
+                                    Adjust Preferences <FaArrowRight size={10} />
+                                </Link>
+                            </div>
+                        ) : (
+                            <div
+                                style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px', marginBottom: '32px' }}
+                            >
+                                {jobs.map((job, i) => <JobCard key={job.id || i} job={job} />)}
+                            </div>
+                        )}
+
+                        {/* Pagination */}
+                        {!loading && jobs.length > 0 && (
+                            <div style={{
+                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                paddingTop: '24px', borderTop: '1px solid var(--color-border)',
+                                flexWrap: 'wrap', gap: '12px',
+                            }}>
+                                <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)' }}>
+                                    Showing {jobs.length} of {totalElements} jobs
+                                </span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <button
+                                        onClick={() => handlePageChange(page - 1)}
+                                        disabled={page === 0}
+                                        style={{
+                                            padding: '8px 14px', background: 'var(--color-surface-2)',
+                                            border: '1px solid var(--color-border)', borderRadius: '8px',
+                                            color: 'var(--color-white-65)', cursor: page === 0 ? 'not-allowed' : 'pointer',
+                                            opacity: page === 0 ? 0.4 : 1, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px',
+                                        }}
+                                    >← Prev</button>
+                                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--color-white-65)' }}>
+                                        {page + 1} / {totalPages}
+                                    </span>
+                                    <button
+                                        onClick={() => handlePageChange(page + 1)}
+                                        disabled={page >= totalPages - 1}
+                                        style={{
+                                            padding: '8px 14px', background: 'var(--color-surface-2)',
+                                            border: '1px solid var(--color-border)', borderRadius: '8px',
+                                            color: 'var(--color-white-65)', cursor: page >= totalPages - 1 ? 'not-allowed' : 'pointer',
+                                            opacity: page >= totalPages - 1 ? 0.4 : 1, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px',
+                                        }}
+                                    >Next →</button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </main>
+        </div>
+    );
+}

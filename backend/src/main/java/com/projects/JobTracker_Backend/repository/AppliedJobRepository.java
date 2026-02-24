@@ -4,6 +4,7 @@ import com.projects.JobTracker_Backend.model.AppliedJob;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -15,10 +16,12 @@ import java.util.Optional;
 public interface AppliedJobRepository extends JpaRepository<AppliedJob, Long> {
 
     // Check if user has applied to a specific job with type
-    boolean existsByUserIdAndJobIdAndJobType(Long userId, Long jobId, String jobType);
+    @Query("SELECT COUNT(a) > 0 FROM AppliedJob a WHERE a.user.id = :userId AND a.job.id = :jobId AND TYPE(a.job) = :jobType")
+    boolean existsByUserIdAndJobIdAndJobType(Long userId, Long jobId, Class<?> jobType);
 
     // Find applied job by user, job ID, and type
-    Optional<AppliedJob> findByUserIdAndJobIdAndJobType(Long userId, Long jobId, String jobType);
+    @Query("SELECT a FROM AppliedJob a WHERE a.user.id = :userId AND a.job.id = :jobId AND TYPE(a.job) = :jobType")
+    Optional<AppliedJob> findByUserIdAndJobIdAndJobType(Long userId, Long jobId, Class<?> jobType);
 
     // Get all applied jobs for a user
     Page<AppliedJob> findByUserIdOrderByAppliedAtDesc(Long userId, Pageable pageable);
@@ -38,5 +41,7 @@ public interface AppliedJobRepository extends JpaRepository<AppliedJob, Long> {
     long countByUserIdAndStatus(Long userId, AppliedJob.ApplicationStatus status);
 
     // Delete applied job by type
-    void deleteByUserIdAndJobIdAndJobType(Long userId, Long jobId, String jobType);
+    @Modifying
+    @Query("DELETE FROM AppliedJob a WHERE a.user.id = :userId AND a.job.id = :jobId AND TYPE(a.job) = :jobType")
+    void deleteByUserIdAndJobIdAndJobType(Long userId, Long jobId, Class<?> jobType);
 }

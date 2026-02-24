@@ -42,8 +42,13 @@ public class JobDTO {
     private Boolean isApplied;
     private String applicationStatus;
     private LocalDateTime appliedAt;
+    private Boolean isFollowed;
 
     public static JobDTO fromEntity(BaseJob baseJob) {
+        if (baseJob == null) return null;
+
+        // Handle Hibernate proxies by checking the actual class name if needed, 
+        // or using simple instanceOf which works if they are initialized
         if (baseJob instanceof Job) {
             return fromEntity((Job) baseJob);
         } else if (baseJob instanceof InternJobs) {
@@ -51,6 +56,17 @@ public class JobDTO {
         } else if (baseJob instanceof FulltimeJobs) {
             return fromEntity((FulltimeJobs) baseJob);
         }
+
+        // Fallback for proxies if instanceOf fails
+        String className = baseJob.getClass().getSimpleName();
+        if (className.contains("Job") && !className.contains("Intern") && !className.contains("Fulltime")) {
+            return fromEntity((Job) baseJob);
+        } else if (className.contains("InternJobs")) {
+            return fromEntity((InternJobs) baseJob);
+        } else if (className.contains("FulltimeJobs")) {
+            return fromEntity((FulltimeJobs) baseJob);
+        }
+
         throw new IllegalArgumentException("Unknown job type: " + baseJob.getClass());
     }
 
@@ -78,6 +94,7 @@ public class JobDTO {
                 .updatedAt(job.getUpdatedAt())
                 .isSaved(false)
                 .isApplied(false)
+                .isFollowed(false)
                 .build();
     }
 
@@ -105,6 +122,7 @@ public class JobDTO {
                 .updatedAt(job.getUpdatedAt())
                 .isSaved(false)
                 .isApplied(false)
+                .isFollowed(false)
                 .build();
     }
 
@@ -132,6 +150,9 @@ public class JobDTO {
                 .updatedAt(job.getUpdatedAt())
                 .isSaved(false)
                 .isApplied(false)
+                .isFollowed(false)
                 .build();
     }
+
+
 }

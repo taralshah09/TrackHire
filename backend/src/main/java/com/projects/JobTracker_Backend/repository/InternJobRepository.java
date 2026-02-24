@@ -40,4 +40,8 @@ public interface InternJobRepository extends JpaRepository<InternJobs, Long>, Jp
 
     @Query("SELECT COUNT(j) FROM InternJobs j WHERE j.isActive = true AND j.employmentType = :type")
     long countActiveByEmploymentType(@Param("type") InternJobs.EmploymentType type);
+
+    @Query("SELECT j FROM InternJobs j WHERE j.isActive = true " +
+           "ORDER BY CASE WHEN j.company IN :preferredCompanies THEN 0 ELSE 1 END, j.postedAt DESC")
+    Page<InternJobs> findPreferredJobs(@Param("preferredCompanies") List<String> preferredCompanies, Pageable pageable);
 }

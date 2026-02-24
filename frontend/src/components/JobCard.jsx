@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaMapMarkerAlt, FaBriefcase } from 'react-icons/fa';
+import api from '../service/ApiService';
 
 /* Brand-accurate status badge styles per guidelines */
 const STATUS_STYLES = {
@@ -50,6 +51,33 @@ export default function JobCard({ job }) {
     const statusStyle = isApplied && applicationStatus ? getStatusStyle(applicationStatus) : null;
 
 
+    const [followed, setFollowed] = useState(job.isFollowed || false);
+    const [followLoading, setFollowLoading] = useState(false);
+
+    const handleFollowToggle = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (followLoading) return;
+
+        setFollowLoading(true);
+        try {
+            const res = await api.getPreferredCompanies();
+            const prefs = res.json ? await res.json() : res;
+            let newPrefs;
+            if (!followed) {
+                newPrefs = [...prefs, companyLabel];
+            } else {
+                newPrefs = prefs.filter(c => c !== companyLabel);
+            }
+            await api.savePreferredCompanies(newPrefs);
+            setFollowed(!followed);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setFollowLoading(false);
+        }
+    };
+
     return (
         <div
             onMouseEnter={() => setHovered(true)}
@@ -69,6 +97,17 @@ export default function JobCard({ job }) {
                 position: 'relative',
             }}
         >
+            {followed && (
+                <div style={{
+                    position: 'absolute', top: '-10px', right: '12px',
+                    background: 'var(--color-orange)', color: '#000',
+                    fontSize: '10px', fontWeight: 800, padding: '2px 8px',
+                    borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.05em',
+                    boxShadow: '0 4px 12px rgba(249,115,22,0.3)', zIndex: 5
+                }}>
+                    Prioritized
+                </div>
+            )}
             {/* Top row: company initial + saved badge */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                 <div style={{
@@ -117,15 +156,54 @@ export default function JobCard({ job }) {
             }}>
                 {title}
             </h3>
-            <p style={{
-                fontFamily: 'var(--font-body)',
-                fontSize: '13px',
-                color: 'var(--color-orange)',
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
                 margin: '0 0 16px',
-                fontWeight: 500,
             }}>
-                {companyLabel}
-            </p>
+                <p style={{
+                    fontFamily: 'var(--font-body)',
+                    fontSize: '13px',
+                    color: 'var(--color-orange)',
+                    margin: 0,
+                    fontWeight: 500,
+                }}>
+                    {companyLabel}
+                </p>
+                <button
+                    onClick={handleFollowToggle}
+                    disabled={followLoading}
+                    style={{
+                        background: followed ? 'var(--color-orange)' : 'transparent',
+                        border: followed ? '1px solid var(--color-orange)' : '1px solid var(--color-orange-border)',
+                        color: followed ? '#000' : 'var(--color-orange)',
+                        fontSize: '10px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        padding: '3px 10px',
+                        borderRadius: '6px',
+                        transition: 'all 0.2s',
+                        opacity: followLoading ? 0.6 : 1,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.02em',
+                    }}
+                    onMouseEnter={e => {
+                        if (!followed) {
+                            e.currentTarget.style.background = 'var(--color-orange)';
+                            e.currentTarget.style.color = '#000';
+                        }
+                    }}
+                    onMouseLeave={e => {
+                        if (!followed) {
+                            e.currentTarget.style.background = 'transparent';
+                            e.currentTarget.style.color = 'var(--color-orange)';
+                        }
+                    }}
+                >
+                    {followLoading ? '...' : followed ? 'Following' : 'Follow'}
+                </button>
+            </div>
 
             {/* Meta: location, type */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '16px', flex: 1 }}>

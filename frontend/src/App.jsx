@@ -13,6 +13,8 @@ import SavedJobsPage from './pages/SavedJobsPage';
 import LandingPage from './pages/LandingPage';
 import NewLandingPage from './pages/NewLandingPage';
 import OnboardingPage from './pages/OnboardingPage';
+import CompanyPreferences from './pages/CompanyPreferences';
+import PreferredJobsPage from './pages/PreferredJobsPage';
 
 function App() {
   return (
@@ -81,6 +83,22 @@ function App() {
           element={
             <ProtectedRoute>
               <SavedJobsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/company-preferences"
+          element={
+            <ProtectedRoute>
+              <CompanyPreferences />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/preferred-jobs"
+          element={
+            <ProtectedRoute>
+              <PreferredJobsPage />
             </ProtectedRoute>
           }
         />

@@ -230,12 +230,30 @@ export const api = {
         } catch (error) {
             console.error("Logout failed", error);
         } finally {
+            Cookies.set('accessToken', '', { expires: 0 });
             Cookies.remove('accessToken');
             Cookies.remove('refreshToken');
             Cookies.remove('username');
             Cookies.remove('email');
             window.location.href = '/login';
         }
+    },
+    // Preferred Companies
+    getCompanies: () =>
+        apiRequest('/companies', { method: 'GET' }),
+
+    savePreferredCompanies: (companies) =>
+        apiRequest('/user/preferences/companies', {
+            method: 'POST',
+            body: JSON.stringify({ companies })
+        }),
+
+    getPreferredCompanies: () =>
+        apiRequest('/user/preferences/companies', { method: 'GET' }),
+
+    getPreferredJobs: (params) => {
+        const query = new URLSearchParams(params).toString();
+        return apiRequest(`/jobs/preferred?${query}`, { method: 'GET' });
     }
 };
 

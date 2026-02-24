@@ -1,12 +1,7 @@
 package com.projects.JobTracker_Backend.service;
 
 import com.projects.JobTracker_Backend.dto.*;
-import com.projects.JobTracker_Backend.model.AppliedJob;
-import com.projects.JobTracker_Backend.model.FulltimeJobs;
-import com.projects.JobTracker_Backend.model.InternJobs;
-import com.projects.JobTracker_Backend.model.Job;
-import com.projects.JobTracker_Backend.model.SavedJob;
-import com.projects.JobTracker_Backend.model.User;
+import com.projects.JobTracker_Backend.model.*;
 import com.projects.JobTracker_Backend.repository.AppliedJobRepository;
 import com.projects.JobTracker_Backend.repository.FulltimeJobsRepository;
 import com.projects.JobTracker_Backend.repository.InternJobRepository;
@@ -18,6 +13,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -38,6 +34,7 @@ public class JobService {
     private final FulltimeJobsRepository fulltimeJobsRepository;
     private final SavedJobRepository savedJobRepository;
     private final AppliedJobRepository appliedJobRepository;
+    private final PreferenceService preferenceService;
 
     // ================== PUBLIC ENDPOINTS ==================
 
@@ -84,14 +81,14 @@ public class JobService {
 
     public Map<String, Long> getEmploymentTypeCounts() {
         Map<String, Long> counts = new LinkedHashMap<>();
-        
+
         long activeInterns = internJobRepository.countActiveJobs();
         long activeFulltime = fulltimeJobsRepository.countActiveJobs();
-        
+
         counts.put("ALL", activeInterns + activeFulltime);
         counts.put("INTERNSHIP", activeInterns);
         counts.put("FULL_TIME", activeFulltime);
-        
+
         return counts;
     }
 
@@ -188,7 +185,46 @@ public class JobService {
         return enrichJobsWithUserData(jobs, user);
     }
 
+    public Page<JobDTO> getPreferredJobs(String type, List<String> preferredCompanies, Pageable pageable, User user) {
+        if (preferredCompanies == null || preferredCompanies.isEmpty()) {
+            // If no preferences, return regular jobs sorted by postedAt (handled by pageable)
+            if ("intern".equalsIgnoreCase(type)) {
+                return internJobRepository.findByIsActiveTrue(pageable).map(job -> enrichJobWithUserData(job, user));
+            } else if ("fulltime".equalsIgnoreCase(type)) {
+                return fulltimeJobsRepository.findByIsActiveTrue(pageable).map(job -> enrichJobWithUserData(job, user));
+            } else {
+                return jobRepository.findByIsActiveTrue(pageable).map(job -> enrichJobWithUserData(job, user));
+            }
+        }
+
+        if ("intern".equalsIgnoreCase(type)) {
+            Page<InternJobs> jobs = internJobRepository.findPreferredJobs(preferredCompanies, pageable);
+            return jobs.map(job -> enrichJobWithUserData(job, user));
+        } else if ("fulltime".equalsIgnoreCase(type)) {
+            Page<FulltimeJobs> jobs = fulltimeJobsRepository.findPreferredJobs(preferredCompanies, pageable);
+            return jobs.map(job -> enrichJobWithUserData(job, user));
+        } else {
+            Page<Job> jobs = jobRepository.findPreferredJobs(preferredCompanies, pageable);
+            return jobs.map(job -> enrichJobWithUserData(job, user));
+        }
+    }
+
     // ================== SAVED JOBS ==================
+
+    // = [NEW] helper for polymorphic entity class lookup
+   private Class<?> getJobEntityClass(BaseJob job) {
+    // Unwrap proxy to get the real entity class
+    BaseJob unproxied = (BaseJob) Hibernate.unproxy(job);
+
+    if (unproxied instanceof InternJobs) {
+        return InternJobs.class;
+    } else if (unproxied instanceof FulltimeJobs) {
+        return FulltimeJobs.class;
+    } else if (unproxied instanceof Job) {
+        return Job.class;
+    }
+    throw new IllegalArgumentException("Unknown job type: " + unproxied.getClass());
+}
 
     @Transactional
     @Caching(evict = {
@@ -199,7 +235,8 @@ public class JobService {
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new RuntimeException("Job not found with id: " + jobId));
 
-        if (savedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), jobId, "LEGACY")) {
+        Class<?> jobClass = getJobEntityClass(job);
+        if (savedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), jobId, jobClass)) {
             throw new RuntimeException("Job already saved");
         }
 
@@ -215,40 +252,51 @@ public class JobService {
             @CacheEvict(value = "userStats", key = "#user.id")
     })
     public void unsaveJob(Long jobId, User user) {
-        if (!savedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), jobId, "LEGACY")) {
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new RuntimeException("Job not found with id: " + jobId));
+
+        Class<?> jobClass = getJobEntityClass(job);
+        if (!savedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), jobId, jobClass)) {
             throw new RuntimeException("Job not saved");
         }
 
-        savedJobRepository.deleteByUserIdAndJobIdAndJobType(user.getId(), jobId, "LEGACY");
+        savedJobRepository.deleteByUserIdAndJobIdAndJobType(user.getId(), jobId, jobClass);
     }
 
     @Transactional(readOnly = true)
     @Cacheable(value = "savedJobs", key = "#user.id + '-' + #pageable.pageNumber")
     public Page<JobDTO> getSavedJobs(Pageable pageable, User user) {
         Page<SavedJob> savedJobs = savedJobRepository.findByUserIdOrderBySavedAtDesc(user.getId(), pageable);
-        return savedJobs.map(savedJob -> {
-            JobDTO dto = JobDTO.fromEntity(savedJob.getJob());
-            dto.setIsSaved(true);
-            
-            // Note: Since savedJob.getJob() could be of any type, we need to check its actual type for the application status lookup
-            String jobType = "LEGACY";
-            if (savedJob.getJob() instanceof InternJobs) jobType = "INTERN";
-            else if (savedJob.getJob() instanceof FulltimeJobs) jobType = "FULLTIME";
+        List<JobDTO> dtoList = savedJobs.getContent().stream()
+                .map(savedJob -> {
+                    JobDTO dto = JobDTO.fromEntity(savedJob.getJob());
+                    if (dto == null) return null;
 
-            dto.setIsApplied(appliedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), savedJob.getJob().getId(), jobType));
-            if (dto.getIsApplied()) {
-                appliedJobRepository.findByUserIdAndJobIdAndJobType(user.getId(), savedJob.getJob().getId(), jobType)
-                        .ifPresent(applied -> {
-                            dto.setApplicationStatus(applied.getStatus().name());
-                            dto.setAppliedAt(applied.getAppliedAt());
-                        });
-            }
-            return dto;
-        });
+                    dto.setIsSaved(true);
+
+                    // Note: Since savedJob.getJob() could be of any type, we need to check its actual type for the application status lookup
+                    Class<?> jobClass = getJobEntityClass(savedJob.getJob());
+                    dto.setIsApplied(appliedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), savedJob.getJob().getId(), jobClass));
+                    if (dto.getIsApplied()) {
+                        appliedJobRepository.findByUserIdAndJobIdAndJobType(user.getId(), savedJob.getJob().getId(), jobClass)
+                                .ifPresent(applied -> {
+                                    dto.setApplicationStatus(applied.getStatus().name());
+                                    dto.setAppliedAt(applied.getAppliedAt());
+                                });
+                    }
+                    return dto;
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(dtoList, pageable, savedJobs.getTotalElements());
     }
 
     public SavedStatusDTO isJobSaved(Long jobId, User user) {
-        boolean saved = savedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), jobId, "LEGACY");
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new RuntimeException("Job not found with id: " + jobId));
+        Class<?> jobClass = getJobEntityClass(job);
+        boolean saved = savedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), jobId, jobClass);
         return SavedStatusDTO.builder().saved(saved).build();
     }
 
@@ -270,7 +318,8 @@ public class JobService {
         Job job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new RuntimeException("Job not found with id: " + jobId));
 
-        Optional<AppliedJob> existingApplication = appliedJobRepository.findByUserIdAndJobIdAndJobType(user.getId(), jobId, "LEGACY");
+        Class<?> jobClass = getJobEntityClass(job);
+        Optional<AppliedJob> existingApplication = appliedJobRepository.findByUserIdAndJobIdAndJobType(user.getId(), jobId, jobClass);
 
         AppliedJob appliedJob;
         if (existingApplication.isPresent()) {
@@ -304,11 +353,14 @@ public class JobService {
             @CacheEvict(value = "userStats", key = "#user.id")
     })
     public void withdrawApplication(Long jobId, User user) {
-        if (!appliedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), jobId, "LEGACY")) {
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new RuntimeException("Job not found with id: " + jobId));
+        Class<?> jobClass = getJobEntityClass(job);
+        if (!appliedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), jobId, jobClass)) {
             throw new RuntimeException("No application found to withdraw");
         }
 
-        appliedJobRepository.deleteByUserIdAndJobIdAndJobType(user.getId(), jobId, "LEGACY");
+        appliedJobRepository.deleteByUserIdAndJobIdAndJobType(user.getId(), jobId, jobClass);
     }
 
     /**
@@ -317,7 +369,10 @@ public class JobService {
      * Returns applied=true with status if applied
      */
     public AppliedStatusDTO getJobStatus(Long jobId, User user) {
-        Optional<AppliedJob> appliedJob = appliedJobRepository.findByUserIdAndJobIdAndJobType(user.getId(), jobId, "LEGACY");
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new RuntimeException("Job not found with id: " + jobId));
+        Class<?> jobClass = getJobEntityClass(job);
+        Optional<AppliedJob> appliedJob = appliedJobRepository.findByUserIdAndJobIdAndJobType(user.getId(), jobId, jobClass);
 
         if (appliedJob.isPresent()) {
             return AppliedStatusDTO.builder()
@@ -346,19 +401,23 @@ public class JobService {
             appliedJobs = appliedJobRepository.findByUserIdOrderByAppliedAtDesc(user.getId(), pageable);
         }
 
-        return appliedJobs.map(appliedJob -> {
-            JobDTO dto = JobDTO.fromEntity(appliedJob.getJob());
-            dto.setIsApplied(true);
-            dto.setApplicationStatus(appliedJob.getStatus().name());
-            dto.setAppliedAt(appliedJob.getAppliedAt());
-            
-            String jobType = "LEGACY";
-            if (appliedJob.getJob() instanceof InternJobs) jobType = "INTERN";
-            else if (appliedJob.getJob() instanceof FulltimeJobs) jobType = "FULLTIME";
+        List<JobDTO> dtoList = appliedJobs.getContent().stream()
+                .map(appliedJob -> {
+                    JobDTO dto = JobDTO.fromEntity(appliedJob.getJob());
+                    if (dto == null) return null;
 
-            dto.setIsSaved(savedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), appliedJob.getJob().getId(), jobType));
-            return dto;
-        });
+                    dto.setIsApplied(true);
+                    dto.setApplicationStatus(appliedJob.getStatus().name());
+                    dto.setAppliedAt(appliedJob.getAppliedAt());
+
+                    Class<?> jobClass = getJobEntityClass(appliedJob.getJob());
+                    dto.setIsSaved(savedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), appliedJob.getJob().getId(), jobClass));
+                    return dto;
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(dtoList, pageable, appliedJobs.getTotalElements());
     }
 
     // ================== USER STATISTICS ==================
@@ -391,24 +450,33 @@ public class JobService {
 
     // ================== HELPER METHODS ==================
 
-    private Page<JobDTO> enrichJobsWithUserData(Page<Job> jobs, User user) {
-        return jobs.map(job -> enrichJobWithUserData(job, user));
+    private Page<JobDTO> enrichJobsWithUserData(Page<? extends BaseJob> jobs, User user) {
+        List<JobDTO> dtoList = jobs.getContent().stream()
+                .map(job -> enrichJobWithUserData(job, user))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        return new PageImpl<>(dtoList, jobs.getPageable(), jobs.getTotalElements());
     }
 
-    private JobDTO enrichJobWithUserData(Job job, User user) {
+    private JobDTO enrichJobWithUserData(BaseJob job, User user) {
         JobDTO dto = JobDTO.fromEntity(job);
+        if (dto == null) return null;
 
         if (user != null) {
-            dto.setIsSaved(savedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), job.getId(), "LEGACY"));
-            dto.setIsApplied(appliedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), job.getId(), "LEGACY"));
+            Class<?> jobClass = getJobEntityClass(job);
+            dto.setIsSaved(savedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), job.getId(), jobClass));
+            dto.setIsApplied(appliedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), job.getId(), jobClass));
 
             if (dto.getIsApplied()) {
-                appliedJobRepository.findByUserIdAndJobIdAndJobType(user.getId(), job.getId(), "LEGACY")
+                appliedJobRepository.findByUserIdAndJobIdAndJobType(user.getId(), job.getId(), jobClass)
                         .ifPresent(applied -> {
                             dto.setApplicationStatus(applied.getStatus().name());
                             dto.setAppliedAt(applied.getAppliedAt());
                         });
             }
+
+            List<String> preferredCompanies = preferenceService.getUserPreferredCompanies(user.getId());
+            dto.setIsFollowed(preferredCompanies.contains(job.getCompany().trim()));
         }
 
         return dto;

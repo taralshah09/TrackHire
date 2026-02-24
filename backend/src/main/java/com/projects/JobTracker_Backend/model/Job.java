@@ -15,7 +15,8 @@ import java.time.LocalDateTime;
         @Index(name = "idx_category_active_posted", columnList = "job_category, is_active, posted_at"),
         @Index(name = "idx_active_posted", columnList = "is_active, posted_at"),
         @Index(name = "idx_company", columnList = "company"),
-        @Index(name = "idx_location", columnList = "location")
+        @Index(name = "idx_location", columnList = "location"),
+        @Index(name = "idx_employment_type", columnList = "employment_type")
 })
 @Data
 @NoArgsConstructor

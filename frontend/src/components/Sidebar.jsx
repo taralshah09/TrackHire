@@ -11,13 +11,16 @@ import {
     FaBars,
     FaChevronLeft,
     FaChevronRight,
+    FaBuilding,
 } from 'react-icons/fa';
 
 const NAV_ITEMS = [
     { label: 'Dashboard', path: '/dashboard', icon: <FaTh /> },
     { label: 'Browse Jobs', path: '/jobs', icon: <FaSearch /> },
+    { label: 'For You', path: '/preferred-jobs', icon: <FaUser /> },
     { label: 'Applied', path: '/applied-all', icon: <FaPaperPlane /> },
     { label: 'Saved Jobs', path: '/saved-all', icon: <FaBookmark /> },
+    { label: 'Preferences', path: '/company-preferences', icon: <FaBuilding /> },
     { label: 'Profile', path: '/profile', icon: <FaUser /> },
 ];
 

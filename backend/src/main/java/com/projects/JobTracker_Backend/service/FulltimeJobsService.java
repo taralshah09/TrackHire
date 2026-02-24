@@ -182,7 +182,7 @@ public class FulltimeJobsService {
         FulltimeJobs job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new RuntimeException("FulltimeJobs not found with id: " + jobId));
 
-        if (savedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), jobId, "FULLTIME")) {
+        if (savedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), jobId, FulltimeJobs.class)) {
             throw new RuntimeException("FulltimeJobs already saved");
         }
 
@@ -198,11 +198,11 @@ public class FulltimeJobsService {
             @CacheEvict(value = "userStats", key = "#user.id")
     })
     public void unsaveJob(Long jobId, User user) {
-        if (!savedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), jobId, "FULLTIME")) {
+        if (!savedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), jobId, FulltimeJobs.class)) {
             throw new RuntimeException("FulltimeJobs not saved");
         }
 
-        savedJobRepository.deleteByUserIdAndJobIdAndJobType(user.getId(), jobId, "FULLTIME");
+        savedJobRepository.deleteByUserIdAndJobIdAndJobType(user.getId(), jobId, FulltimeJobs.class);
     }
 
     @Transactional(readOnly = true)
@@ -212,9 +212,9 @@ public class FulltimeJobsService {
         return savedJobs.map(savedJob -> {
             JobDTO dto = JobDTO.fromEntity(savedJob.getJob());
             dto.setIsSaved(true);
-            dto.setIsApplied(appliedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), savedJob.getJob().getId(), "FULLTIME"));
+            dto.setIsApplied(appliedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), savedJob.getJob().getId(), FulltimeJobs.class));
             if (dto.getIsApplied()) {
-                appliedJobRepository.findByUserIdAndJobIdAndJobType(user.getId(), savedJob.getJob().getId(), "FULLTIME")
+                appliedJobRepository.findByUserIdAndJobIdAndJobType(user.getId(), savedJob.getJob().getId(), FulltimeJobs.class)
                         .ifPresent(applied -> {
                             dto.setApplicationStatus(applied.getStatus().name());
                             dto.setAppliedAt(applied.getAppliedAt());
@@ -225,7 +225,7 @@ public class FulltimeJobsService {
     }
 
     public SavedStatusDTO isJobSaved(Long jobId, User user) {
-        boolean saved = savedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), jobId, "FULLTIME");
+        boolean saved = savedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), jobId, FulltimeJobs.class);
         return SavedStatusDTO.builder().saved(saved).build();
     }
 
@@ -247,7 +247,7 @@ public class FulltimeJobsService {
         FulltimeJobs job = jobRepository.findById(jobId)
                 .orElseThrow(() -> new RuntimeException("FulltimeJobs not found with id: " + jobId));
 
-        Optional<AppliedJob> existingApplication = appliedJobRepository.findByUserIdAndJobIdAndJobType(user.getId(), jobId, "FULLTIME");
+        Optional<AppliedJob> existingApplication = appliedJobRepository.findByUserIdAndJobIdAndJobType(user.getId(), jobId, FulltimeJobs.class);
 
         AppliedJob appliedJob;
         if (existingApplication.isPresent()) {
@@ -281,11 +281,11 @@ public class FulltimeJobsService {
             @CacheEvict(value = "userStats", key = "#user.id")
     })
     public void withdrawApplication(Long jobId, User user) {
-        if (!appliedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), jobId, "FULLTIME")) {
+        if (!appliedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), jobId, FulltimeJobs.class)) {
             throw new RuntimeException("No application found to withdraw");
         }
 
-        appliedJobRepository.deleteByUserIdAndJobIdAndJobType(user.getId(), jobId, "FULLTIME");
+        appliedJobRepository.deleteByUserIdAndJobIdAndJobType(user.getId(), jobId, FulltimeJobs.class);
     }
 
     /**
@@ -294,7 +294,7 @@ public class FulltimeJobsService {
      * Returns applied=true with status if applied
      */
     public AppliedStatusDTO getJobStatus(Long jobId, User user) {
-        Optional<AppliedJob> appliedJob = appliedJobRepository.findByUserIdAndJobIdAndJobType(user.getId(), jobId, "FULLTIME");
+        Optional<AppliedJob> appliedJob = appliedJobRepository.findByUserIdAndJobIdAndJobType(user.getId(), jobId, FulltimeJobs.class);
 
         if (appliedJob.isPresent()) {
             return AppliedStatusDTO.builder()
@@ -371,11 +371,11 @@ public class FulltimeJobsService {
         JobDTO dto = JobDTO.fromEntity(job);
 
         if (user != null) {
-            dto.setIsSaved(savedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), job.getId(), "FULLTIME"));
-            dto.setIsApplied(appliedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), job.getId(), "FULLTIME"));
+            dto.setIsSaved(savedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), job.getId(), FulltimeJobs.class));
+            dto.setIsApplied(appliedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), job.getId(), FulltimeJobs.class));
 
             if (dto.getIsApplied()) {
-                appliedJobRepository.findByUserIdAndJobIdAndJobType(user.getId(), job.getId(), "FULLTIME")
+                appliedJobRepository.findByUserIdAndJobIdAndJobType(user.getId(), job.getId(), FulltimeJobs.class)
                         .ifPresent(applied -> {
                             dto.setApplicationStatus(applied.getStatus().name());
                             dto.setAppliedAt(applied.getAppliedAt());
