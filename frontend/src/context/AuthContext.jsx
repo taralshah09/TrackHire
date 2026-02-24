@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }) => {
         try {
             console.log('Attempting to refresh access token...');
 
-            const response = await fetch(import.meta.env.VITE_APP_BASE_URL + '/auth/refresh', {
+            const response = await fetch(import.meta.env.VITE_API_BASE_URL + '/auth/refresh', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

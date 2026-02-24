@@ -12,6 +12,7 @@ import AppliedJobsPage from './pages/AppliedJobsPage';
 import SavedJobsPage from './pages/SavedJobsPage';
 import LandingPage from './pages/LandingPage';
 import NewLandingPage from './pages/NewLandingPage';
+import OnboardingPage from './pages/OnboardingPage';
 
 function App() {
   return (
@@ -21,6 +22,9 @@ function App() {
         <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
         <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
         <Route path="/" element={<NewLandingPage />} />
+
+        {/* Onboarding (post-registration) */}
+        <Route path="/onboarding" element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
 
         {/* Protected Routes */}
         <Route

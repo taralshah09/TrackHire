@@ -63,7 +63,7 @@ export default function RegisterPage() {
         setErrorMsg('');
         setLoading(true);
         try {
-            const res = await fetch(import.meta.env.VITE_APP_BASE_URL + '/auth/register', {
+            const res = await fetch(import.meta.env.VITE_API_BASE_URL + '/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -74,15 +74,15 @@ export default function RegisterPage() {
             const data = await res.json();
             if (res.ok) {
                 // Auto-login
-                const lr = await fetch("https://trackhire-nlno.onrender.com/api" + '/auth/login', {
+                const lr = await fetch(import.meta.env.VITE_API_BASE_URL + '/auth/login', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ loginIdentifier: formData.username, password: formData.password }),
+                    body: JSON.stringify({ loginIdentifier: formData.email, password: formData.password }),
                 });
                 const ld = await lr.json();
                 if (lr.ok && ld.token && ld.refreshToken) {
                     login(ld);
                     toast.success('Account created! Welcome to TrackHire.');
-                    navigate('/dashboard');
+                    navigate('/onboarding');
                 } else {
                     toast.success('Account created! Sign in to continue.');
                     navigate('/login');
