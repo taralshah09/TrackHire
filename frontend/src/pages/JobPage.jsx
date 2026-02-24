@@ -355,7 +355,7 @@ export default function JobPage() {
                                 </button>
 
                                 {/* Apply / Status */}
-                                <div style={{ position: 'relative' }} ref={dropdownRef}>
+                                {/* <div style={{ position: 'relative' }} ref={dropdownRef}>
                                     <button
                                         onClick={handleApplyClick}
                                         disabled={actionLoading}
@@ -375,7 +375,6 @@ export default function JobPage() {
                                         {applied && <FaChevronDown style={{ fontSize: '11px' }} />}
                                     </button>
 
-                                    {/* Status dropdown */}
                                     {showDropdown && applied && (
                                         <div style={{
                                             position: 'absolute', right: 0, top: 'calc(100% + 8px)',
@@ -436,6 +435,52 @@ export default function JobPage() {
                                             </div>
                                         </div>
                                     )}
+                                </div> 
+                                */}
+                                {/* Application Status Dropdown */}
+                                <div style={{ position: 'relative' }} ref={dropdownRef}>
+                                    <select
+                                        value={applicationStatus || 'NOT_APPLIED'}
+                                        disabled={actionLoading}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+
+                                            if (value === 'NOT_APPLIED') {
+                                                handleWithdraw(); // mark as not applied
+                                            } else {
+                                                handleStatusChange(value);
+                                            }
+                                        }}
+                                        style={{
+                                            padding: '10px 18px',
+                                            borderRadius: '8px',
+                                            fontFamily: 'var(--font-display)',
+                                            fontWeight: 700,
+                                            fontSize: '13px',
+                                            cursor: 'pointer',
+                                            background: applied
+                                                ? (statusMeta?.bg || 'rgba(59,130,246,0.12)')
+                                                : 'var(--color-surface-3)',
+                                            color: applied
+                                                ? (statusMeta?.color || '#60a5fa')
+                                                : 'var(--color-white-65)',
+                                            border: applied
+                                                ? `1px solid ${statusMeta?.border || 'rgba(59,130,246,0.20)'}`
+                                                : '1px solid var(--color-border)',
+                                            appearance: 'none',
+                                            minWidth: '180px',
+                                        }}
+                                    >
+                                        {/* Default */}
+                                        <option value="NOT_APPLIED">Not Applied</option>
+
+                                        {/* Status options */}
+                                        {STATUS_OPTIONS.map(opt => (
+                                            <option key={opt.value} value={opt.value}>
+                                                {opt.label}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
 
                                 {/* External apply link */}

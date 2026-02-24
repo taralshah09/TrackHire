@@ -133,8 +133,8 @@ export const AuthProvider = ({ children }) => {
     }, [accessToken]);
 
     const login = (authData) => {
-        console.log('=== AuthContext login called ===');
-        console.log('Raw authData received:', authData);
+        // console.log('=== AuthContext login called ===');
+        // console.log('Raw authData received:', authData);
 
         const { token, refreshToken, username, email, user: userData } = authData;
 
@@ -142,12 +142,12 @@ export const AuthProvider = ({ children }) => {
         const finalUsername = username || userData?.username;
         const finalEmail = email || userData?.email;
 
-        console.log('Extracted values:', {
-            token,
-            refreshToken,
-            username: finalUsername,
-            email: finalEmail
-        });
+        // console.log('Extracted values:', {
+        //     token,
+        //     refreshToken,
+        //     username: finalUsername,
+        //     email: finalEmail
+        // });
 
         // Validate that we have the required data
         if (!token || !refreshToken) {
@@ -178,11 +178,11 @@ export const AuthProvider = ({ children }) => {
                 Cookies.set('email', finalEmail, { ...cookieOptions, expires: 30 });
             }
 
-            console.log('✅ Cookies set successfully');
-            console.log('Verification - accessToken:', Cookies.get('accessToken')?.substring(0, 20) + '...');
-            console.log('Verification - refreshToken:', Cookies.get('refreshToken')?.substring(0, 20) + '...');
-            console.log('Verification - username:', Cookies.get('username'));
-            console.log('Verification - email:', Cookies.get('email'));
+            // console.log('✅ Cookies set successfully');
+            // console.log('Verification - accessToken:', Cookies.get('accessToken')?.substring(0, 20) + '...');
+            // console.log('Verification - refreshToken:', Cookies.get('refreshToken')?.substring(0, 20) + '...');
+            // console.log('Verification - username:', Cookies.get('username'));
+            // console.log('Verification - email:', Cookies.get('email'));
 
             // Update state
             setAccessToken(token);
