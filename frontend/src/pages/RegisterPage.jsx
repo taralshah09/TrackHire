@@ -31,7 +31,7 @@ function calcStrength(pw) {
 
 export default function RegisterPage() {
     const navigate = useNavigate();
-    const { login } = useAuth();
+    const { login, setRedirectPath } = useAuth();
 
     const [formData, setFormData] = useState({
         username: '', email: '', phoneNumber: '', password: '', confirmPassword: '',
@@ -80,9 +80,9 @@ export default function RegisterPage() {
                 });
                 const ld = await lr.json();
                 if (lr.ok && ld.token && ld.refreshToken) {
+                    setRedirectPath('/onboarding');
                     login(ld);
                     toast.success('Account created! Welcome to TrackHire.');
-                    navigate('/onboarding');
                 } else {
                     toast.success('Account created! Sign in to continue.');
                     navigate('/login');
