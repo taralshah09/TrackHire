@@ -22,7 +22,7 @@ export default function JobsPage() {
 
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(true);
-    
+
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [totalElements, setTotalElements] = useState(0);
@@ -32,6 +32,7 @@ export default function JobsPage() {
         position: '', company: '', skills: '', locations: '',
         experienceLevels: '', sort: 'postedAt', direction: 'DESC',
     });
+    const [appliedFilters, setAppliedFilters] = useState({ ...filters });
     const [inputFocus, setInputFocus] = useState('');
 
     // Fetch tab badge counts on mount
@@ -56,11 +57,11 @@ export default function JobsPage() {
         setLoading(true);
         try {
             const params = { page, size: 9, sort: filters.sort, direction: filters.direction };
-            if (filters.position) params.position = filters.position;
-            if (filters.company) params.companies = filters.company;
-            if (filters.skills) params.skills = filters.skills;
-            if (filters.locations) params.locations = filters.locations;
-            if (filters.experienceLevels) params.experienceLevels = filters.experienceLevels;
+            if (appliedFilters.position) params.position = appliedFilters.position;
+            if (appliedFilters.company) params.companies = appliedFilters.company;
+            if (appliedFilters.skills) params.skills = appliedFilters.skills;
+            if (appliedFilters.locations) params.locations = appliedFilters.locations;
+            if (appliedFilters.experienceLevels) params.experienceLevels = appliedFilters.experienceLevels;
 
             // Choose endpoint by active tab
             let response;
@@ -82,7 +83,7 @@ export default function JobsPage() {
         } finally {
             setLoading(false);
         }
-    }, [page, activeTab, filters]);
+    }, [page, activeTab, appliedFilters, filters.sort, filters.direction]);
 
     useEffect(() => { fetchJobs(); }, [fetchJobs]);
 
@@ -100,11 +101,8 @@ export default function JobsPage() {
     };
 
     const handleSearch = () => {
-        if (page === 0) {
-            fetchJobs();
-        } else {
-            setPage(0);
-        }
+        setAppliedFilters({ ...filters });
+        setPage(0);
     };
 
     const handleFilterChange = (key, value) => {
