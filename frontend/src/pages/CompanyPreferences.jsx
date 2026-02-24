@@ -74,9 +74,7 @@ export default function CompanyPreferences() {
             <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                 <AppHeader left={
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)' }}>
-                        <span>Settings</span>
-                        <span style={{ opacity: 0.5 }}>/</span>
-                        <span>Company Preferences</span>
+                        <span>Preferred Companies</span>
                     </div>
                 } />
 

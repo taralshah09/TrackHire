@@ -122,28 +122,38 @@ export default function SavedJobsPage() {
                                     {loading ? 'Loading…' : `${totalElements} jobs saved`}
                                 </p>
                             </div>
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                                {[
-                                    { label: 'Date Saved', val: 'savedAt' },
-                                    { label: 'Newest Jobs', val: 'postedAt' },
-                                ].map(({ label, val }) => (
-                                    <button key={val}
-                                        onClick={() => { setSort(val); setPage(0); }}
-                                        style={{
-                                            padding: '8px 14px',
-                                            border: `1px solid ${sort === val ? 'var(--color-orange-border)' : 'var(--color-border)'}`,
-                                            borderRadius: '8px',
-                                            background: sort === val ? 'var(--color-orange-dim)' : 'var(--color-surface-2)',
-                                            color: sort === val ? 'var(--color-orange)' : 'var(--color-white-65)',
-                                            cursor: 'pointer',
-                                            fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '12px',
-                                            transition: 'all 0.2s',
-                                        }}
-                                    >
-                                        {label}
-                                    </button>
-                                ))}
+                            {/* Sort controls */}
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                <select
+                                    value={sort}
+                                    onChange={e => { setSort(e.target.value); setPage(0); }}
+                                    style={{
+                                        background: 'var(--color-surface-2)', border: '1px solid var(--color-border)',
+                                        borderRadius: '8px', color: 'var(--color-white)',
+                                        fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '12px',
+                                        padding: '7px 12px', outline: 'none', cursor: 'pointer',
+                                    }}
+                                >
+                                    <option value="savedAt">Date Saved</option>
+                                    <option value="job.postedAt">Date Posted</option>
+                                    <option value="job.title">Job Title</option>
+                                    <option value="job.company">Company</option>
+                                </select>
+                                <select
+                                    value={direction}
+                                    onChange={e => { setDirection(e.target.value); setPage(0); }}
+                                    style={{
+                                        background: 'var(--color-surface-2)', border: '1px solid var(--color-border)',
+                                        borderRadius: '8px', color: 'var(--color-white)',
+                                        fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '12px',
+                                        padding: '7px 12px', outline: 'none', cursor: 'pointer',
+                                    }}
+                                >
+                                    <option value="DESC">Newest First</option>
+                                    <option value="ASC">Oldest First</option>
+                                </select>
                             </div>
+
                         </div>
 
                         {/* Grid or empty state */}

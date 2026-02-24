@@ -24,6 +24,9 @@ public interface SavedJobRepository extends JpaRepository<SavedJob, Long> {
     Optional<SavedJob> findByUserIdAndJobIdAndJobType(Long userId, Long jobId, Class<?> jobType);
 
     // Get all saved jobs for a user
+    Page<SavedJob> findByUserId(Long userId, Pageable pageable);
+
+    // Get all saved jobs for a user (default sort)
     Page<SavedJob> findByUserIdOrderBySavedAtDesc(Long userId, Pageable pageable);
 
     // Count saved jobs for user

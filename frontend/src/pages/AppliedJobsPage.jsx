@@ -146,7 +146,10 @@ export default function AppliedJobsPage() {
                                     }}
                                 >
                                     <option value="appliedAt">Date Applied</option>
-                                    <option value="applicationStatus">Status</option>
+                                    <option value="status">Status</option>
+                                    {/* <option value="job.postedAt">Date Posted</option>
+                                    <option value="job.title">Job Title</option>
+                                    <option value="job.company">Company</option> */}
                                 </select>
                                 <select
                                     value={direction}
@@ -174,21 +177,52 @@ export default function AppliedJobsPage() {
                                 <table className="applied-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                                     <thead>
                                         <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
-                                            {['Job Title', 'Company', 'Location', 'Status', 'Date Applied', 'Link'].map(h => (
-                                                <th key={h} style={{
-                                                    padding: '14px 20px', textAlign: 'left',
-                                                    fontFamily: 'var(--font-display)', fontWeight: 700,
-                                                    fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase',
-                                                    color: 'var(--color-white-40)', whiteSpace: 'nowrap',
-                                                }}>{h}</th>
+                                            {[
+                                                { label: 'Job Title', key: 'job.title' },
+                                                { label: 'Company', key: 'job.company' },
+                                                { label: 'Location', key: 'job.location' },
+                                                { label: 'Status', key: 'status' },
+                                                { label: 'Date Posted', key: 'job.postedAt' },
+                                                { label: 'Date Applied', key: 'appliedAt' },
+                                                { label: 'Link', key: null }
+                                            ].map(({ label, key }) => (
+                                                <th key={label}
+                                                    onClick={() => {
+                                                        if (!key) return;
+                                                        if (sort === key) {
+                                                            setDirection(d => d === 'ASC' ? 'DESC' : 'ASC');
+                                                        } else {
+                                                            setSort(key);
+                                                            setDirection('DESC');
+                                                        }
+                                                        setPage(0);
+                                                    }}
+                                                    style={{
+                                                        padding: '14px 20px', textAlign: 'left',
+                                                        fontFamily: 'var(--font-display)', fontWeight: 700,
+                                                        fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase',
+                                                        color: sort === key ? 'var(--color-orange)' : 'var(--color-white-40)',
+                                                        whiteSpace: 'nowrap',
+                                                        cursor: key ? 'pointer' : 'default',
+                                                        userSelect: 'none',
+                                                        transition: 'color 0.2s',
+                                                    }}
+                                                >
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        {label}
+                                                        {key && sort === key && (
+                                                            <span>{direction === 'DESC' ? '↓' : '↑'}</span>
+                                                        )}
+                                                    </div>
+                                                </th>
                                             ))}
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {loading ? (
-                                            <tr><td colSpan="6" style={{ padding: '48px', textAlign: 'center', color: 'var(--color-white-40)', fontFamily: 'var(--font-body)', fontSize: '14px' }}>Loading…</td></tr>
+                                            <tr><td colSpan="7" style={{ padding: '48px', textAlign: 'center', color: 'var(--color-white-40)', fontFamily: 'var(--font-body)', fontSize: '14px' }}>Loading…</td></tr>
                                         ) : error ? (
-                                            <tr><td colSpan="6" style={{ padding: '64px', textAlign: 'center' }}>
+                                            <tr><td colSpan="7" style={{ padding: '64px', textAlign: 'center' }}>
                                                 <p style={{ fontFamily: 'var(--font-body)', fontSize: '15px', color: '#f87171', margin: '0 0 12px' }}>{error}</p>
                                                 <button
                                                     onClick={fetchJobs}
@@ -201,7 +235,7 @@ export default function AppliedJobsPage() {
                                                 </button>
                                             </td></tr>
                                         ) : jobs?.length === 0 ? (
-                                            <tr><td colSpan="6" style={{ padding: '64px', textAlign: 'center' }}>
+                                            <tr><td colSpan="7" style={{ padding: '64px', textAlign: 'center' }}>
                                                 <p style={{ fontFamily: 'var(--font-body)', fontSize: '15px', color: 'var(--color-white-65)', margin: '0 0 6px' }}>No applications tracked yet.</p>
                                                 <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-20)', margin: 0 }}>Start applying to jobs and track your pipeline here.</p>
                                             </td></tr>
@@ -234,7 +268,10 @@ export default function AppliedJobsPage() {
                                                         </span>
                                                     </td>
                                                     <td style={{ padding: '14px 20px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-white-40)', whiteSpace: 'nowrap' }}>
-                                                        {job?.appliedAt ? `Applied on ${new Date(job.appliedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}` : '—'}
+                                                        {job?.postedAt ? new Date(job.postedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                                                    </td>
+                                                    <td style={{ padding: '14px 20px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-white-40)', whiteSpace: 'nowrap' }}>
+                                                        {job?.appliedAt ? new Date(job.appliedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
                                                     </td>
                                                     <td style={{ padding: '14px 20px' }}>
                                                         <Link to={`/jobs/${job?.jobId || job?.id}`} style={{
@@ -249,10 +286,12 @@ export default function AppliedJobsPage() {
                                                 </tr>
                                             );
                                         })}
+
                                     </tbody>
                                 </table>
                             </div>
                         </div>
+
 
                         {/* Pagination */}
                         {!loading && jobs.length > 0 && totalPages > 1 && (

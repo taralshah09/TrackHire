@@ -24,10 +24,13 @@ public interface AppliedJobRepository extends JpaRepository<AppliedJob, Long> {
     Optional<AppliedJob> findByUserIdAndJobIdAndJobType(Long userId, Long jobId, Class<?> jobType);
 
     // Get all applied jobs for a user
+    Page<AppliedJob> findByUserId(Long userId, Pageable pageable);
+
+    // Get all applied jobs for a user (default sort)
     Page<AppliedJob> findByUserIdOrderByAppliedAtDesc(Long userId, Pageable pageable);
 
     // Get applied jobs by status (multiple statuses)
-    @Query("SELECT a FROM AppliedJob a WHERE a.user.id = :userId AND a.status IN :statuses ORDER BY a.appliedAt DESC")
+    @Query("SELECT a FROM AppliedJob a WHERE a.user.id = :userId AND a.status IN :statuses")
     Page<AppliedJob> findByUserIdAndStatusIn(Long userId, List<AppliedJob.ApplicationStatus> statuses, Pageable pageable);
 
     // Count applied jobs for user

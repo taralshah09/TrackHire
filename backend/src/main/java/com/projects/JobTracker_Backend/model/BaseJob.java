@@ -4,4 +4,5 @@ public interface BaseJob {
     Long getId();
     String getTitle();
     String getCompany();
+    java.time.LocalDateTime getPostedAt();
 }

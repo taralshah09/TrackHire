@@ -20,7 +20,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.hibernate.Hibernate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -264,9 +264,9 @@ public class JobService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "savedJobs", key = "#user.id + '-' + #pageable.pageNumber")
+    @Cacheable(value = "savedJobs", key = "#user.id + '-' + #pageable.pageNumber + '-' + #pageable.sort.toString()")
     public Page<JobDTO> getSavedJobs(Pageable pageable, User user) {
-        Page<SavedJob> savedJobs = savedJobRepository.findByUserIdOrderBySavedAtDesc(user.getId(), pageable);
+        Page<SavedJob> savedJobs = savedJobRepository.findByUserId(user.getId(), pageable);
         List<JobDTO> dtoList = savedJobs.getContent().stream()
                 .map(savedJob -> {
                     JobDTO dto = JobDTO.fromEntity(savedJob.getJob());
@@ -390,7 +390,7 @@ public class JobService {
      * Get all applied jobs with optional status filter
      */
     @Transactional(readOnly = true)
-    @Cacheable(value = "appliedJobs", key = "#user.id + '-' + #pageable.pageNumber + '-' + (#statuses != null ? #statuses.toString() : 'all')")
+    @Cacheable(value = "appliedJobs", key = "#user.id + '-' + #pageable.pageNumber + '-' + #pageable.sort.toString() + '-' + (#statuses != null ? #statuses.toString() : 'all')")
     public Page<JobDTO> getAppliedJobs(List<AppliedJob.ApplicationStatus> statuses,
                                        Pageable pageable, User user) {
         Page<AppliedJob> appliedJobs;
@@ -398,7 +398,7 @@ public class JobService {
         if (statuses != null && !statuses.isEmpty()) {
             appliedJobs = appliedJobRepository.findByUserIdAndStatusIn(user.getId(), statuses, pageable);
         } else {
-            appliedJobs = appliedJobRepository.findByUserIdOrderByAppliedAtDesc(user.getId(), pageable);
+            appliedJobs = appliedJobRepository.findByUserId(user.getId(), pageable);
         }
 
         List<JobDTO> dtoList = appliedJobs.getContent().stream()
