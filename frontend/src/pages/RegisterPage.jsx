@@ -40,6 +40,7 @@ export default function RegisterPage() {
     const [agreedToTerms, setAgreedToTerms] = useState(false);
     const [focused, setFocused] = useState('');
     const [strength, setStrength] = useState(0);
+    const [errorMsg, setErrorMsg] = useState('');
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -48,20 +49,21 @@ export default function RegisterPage() {
     };
 
     const validate = () => {
-        if (!formData.username.trim()) { toast.error('Full name is required.'); return false; }
-        if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) { toast.error('Enter a valid email address.'); return false; }
-        if (formData.password.length < 8) { toast.error('Password must be at least 8 characters.'); return false; }
-        if (formData.password !== formData.confirmPassword) { toast.error('Passwords do not match.'); return false; }
-        if (!agreedToTerms) { toast.error('Agree to the Terms of Service to continue.'); return false; }
+        if (!formData.username.trim()) { setErrorMsg('Full name is required.'); return false; }
+        if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) { setErrorMsg('Enter a valid email address.'); return false; }
+        if (formData.password.length < 8) { setErrorMsg('Password must be at least 8 characters.'); return false; }
+        if (formData.password !== formData.confirmPassword) { setErrorMsg('Passwords do not match.'); return false; }
+        if (!agreedToTerms) { setErrorMsg('Agree to the Terms of Service to continue.'); return false; }
         return true;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validate()) return;
+        setErrorMsg('');
         setLoading(true);
         try {
-            const res = await fetch("https://trackhire-nlno.onrender.com/api" + '/auth/register', {
+            const res = await fetch(import.meta.env.VITE_APP_BASE_URL + '/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -86,10 +88,11 @@ export default function RegisterPage() {
                     navigate('/login');
                 }
             } else {
-                toast.error(data.message || 'Registration failed.');
+                const msg = data.message || 'Registration failed.';
+                setErrorMsg(msg);
             }
         } catch {
-            toast.error('Something went wrong on our end. Refresh the page — your data is safe.');
+            setErrorMsg('Something went wrong on our end. Refresh the page — your data is safe.');
         } finally {
             setLoading(false);
         }
@@ -123,6 +126,14 @@ export default function RegisterPage() {
                 }
                 @media (min-width: 769px) {
                     .register-form-grid { grid-template-columns: 1fr 1fr !important; }
+                }
+                @keyframes popupFadeIn {
+                    from { opacity: 0; transform: translate(-50%, -50%) scale(0.85); }
+                    to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                }
+                @keyframes backdropFadeIn {
+                    from { opacity: 0; }
+                    to   { opacity: 1; }
                 }
             `}</style>
 
@@ -318,29 +329,115 @@ export default function RegisterPage() {
                             </span>
                         </label>
 
-                        {/* Submit */}
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            style={{
-                                width: '100%',
-                                fontFamily: 'var(--font-display)', fontWeight: 700,
-                                fontSize: '14px', color: '#000',
-                                background: loading ? 'var(--color-orange-hover)' : 'var(--color-orange)',
-                                padding: '13px 24px',
-                                borderRadius: '8px', border: 'none',
-                                cursor: loading ? 'not-allowed' : 'pointer',
-                                opacity: loading ? 0.8 : 1,
-                                transition: 'background 0.2s',
-                            }}
-                            onMouseEnter={e => { if (!loading) e.currentTarget.style.background = 'var(--color-orange-hover)'; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-orange)'; }}
-                        >
-                            {loading ? 'Creating Account…' : 'Create Free Account'}
-                        </button>
+                        {/* Submit — only enabled when passwords match + terms agreed */}
+                        {(() => {
+                            const passwordsMatch = formData.password && formData.confirmPassword && formData.password === formData.confirmPassword;
+                            const isFormValid = passwordsMatch && agreedToTerms && !loading;
+                            return (
+                                <button
+                                    type="submit"
+                                    disabled={!isFormValid}
+                                    style={{
+                                        width: '100%',
+                                        fontFamily: 'var(--font-display)', fontWeight: 700,
+                                        fontSize: '14px', color: '#000',
+                                        background: !isFormValid ? 'var(--color-white-20)' : 'var(--color-orange)',
+                                        padding: '13px 24px',
+                                        borderRadius: '8px', border: 'none',
+                                        cursor: !isFormValid ? 'not-allowed' : 'pointer',
+                                        opacity: !isFormValid ? 0.5 : 1,
+                                        transition: 'background 0.2s, opacity 0.2s',
+                                    }}
+                                    onMouseEnter={e => { if (isFormValid) e.currentTarget.style.background = 'var(--color-orange-hover)'; }}
+                                    onMouseLeave={e => { if (isFormValid) e.currentTarget.style.background = 'var(--color-orange)'; }}
+                                >
+                                    {loading ? 'Creating Account…' : 'Create Free Account'}
+                                </button>
+                            );
+                        })()}
+
+                        {/* Hint text when button is disabled */}
+                        {(!agreedToTerms || !formData.confirmPassword || formData.password !== formData.confirmPassword) && (
+                            <p style={{
+                                fontFamily: 'var(--font-body)', fontSize: '12px',
+                                color: 'var(--color-white-40)', textAlign: 'center',
+                                marginTop: '8px', marginBottom: 0,
+                            }}>
+                                {formData.confirmPassword && formData.password !== formData.confirmPassword
+                                    ? '⚠ Passwords do not match'
+                                    : !agreedToTerms
+                                        ? '☑ Please agree to the Terms of Service'
+                                        : 'Fill in all required fields to continue'}
+                            </p>
+                        )}
                     </form>
                 </div>
             </div>
+
+            {/* Error modal popup */}
+            {errorMsg && (
+                <div
+                    onClick={() => setErrorMsg('')}
+                    style={{
+                        position: 'fixed', inset: 0,
+                        background: 'rgba(0,0,0,0.6)',
+                        backdropFilter: 'blur(4px)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        zIndex: 9999,
+                        animation: 'backdropFadeIn 0.25s ease-out',
+                    }}
+                >
+                    <div
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                            position: 'fixed', top: '50%', left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            background: 'var(--color-surface-1)',
+                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                            borderRadius: '16px',
+                            padding: '32px',
+                            maxWidth: '400px',
+                            width: '90%',
+                            textAlign: 'center',
+                            animation: 'popupFadeIn 0.3s ease-out',
+                            boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+                        }}
+                    >
+                        <div style={{
+                            width: '56px', height: '56px', borderRadius: '50%',
+                            background: 'rgba(239, 68, 68, 0.12)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            margin: '0 auto 16px',
+                        }}>
+                            <span style={{ fontSize: '28px' }}>✕</span>
+                        </div>
+                        <h3 style={{
+                            fontFamily: 'var(--font-display)', fontWeight: 700,
+                            fontSize: '18px', color: '#fca5a5',
+                            margin: '0 0 8px',
+                        }}>Registration Failed</h3>
+                        <p style={{
+                            fontFamily: 'var(--font-body)', fontSize: '14px',
+                            color: 'var(--color-white-65)', lineHeight: 1.6,
+                            margin: '0 0 24px',
+                        }}>{errorMsg}</p>
+                        <button
+                            onClick={() => setErrorMsg('')}
+                            style={{
+                                fontFamily: 'var(--font-display)', fontWeight: 700,
+                                fontSize: '14px', color: '#000',
+                                background: 'var(--color-orange)',
+                                padding: '10px 32px',
+                                borderRadius: '8px', border: 'none',
+                                cursor: 'pointer',
+                                transition: 'background 0.2s',
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'var(--color-orange-hover)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'var(--color-orange)'}
+                        >Try Again</button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

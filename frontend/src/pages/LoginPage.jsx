@@ -42,14 +42,16 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [focused, setFocused] = useState('');
+    const [errorMsg, setErrorMsg] = useState('');
 
     const handleChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setErrorMsg('');
         setLoading(true);
         try {
-            const response = await fetch("https://trackhire-nlno.onrender.com/api" + '/auth/login', {
+            const response = await fetch(import.meta.env.VITE_API_BASE_URL + '/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
@@ -61,12 +63,16 @@ export default function LoginPage() {
                     toast.success('Welcome back!');
                     navigate(location.state?.from?.pathname || '/dashboard', { replace: true });
                 } else {
+                    setErrorMsg('Failed to save login session.');
                     toast.error('Failed to save login session.');
                 }
             } else {
-                toast.error(data.message || "We couldn't log you in. Check your email and password and try again.");
+                const msg = data.message || "We couldn't log you in. Check your email and password and try again.";
+                setErrorMsg(msg);
+                toast.error(msg);
             }
         } catch {
+            setErrorMsg('Something went wrong on our end. Refresh the page — your data is safe.');
             toast.error('Something went wrong on our end. Refresh the page — your data is safe.');
         } finally {
             setLoading(false);
@@ -94,6 +100,14 @@ export default function LoginPage() {
                 @media (max-width: 768px) {
                     .login-left-panel { display: none !important; }
                     .login-card { max-width: 440px !important; }
+                }
+                @keyframes popupFadeIn {
+                    from { opacity: 0; transform: translate(-50%, -50%) scale(0.85); }
+                    to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                }
+                @keyframes backdropFadeIn {
+                    from { opacity: 0; }
+                    to   { opacity: 1; }
                 }
             `}</style>
 
@@ -273,6 +287,7 @@ export default function LoginPage() {
                             </div>
                         </div>
 
+
                         {/* Submit */}
                         <button
                             type="submit"
@@ -304,6 +319,71 @@ export default function LoginPage() {
                     </p>
                 </div>
             </div>
+
+            {/* Error modal popup */}
+            {errorMsg && (
+                <div
+                    onClick={() => setErrorMsg('')}
+                    style={{
+                        position: 'fixed', inset: 0,
+                        background: 'rgba(0,0,0,0.6)',
+                        backdropFilter: 'blur(4px)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        zIndex: 9999,
+                        animation: 'backdropFadeIn 0.25s ease-out',
+                    }}
+                >
+                    <div
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                            position: 'fixed', top: '50%', left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            background: 'var(--color-surface-1)',
+                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                            borderRadius: '16px',
+                            padding: '32px',
+                            maxWidth: '400px',
+                            width: '90%',
+                            textAlign: 'center',
+                            animation: 'popupFadeIn 0.3s ease-out',
+                            boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+                        }}
+                    >
+                        <div style={{
+                            width: '56px', height: '56px', borderRadius: '50%',
+                            background: 'rgba(239, 68, 68, 0.12)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            margin: '0 auto 16px',
+                        }}>
+                            <span style={{ fontSize: '28px' }}>✕</span>
+                        </div>
+                        <h3 style={{
+                            fontFamily: 'var(--font-display)', fontWeight: 700,
+                            fontSize: '18px', color: '#fca5a5',
+                            margin: '0 0 8px',
+                        }}>Login Failed</h3>
+                        <p style={{
+                            fontFamily: 'var(--font-body)', fontSize: '14px',
+                            color: 'var(--color-white-65)', lineHeight: 1.6,
+                            margin: '0 0 24px',
+                        }}>{errorMsg}</p>
+                        <button
+                            onClick={() => setErrorMsg('')}
+                            style={{
+                                fontFamily: 'var(--font-display)', fontWeight: 700,
+                                fontSize: '14px', color: '#000',
+                                background: 'var(--color-orange)',
+                                padding: '10px 32px',
+                                borderRadius: '8px', border: 'none',
+                                cursor: 'pointer',
+                                transition: 'background 0.2s',
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'var(--color-orange-hover)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'var(--color-orange)'}
+                        >Try Again</button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
