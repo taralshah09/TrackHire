@@ -56,7 +56,7 @@ function mapSource(src) {
     if (!src) return "OTHER";
 
     const s = src.toLowerCase();
-
+    if (s.includes("adzuna")) return "ADZUNA"; // Added Adzuna
     if (s.includes("linkedin")) return "LINKEDIN";
     if (s.includes("indeed")) return "INDEED";
     if (s.includes("glassdoor")) return "GLASSDOOR";
@@ -80,6 +80,75 @@ function toDate(iso) {
 // ---------- Main Loader ----------
 
 // ---------- Main Loader ----------
+
+/**
+ * Helper to upsert a batch of jobs into a specific table.
+ * @param {import('pg').PoolClient} client 
+ * @param {string} tableName 
+ * @param {Array} batch 
+ * @returns {Promise<{ inserted: number, updated: number, skipped: number }>}
+ */
+async function upsertBatch(client, tableName, batch) {
+    if (batch.length === 0) return { inserted: 0, updated: 0, skipped: 0 };
+
+    const values = [];
+    const placeholders = [];
+    let paramIndex = 1;
+
+    for (const job of batch) {
+        const row = [
+            generateId(job.company, job.title, job.id, job.date_posted),
+            job.company,
+            null, // company_logo
+            job.title,
+            job.location || null,
+            null, // department
+            mapEmploymentType(job.job_type),
+            job.description || null,
+            job.apply_url,
+            toDate(job.date_posted),
+            mapSource(job.source),
+            detectRemote(job.location, job.title),
+            null, // experience_level
+            true, // is_active
+            job.salary_min || 0,
+            job.salary_max || 0,
+            "DISCOVER" // job_category
+        ];
+        values.push(...row);
+
+        const rowPlaceholders = row.map(() => `$${paramIndex++}`).join(", ");
+        placeholders.push(`(${rowPlaceholders})`);
+    }
+
+    const sql = `
+        INSERT INTO ${tableName} (
+            external_id, company, company_logo, title, location, department,
+            employment_type, description, apply_url, posted_at,
+            source, is_remote, experience_level, is_active,
+            min_salary, max_salary, job_category
+        )
+        VALUES ${placeholders.join(", ")}
+        ON CONFLICT (external_id) DO UPDATE SET
+            title = EXCLUDED.title,
+            location = EXCLUDED.location,
+            description = EXCLUDED.description,
+            posted_at = EXCLUDED.posted_at,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE 
+            ${tableName}.title IS DISTINCT FROM EXCLUDED.title OR
+            ${tableName}.location IS DISTINCT FROM EXCLUDED.location OR
+            ${tableName}.description IS DISTINCT FROM EXCLUDED.description
+        RETURNING (xmax = 0) AS inserted
+    `;
+
+    const res = await client.query(sql, values);
+    const inserted = res.rows.filter(r => r.inserted).length;
+    const updated = res.rows.filter(r => !r.inserted).length;
+    const skipped = batch.length - res.rows.length;
+
+    return { inserted, updated, skipped };
+}
 
 /**
  * Loads jobs from JSON file to DB.
@@ -109,71 +178,24 @@ async function run(filePath) {
         for (let i = 0; i < jobs.length; i += BATCH_SIZE) {
             const batch = jobs.slice(i, i + BATCH_SIZE);
 
-            // Construct values and placeholders for bulk insert
-            const values = [];
-            const placeholders = [];
-            let paramIndex = 1;
+            // 1. All jobs go to 'jobs' table
+            const stats = await upsertBatch(client, "jobs", batch);
+            totalInserted += stats.inserted;
+            totalUpdated += stats.updated;
+            totalSkipped += stats.skipped;
 
-            for (const job of batch) {
-                const row = [
-                    generateId(job.company, job.title, job.id, job.date_posted),
-                    job.company,
-                    null, // company_logo
-                    job.title,
-                    job.location || null,
-                    null, // department
-                    mapEmploymentType(job.job_type),
-                    job.description || null,
-                    job.apply_url,
-                    toDate(job.date_posted),
-                    mapSource(job.source),
-                    detectRemote(job.location, job.title),
-                    null, // experience_level
-                    true, // is_active
-                    job.salary_min || 0,
-                    job.salary_max || 0,
-                    "DISCOVER" // job_category
-                ];
-                values.push(...row);
+            // 2. Conditionally insert into intern_jobs or fulltime_jobs
+            const internBatch = batch.filter(job => job.title && job.title.toLowerCase().includes("intern"));
+            const fulltimeBatch = batch.filter(job => !job.title || !job.title.toLowerCase().includes("intern"));
 
-                // Create placeholder string like ($1, $2, ... $17)
-                const rowPlaceholders = row.map(() => `$${paramIndex++}`).join(", ");
-                placeholders.push(`(${rowPlaceholders})`);
+            if (internBatch.length > 0) {
+                await upsertBatch(client, "intern_jobs", internBatch);
+            }
+            if (fulltimeBatch.length > 0) {
+                await upsertBatch(client, "fulltime_jobs", fulltimeBatch);
             }
 
-            // Optimization: Add WHERE clause to ON CONFLICT to avoid "fake" updates
-            // xmax=0 → fresh insert, xmax>0 → updated, not returned → skipped (no change)
-            const sql = `
-          INSERT INTO ${TABLE_NAME} (
-            external_id, company, company_logo, title, location, department,
-            employment_type, description, apply_url, posted_at,
-            source, is_remote, experience_level, is_active,
-            min_salary, max_salary, job_category
-          )
-          VALUES ${placeholders.join(", ")}
-          ON CONFLICT (external_id) DO UPDATE SET
-            title = EXCLUDED.title,
-            location = EXCLUDED.location,
-            description = EXCLUDED.description,
-            posted_at = EXCLUDED.posted_at,
-            is_active = TRUE,
-            updated_at = CURRENT_TIMESTAMP
-          WHERE 
-            jobs.title IS DISTINCT FROM EXCLUDED.title OR
-            jobs.location IS DISTINCT FROM EXCLUDED.location OR
-            jobs.description IS DISTINCT FROM EXCLUDED.description
-          RETURNING (xmax = 0) AS inserted
-        `;
-
-            const res = await client.query(sql, values);
-            const inserted = res.rows.filter(r => r.inserted).length;
-            const updated = res.rows.filter(r => !r.inserted).length;
-            const skipped = batch.length - res.rows.length;
-            totalInserted += inserted;
-            totalUpdated += updated;
-            totalSkipped += skipped;
-
-            console.log(`✅ Batch ${i + batch.length}/${jobs.length} — +${inserted} new, ~${updated} updated, =${skipped} skipped`);
+            console.log(`✅ Batch ${i + batch.length}/${jobs.length} processed`);
         }
 
         console.log(`\n🎉 Load complete: ${totalInserted} inserted, ${totalUpdated} updated, ${totalSkipped} skipped (unchanged)`);
