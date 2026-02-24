@@ -24,20 +24,78 @@ export default function AppliedJobsPage() {
     const [totalElements, setTotalElements] = useState(0);
     const [sort, setSort] = useState('appliedAt');
     const [direction, setDirection] = useState('DESC');
+    const [error, setError] = useState(null);
     const username = Cookies.get('username') || '';
 
     const fetchJobs = async () => {
         setLoading(true);
+        setError(null);
+
         try {
             const res = await api.getAppliedJobs({ page, size: 15, sort, direction });
-            const d = res.json ? await res.json() : res;
-            setJobs(d.content || d || []);
-            setTotalPages(d.totalPages || 0);
-            setTotalElements(d.totalElements || 0);
-        } catch (e) { console.error(e); } finally { setLoading(false); }
-    };
 
-    useEffect(() => { fetchJobs(); }, [page, sort, direction]);
+            let data;
+
+            // Handle fetch-style response
+            if (res?.ok === false) {
+                throw new Error(`Server error: ${res.status}`);
+            }
+
+            if (typeof res?.json === "function") {
+                try {
+                    data = await res.json();
+                } catch {
+                    throw new Error("Invalid server response.");
+                }
+            } else {
+                data = res;
+            }
+
+            // Defensive structure validation
+            const safeContent = Array.isArray(data?.content)
+                ? data.content
+                : Array.isArray(data)
+                    ? data
+                    : [];
+
+            setJobs(safeContent);
+            setTotalPages(Number.isInteger(data?.totalPages) ? data.totalPages : 0);
+            setTotalElements(Number.isInteger(data?.totalElements) ? data.totalElements : 0);
+
+        } catch (err) {
+            console.error("AppliedJobs fetch error:", err);
+
+            // Reset state to avoid stale UI
+            setJobs([]);
+            setTotalPages(0);
+            setTotalElements(0);
+
+            if (err?.name === "AbortError") {
+                setError("Request timed out. Please try again.");
+            } else if (err?.message?.includes("Network")) {
+                setError("Network error. Check your connection.");
+            } else {
+                setError("Unable to load applied jobs. Please try again later.");
+            }
+
+        } finally {
+            setLoading(false);
+        }
+    };
+    useEffect(() => {
+        let isMounted = true;
+
+        const safeFetch = async () => {
+            if (!isMounted) return;
+            await fetchJobs();
+        };
+
+        safeFetch();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [page, sort, direction]);
 
     return (
         <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
@@ -129,28 +187,41 @@ export default function AppliedJobsPage() {
                                     <tbody>
                                         {loading ? (
                                             <tr><td colSpan="6" style={{ padding: '48px', textAlign: 'center', color: 'var(--color-white-40)', fontFamily: 'var(--font-body)', fontSize: '14px' }}>Loading…</td></tr>
-                                        ) : jobs.length === 0 ? (
+                                        ) : error ? (
+                                            <tr><td colSpan="6" style={{ padding: '64px', textAlign: 'center' }}>
+                                                <p style={{ fontFamily: 'var(--font-body)', fontSize: '15px', color: '#f87171', margin: '0 0 12px' }}>{error}</p>
+                                                <button
+                                                    onClick={fetchJobs}
+                                                    style={{
+                                                        background: 'var(--color-surface-3)', border: '1px solid var(--color-border)',
+                                                        color: 'var(--color-white)', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    Try Again
+                                                </button>
+                                            </td></tr>
+                                        ) : jobs?.length === 0 ? (
                                             <tr><td colSpan="6" style={{ padding: '64px', textAlign: 'center' }}>
                                                 <p style={{ fontFamily: 'var(--font-body)', fontSize: '15px', color: 'var(--color-white-65)', margin: '0 0 6px' }}>No applications tracked yet.</p>
                                                 <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-20)', margin: 0 }}>Start applying to jobs and track your pipeline here.</p>
                                             </td></tr>
-                                        ) : jobs.map((job) => {
-                                            const st = getStatus(job.applicationStatus);
+                                        ) : jobs?.map((job) => {
+                                            const st = getStatus(job?.applicationStatus);
                                             return (
-                                                <tr key={job.id} style={{ borderBottom: '1px solid rgba(46,46,46,0.5)' }}>
+                                                <tr key={job?.id} style={{ borderBottom: '1px solid rgba(46,46,46,0.5)' }}>
                                                     <td style={{ padding: '14px 20px' }}>
                                                         <span style={{
                                                             fontFamily: 'var(--font-display)', fontWeight: 700,
                                                             fontSize: '14px', color: 'var(--color-white)',
                                                         }}>
-                                                            {job.title || job.role}
+                                                            {job?.title || job?.role}
                                                         </span>
                                                     </td>
                                                     <td style={{ padding: '14px 20px', fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--color-white-65)' }}>
-                                                        {job.companyName || job.company}
+                                                        {job?.companyName || job?.company}
                                                     </td>
                                                     <td style={{ padding: '14px 20px', fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)' }}>
-                                                        {job.location || '—'}
+                                                        {job?.location || '—'}
                                                     </td>
                                                     <td style={{ padding: '14px 20px' }}>
                                                         <span style={{
@@ -159,14 +230,14 @@ export default function AppliedJobsPage() {
                                                             background: st.bg, color: st.color, border: `1px solid ${st.border}`,
                                                             padding: '4px 10px', borderRadius: '999px', whiteSpace: 'nowrap',
                                                         }}>
-                                                            {job.applicationStatus || 'Applied'}
+                                                            {job?.applicationStatus || 'Applied'}
                                                         </span>
                                                     </td>
                                                     <td style={{ padding: '14px 20px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-white-40)', whiteSpace: 'nowrap' }}>
-                                                        {job.appliedAt ? `Applied on ${new Date(job.appliedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}` : '—'}
+                                                        {job?.appliedAt ? `Applied on ${new Date(job.appliedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}` : '—'}
                                                     </td>
                                                     <td style={{ padding: '14px 20px' }}>
-                                                        <Link to={`/jobs/${job.jobId || job.id}`} style={{
+                                                        <Link to={`/jobs/${job?.jobId || job?.id}`} style={{
                                                             fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '12px',
                                                             color: 'var(--color-orange)', textDecoration: 'none',
                                                             transition: 'color 0.2s',

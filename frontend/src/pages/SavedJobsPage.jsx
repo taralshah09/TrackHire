@@ -15,20 +15,75 @@ export default function SavedJobsPage() {
     const [totalElements, setTotalElements] = useState(0);
     const [sort, setSort] = useState('savedAt');
     const [direction, setDirection] = useState('DESC');
+    const [error, setError] = useState(null);
     const username = Cookies.get('username') || '';
 
     const fetchJobs = async () => {
         setLoading(true);
+        setError(null);
+
         try {
             const res = await api.getSavedJobs({ page, size: 9, sort, direction });
-            const d = res.json ? await res.json() : res;
-            setJobs(d.content || d || []);
-            setTotalPages(d.totalPages || 0);
-            setTotalElements(d.totalElements || 0);
-        } catch (e) { console.error(e); } finally { setLoading(false); }
+
+            // Handle fetch-style response
+            let data;
+
+            if (res?.ok === false) {
+                throw new Error(`Server error: ${res.status}`);
+            }
+
+            if (typeof res?.json === "function") {
+                try {
+                    data = await res.json();
+                } catch (jsonErr) {
+                    throw new Error("Invalid server response.");
+                }
+            } else {
+                data = res;
+            }
+
+            // Validate structure safely
+            const safeContent = Array.isArray(data?.content)
+                ? data.content
+                : Array.isArray(data)
+                    ? data
+                    : [];
+
+            setJobs(safeContent);
+            setTotalPages(Number.isInteger(data?.totalPages) ? data.totalPages : 0);
+            setTotalElements(Number.isInteger(data?.totalElements) ? data.totalElements : 0);
+
+        } catch (err) {
+            console.error("SavedJobs fetch error:", err);
+
+            setJobs([]); // Prevent stale UI
+            setTotalPages(0);
+            setTotalElements(0);
+
+            setError(
+                err?.message?.includes("Network")
+                    ? "Network error. Please check your internet connection."
+                    : "Unable to load saved jobs. Please try again later."
+            );
+        } finally {
+            setLoading(false);
+        }
     };
 
-    useEffect(() => { fetchJobs(); }, [page, sort, direction]);
+    useEffect(() => {
+        let isMounted = true;
+
+        const safeFetch = async () => {
+            if (!isMounted) return;
+            await fetchJobs();
+        };
+
+        safeFetch();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [page, sort, direction]);
 
     return (
         <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
@@ -96,6 +151,23 @@ export default function SavedJobsPage() {
                             <div style={{ textAlign: 'center', padding: '80px', color: 'var(--color-white-40)', fontFamily: 'var(--font-body)', fontSize: '15px' }}>
                                 Loading…
                             </div>
+                        ) : error ? (
+                            <div style={{
+                                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                                minHeight: '320px', border: '1px solid var(--color-border)',
+                                borderRadius: '14px', textAlign: 'center', padding: '48px',
+                            }}>
+                                <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '18px', color: '#f87171', margin: '0 0 12px' }}>{error}</p>
+                                <button
+                                    onClick={fetchJobs}
+                                    style={{
+                                        background: 'var(--color-surface-3)', border: '1px solid var(--color-border)',
+                                        color: 'var(--color-white)', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer'
+                                    }}
+                                >
+                                    Try Again
+                                </button>
+                            </div>
                         ) : jobs.length === 0 ? (
                             <div style={{
                                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -134,7 +206,7 @@ export default function SavedJobsPage() {
                                     className="saved-jobs-grid"
                                     style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '32px' }}
                                 >
-                                    {jobs.map((job, i) => <JobCard key={job.id || i} job={job} />)}
+                                    {jobs?.map((job, i) => <JobCard key={job?.id || i} job={job} />)}
                                 </div>
 
                                 {/* Pagination */}
