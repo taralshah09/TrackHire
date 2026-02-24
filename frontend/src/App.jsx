@@ -15,6 +15,7 @@ import NewLandingPage from './pages/NewLandingPage';
 import OnboardingPage from './pages/OnboardingPage';
 import CompanyPreferences from './pages/CompanyPreferences';
 import PreferredJobsPage from './pages/PreferredJobsPage';
+import MeetTheBuilder from './pages/MeetTheBuilder';
 
 function App() {
   return (
@@ -102,6 +103,8 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route path="/meet-the-builder" element={<MeetTheBuilder />}></Route>
 
         {/* Default redirect */}
         <Route path="/" element={<Navigate to="/" replace />} />

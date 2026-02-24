@@ -12,6 +12,7 @@ import {
     FaChevronLeft,
     FaChevronRight,
     FaBuilding,
+    FaCode,
 } from 'react-icons/fa';
 
 const NAV_ITEMS = [
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
     { label: 'Saved Jobs', path: '/saved-all', icon: <FaBookmark /> },
     { label: 'Preferences', path: '/company-preferences', icon: <FaBuilding /> },
     { label: 'Profile', path: '/profile', icon: <FaUser /> },
+    { label: 'Meet the Builder', path: '/meet-the-builder', icon: <FaCode /> },
 ];
 
 export default function Sidebar() {
