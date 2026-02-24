@@ -8,16 +8,14 @@ import { useAuth } from '../context/AuthContext';
  * If the user is already authenticated, redirects them to /dashboard.
  */
 const GuestRoute = ({ children }) => {
-    const { isAuthenticated, loading, redirectPath, setRedirectPath } = useAuth();
+    const { isAuthenticated, loading } = useAuth();
 
     if (loading) {
         return <Navigate to="/" replace />; // or a spinner — keep it silent while auth resolves
     }
 
     if (isAuthenticated) {
-        const dest = redirectPath || "/dashboard";
-        if (redirectPath) setRedirectPath(null); // Clear it after use
-        return <Navigate to={dest} replace />;
+        return <Navigate to="/dashboard" replace />;
     }
 
     return children;

@@ -8,7 +8,6 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [accessToken, setAccessToken] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [redirectPath, setRedirectPath] = useState(null);
 
     // Check if token is expired
     const isTokenExpired = (token) => {
@@ -232,9 +231,7 @@ export const AuthProvider = ({ children }) => {
         loading,
         isAuthenticated: !!accessToken,
         getAccessToken, // Export this for API calls
-        refreshAccessToken,
-        redirectPath,
-        setRedirectPath
+        refreshAccessToken
     };
 
     return (
