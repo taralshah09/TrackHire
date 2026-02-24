@@ -159,7 +159,7 @@ public class InternJobsService {
             Integer maxSalary,
             List<String> companies,
             List<InternJobs.Source> sources,
-            List<String> positions  ,
+            List<String> positions,
             List<String> skills,
             Pageable pageable,
             User user) {
