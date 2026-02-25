@@ -59,13 +59,13 @@ const EXPERIENCE = [
         company: "First Draft",
         role: "Software Intern",
         dates: "Jun 2025 – Aug 2025",
-        desc: "Built an LLM-powered journalism platform. Scaled APIs to 10K+ requests and reduced query times by 40%.",
+        desc: "Contributed to an LLM-powered journalism platform. Scaled APIs to 10K+ requests and reduced query times by 40%.",
     },
     {
         company: "MatchMyCV",
         role: "Software Intern",
         dates: "Aug 2024 – Dec 2024",
-        desc: "Architected a resume refinement microservice using OpenAI. Maintained 99.9% uptime for 500+ active users.",
+        desc: "Contributed to a resume refinement microservice using OpenAI and revamped the existing html legacy frontend to React. Maintained 99.9% uptime for 500+ active users.",
     },
 ];
 
