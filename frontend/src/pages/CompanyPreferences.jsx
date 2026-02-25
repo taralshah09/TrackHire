@@ -4,6 +4,10 @@ import AppHeader from '../components/AppHeader';
 import api from '../service/ApiService';
 import { FaSearch, FaCheck, FaBuilding, FaPlus } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import availableCompaniesData from '../data/available_companies.json';
+
+// Extract and clean company names from JSON
+const jsonDataCompanies = [...new Set(availableCompaniesData.map(item => item.company.trim()))];
 
 export default function CompanyPreferences() {
     const [allCompanies, setAllCompanies] = useState([]);
@@ -64,9 +68,14 @@ export default function CompanyPreferences() {
         }
     };
 
-    const filteredCompanies = allCompanies.filter(c =>
+    const filteredCompanies = [
+        ...new Set([
+            ...allCompanies,
+            ...jsonDataCompanies
+        ])
+    ].filter(c =>
         c.toLowerCase().includes(searchTerm.toLowerCase())
-    ).slice(0, 50); // Show only top 50 matches for performance
+    ).slice(0, 5000); // Show all/more matching companies
 
     return (
         <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>

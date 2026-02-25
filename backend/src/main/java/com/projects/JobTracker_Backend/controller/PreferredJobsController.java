@@ -33,6 +33,10 @@ public class PreferredJobsController {
     public ResponseEntity<Page<JobDTO>> getPreferredJobs(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "all") String type,
+            @RequestParam(required = false) String position,
+            @RequestParam(required = false) String company,
+            @RequestParam(required = false) String locations,
+            @RequestParam(required = false) String skills,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
@@ -41,11 +45,12 @@ public class PreferredJobsController {
 
         List<String> preferredCompanies = preferenceService.getUserPreferredCompanies(user.getId());
 
-        // Note: The sorting is handled inside the repository query (CASE WHEN ...)
-        // so we don't pass Sort to PageRequest to avoid conflicting with the custom order.
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<JobDTO> jobs = jobService.getPreferredJobs(type, preferredCompanies, pageable, user);
+        Page<JobDTO> jobs = jobService.getPreferredJobs(
+                type, preferredCompanies, 
+                position, company, locations, skills,
+                pageable, user);
         return ResponseEntity.ok(jobs);
     }
 }

@@ -185,26 +185,44 @@ public class JobService {
         return enrichJobsWithUserData(jobs, user);
     }
 
-    public Page<JobDTO> getPreferredJobs(String type, List<String> preferredCompanies, Pageable pageable, User user) {
+    public Page<JobDTO> getPreferredJobs(
+            String type, 
+            List<String> preferredCompanies, 
+            String position,
+            String company,
+            String locations,
+            String skills,
+            Pageable pageable, 
+            User user
+    ) {
         if (preferredCompanies == null || preferredCompanies.isEmpty()) {
-            // If no preferences, return regular jobs sorted by postedAt (handled by pageable)
-            if ("intern".equalsIgnoreCase(type)) {
-                return internJobRepository.findByIsActiveTrue(pageable).map(job -> enrichJobWithUserData(job, user));
-            } else if ("fulltime".equalsIgnoreCase(type)) {
-                return fulltimeJobsRepository.findByIsActiveTrue(pageable).map(job -> enrichJobWithUserData(job, user));
-            } else {
-                return jobRepository.findByIsActiveTrue(pageable).map(job -> enrichJobWithUserData(job, user));
-            }
+            return new PageImpl<>(Collections.emptyList(), pageable, 0);
         }
 
+        // Base Specification: Must be one of the preferred companies
+        Specification<BaseJob> spec = (root, query, cb) -> root.get("company").in(preferredCompanies);
+
+        // Add search filters if provided
+        List<String> locList = locations != null && !locations.isEmpty() ? List.of(locations) : null;
+        List<String> compList = company != null && !company.isEmpty() ? List.of(company) : null;
+        List<String> posList = position != null && !position.isEmpty() ? List.of(position) : null;
+        List<String> skillList = skills != null && !skills.isEmpty() ? List.of(skills) : null;
+
+        Specification<BaseJob> searchSpec = JobSpecification.filterJobs(
+                null, null, locList, null, null,
+                null, null, null, compList, null, posList, skillList
+        );
+
+        spec = spec.and(searchSpec);
+
         if ("intern".equalsIgnoreCase(type)) {
-            Page<InternJobs> jobs = internJobRepository.findPreferredJobs(preferredCompanies, pageable);
+            Page<InternJobs> jobs = internJobRepository.findAll(Specification.where((Specification<InternJobs>)(Specification<?>)spec), pageable);
             return jobs.map(job -> enrichJobWithUserData(job, user));
         } else if ("fulltime".equalsIgnoreCase(type)) {
-            Page<FulltimeJobs> jobs = fulltimeJobsRepository.findPreferredJobs(preferredCompanies, pageable);
+            Page<FulltimeJobs> jobs = fulltimeJobsRepository.findAll(Specification.where((Specification<FulltimeJobs>)(Specification<?>)spec), pageable);
             return jobs.map(job -> enrichJobWithUserData(job, user));
         } else {
-            Page<Job> jobs = jobRepository.findPreferredJobs(preferredCompanies, pageable);
+            Page<Job> jobs = jobRepository.findAll(Specification.where((Specification<Job>)(Specification<?>)spec), pageable);
             return jobs.map(job -> enrichJobWithUserData(job, user));
         }
     }

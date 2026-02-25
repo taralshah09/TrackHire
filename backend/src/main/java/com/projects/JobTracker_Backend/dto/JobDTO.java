@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.Hibernate;
 
 import java.time.LocalDateTime;
 
@@ -44,32 +45,24 @@ public class JobDTO {
     private LocalDateTime appliedAt;
     private Boolean isFollowed;
 
-    public static JobDTO fromEntity(BaseJob baseJob) {
-        if (baseJob == null) return null;
 
-        // Handle Hibernate proxies by checking the actual class name if needed, 
-        // or using simple instanceOf which works if they are initialized
-        if (baseJob instanceof Job) {
-            return fromEntity((Job) baseJob);
-        } else if (baseJob instanceof InternJobs) {
-            return fromEntity((InternJobs) baseJob);
-        } else if (baseJob instanceof FulltimeJobs) {
-            return fromEntity((FulltimeJobs) baseJob);
-        }
 
-        // Fallback for proxies if instanceOf fails
-        String className = baseJob.getClass().getSimpleName();
-        if (className.contains("Job") && !className.contains("Intern") && !className.contains("Fulltime")) {
-            return fromEntity((Job) baseJob);
-        } else if (className.contains("InternJobs")) {
-            return fromEntity((InternJobs) baseJob);
-        } else if (className.contains("FulltimeJobs")) {
-            return fromEntity((FulltimeJobs) baseJob);
-        }
+public static JobDTO fromEntity(BaseJob baseJob) {
+    if (baseJob == null) return null;
 
-        throw new IllegalArgumentException("Unknown job type: " + baseJob.getClass());
+    // Unwrap Hibernate proxy before instanceof checks
+    BaseJob unproxied = (BaseJob) Hibernate.unproxy(baseJob);
+
+    if (unproxied instanceof Job) {
+        return fromEntity((Job) unproxied);
+    } else if (unproxied instanceof InternJobs) {
+        return fromEntity((InternJobs) unproxied);
+    } else if (unproxied instanceof FulltimeJobs) {
+        return fromEntity((FulltimeJobs) unproxied);
     }
 
+    throw new IllegalArgumentException("Unknown job type: " + unproxied.getClass());
+    }
     public static JobDTO fromEntity(Job job) {
         return JobDTO.builder()
                 .id(job.getId())
@@ -153,6 +146,4 @@ public class JobDTO {
                 .isFollowed(false)
                 .build();
     }
-
-
 }

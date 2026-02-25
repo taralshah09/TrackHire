@@ -3,7 +3,7 @@ import Sidebar from '../components/Sidebar';
 import AppHeader from '../components/AppHeader';
 import JobCard from '../components/JobCard';
 import api from '../service/ApiService';
-import { FaBuilding, FaMapMarkerAlt, FaBriefcase, FaArrowRight } from 'react-icons/fa';
+import { FaBuilding, FaMapMarkerAlt, FaBriefcase, FaArrowRight, FaSearch, FaBolt } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 
 const JOB_TABS = [
@@ -20,6 +20,13 @@ export default function PreferredJobsPage() {
     const [totalPages, setTotalPages] = useState(0);
     const [totalElements, setTotalElements] = useState(0);
     const [preferredCompanies, setPreferredCompanies] = useState([]);
+
+    // Search & Filter state
+    const [filters, setFilters] = useState({
+        position: '', company: '', skills: '', locations: '',
+    });
+    const [appliedFilters, setAppliedFilters] = useState({ ...filters });
+    const [inputFocus, setInputFocus] = useState('');
 
     useEffect(() => {
         const fetchPrefs = async () => {
@@ -40,7 +47,8 @@ export default function PreferredJobsPage() {
             const params = {
                 type: activeTab,
                 page,
-                size: 9
+                size: 9,
+                ...appliedFilters
             };
 
             const response = await api.getPreferredJobs(params);
@@ -54,7 +62,7 @@ export default function PreferredJobsPage() {
         } finally {
             setLoading(false);
         }
-    }, [page, activeTab]);
+    }, [page, activeTab, appliedFilters]);
 
     useEffect(() => {
         fetchJobs();
@@ -69,8 +77,40 @@ export default function PreferredJobsPage() {
         if (newPage >= 0 && newPage < totalPages) setPage(newPage);
     };
 
+    const handleSearch = () => {
+        setAppliedFilters({ ...filters });
+        setPage(0);
+    };
+
+    const inputStyle = (name) => ({
+        width: '100%',
+        padding: '10px 14px 10px 36px',
+        background: 'var(--color-surface-3)',
+        border: `1px solid ${inputFocus === name ? 'var(--color-orange)' : 'var(--color-border)'}`,
+        borderRadius: '8px',
+        color: 'var(--color-white)',
+        fontFamily: 'var(--font-body)', fontSize: '14px',
+        outline: 'none',
+        boxShadow: inputFocus === name ? '0 0 0 3px rgba(249,115,22,0.15)' : 'none',
+        transition: 'border-color 0.2s, box-shadow 0.2s',
+        boxSizing: 'border-box',
+    });
+
+    const SEARCH_FIELDS = [
+        { key: 'position', icon: <FaSearch />, placeholder: 'Job title, skill, or company...' },
+        { key: 'company', icon: <FaBuilding />, placeholder: 'Company name...' },
+        { key: 'skills', icon: <FaBolt />, placeholder: 'Skills or keywords...' },
+        { key: 'locations', icon: <FaMapMarkerAlt />, placeholder: 'Location (e.g. Remote)' },
+    ];
+
     return (
         <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
+            <style>{`
+                @media (max-width: 768px) {
+                    .jobs-search-grid { grid-template-columns: 1fr !important; }
+                    .jobs-grid { grid-template-columns: 1fr !important; }
+                }
+            `}</style>
             <Sidebar />
 
             <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -83,7 +123,7 @@ export default function PreferredJobsPage() {
                 <div style={{ flex: 1, overflowY: 'auto' }}>
                     <div className="jobs-main-inner" style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px' }}>
 
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
                             <div>
                                 <h1 style={{
                                     fontFamily: 'var(--font-display)', fontWeight: 800,
@@ -91,7 +131,7 @@ export default function PreferredJobsPage() {
                                     color: 'var(--color-white)', margin: 0,
                                 }}>Your Personalized Feed</h1>
                                 <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--color-white-40)', marginTop: '4px' }}>
-                                    Jobs from your preferred companies are prioritized.
+                                    Showing exclusive jobs from your preferred companies.
                                 </p>
                             </div>
                             <Link
@@ -114,7 +154,7 @@ export default function PreferredJobsPage() {
                         {/* Preferred Companies Chips */}
                         {preferredCompanies.length > 0 && (
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '24px' }}>
-                                <span style={{ color: 'var(--color-white-40)', fontSize: '13px', alignSelf: 'center', marginRight: '8px' }}>Prioritizing:</span>
+                                <span style={{ color: 'var(--color-white-40)', fontSize: '13px', alignSelf: 'center', marginRight: '8px' }}>Filtering by:</span>
                                 {preferredCompanies.map(company => (
                                     <span key={company} style={{
                                         padding: '4px 12px', borderRadius: '20px',
@@ -132,7 +172,7 @@ export default function PreferredJobsPage() {
                             display: 'flex', alignItems: 'center', gap: '6px',
                             padding: '4px', background: 'var(--color-surface-2)',
                             border: '1px solid var(--color-border)', borderRadius: '12px',
-                            marginBottom: '32px', width: 'fit-content',
+                            marginBottom: '24px', width: 'fit-content',
                         }}>
                             {JOB_TABS.map(tab => {
                                 const isActive = activeTab === tab.key;
@@ -155,6 +195,65 @@ export default function PreferredJobsPage() {
                             })}
                         </div>
 
+                        {/* Search bar */}
+                        <div style={{
+                            background: 'var(--color-surface-2)',
+                            border: '1px solid var(--color-border)',
+                            borderRadius: '14px',
+                            padding: '20px',
+                            marginBottom: '32px',
+                        }}>
+                            <div
+                                className="jobs-search-grid"
+                                style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: '1fr 1fr',
+                                    gap: '10px',
+                                    marginBottom: '12px',
+                                }}
+                            >
+                                {SEARCH_FIELDS.map(({ key, icon, placeholder }) => (
+                                    <div key={key} style={{ position: 'relative' }}>
+                                        <span style={{
+                                            position: 'absolute', left: '10px', top: '50%',
+                                            transform: 'translateY(-50%)',
+                                            fontSize: '14px', pointerEvents: 'none',
+                                            color: inputFocus === key ? 'var(--color-orange)' : 'var(--color-white-40)',
+                                            transition: 'color 0.2s',
+                                        }}>{icon}</span>
+                                        <input
+                                            type="text"
+                                            placeholder={placeholder}
+                                            value={filters[key]}
+                                            onChange={e => setFilters(prev => ({ ...prev, [key]: e.target.value }))}
+                                            onFocus={() => setInputFocus(key)}
+                                            onBlur={() => setInputFocus('')}
+                                            onKeyDown={e => e.key === 'Enter' && handleSearch()}
+                                            style={inputStyle(key)}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+
+                            <button
+                                onClick={handleSearch}
+                                style={{
+                                    width: '100%',
+                                    background: 'var(--color-orange)',
+                                    border: 'none', borderRadius: '8px',
+                                    color: '#000',
+                                    fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '14px',
+                                    padding: '11px 24px', cursor: 'pointer',
+                                    transition: 'background 0.2s, transform 0.15s',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                                }}
+                                onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-orange-hover)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-orange)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                            >
+                                <FaSearch style={{ fontSize: '13px' }} /> Search Preferred Jobs
+                            </button>
+                        </div>
+
                         {/* Job grid */}
                         {loading ? (
                             <div style={{ textAlign: 'center', padding: '64px', color: 'var(--color-white-40)', fontFamily: 'var(--font-body)', fontSize: '15px' }}>
@@ -169,7 +268,9 @@ export default function PreferredJobsPage() {
                                 <FaBriefcase size={40} style={{ color: 'var(--color-white-10)', marginBottom: '16px' }} />
                                 <h3 style={{ fontFamily: 'var(--font-display)', color: 'var(--color-white)', marginBottom: '8px' }}>No jobs found</h3>
                                 <p style={{ fontFamily: 'var(--font-body)', fontSize: '15px', color: 'var(--color-white-40)', maxWidth: '400px', margin: '0 auto 24px' }}>
-                                    We couldn't find any jobs matching your preferences right now. Try expanding your preferred companies.
+                                    {preferredCompanies.length === 0
+                                        ? "You haven't selected any preferred companies yet."
+                                        : "We couldn't find any jobs matching your preferences and search filters."}
                                 </p>
                                 <Link to="/company-preferences" style={{ color: 'var(--color-orange)', textDecoration: 'none', fontWeight: 600 }}>
                                     Adjust Preferences <FaArrowRight size={10} />

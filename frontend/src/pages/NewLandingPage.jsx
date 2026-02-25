@@ -4,7 +4,7 @@ import { FaBolt, FaBullseye, FaClipboardList, FaChartBar, FaGithub, FaStar } fro
 import Cookies from 'js-cookie';
 
 const GITHUB_REPO = 'https://github.com/taralshah09/TrackHire';
-const AUTHOR_URL = 'https://taralshah.vercel.app/';
+const AUTHOR_URL = '/meet-the-builder';
 const SCENE_URL = 'https://prod.spline.design/xNV9ygjcVERzejEQ/scene.splinecode';
 const Spline = lazy(() => import('@splinetool/react-spline'));
 
@@ -901,7 +901,7 @@ function Footer() {
                     <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'rgba(255,255,255,0.18)', margin: 0 }}>
                         © 2026 TrackHire. All rights reserved.
                     </p>
-                    <a href={AUTHOR_URL} target="_blank" rel="noopener noreferrer" style={{
+                    <Link to={AUTHOR_URL} style={{
                         display: 'inline-flex', alignItems: 'center', gap: '6px',
                         fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '12px',
                         color: T.w65, background: T.s3, border: `1px solid ${T.border}`,
@@ -909,8 +909,8 @@ function Footer() {
                     }}
                         onMouseEnter={e => { e.currentTarget.style.borderColor = T.border2; e.currentTarget.style.color = T.orange; }}
                         onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.w65; }}>
-                        Made by Taral Shah →
-                    </a>
+                        Meet the Builder →
+                    </Link>
                 </div>
             </div>
         </footer>
