@@ -73,11 +73,15 @@ async function fetchUserBatch(afterId) {
  * Processes a single user: match jobs → build email → send.
  * Returns a result object for stats tracking.
  */
+/**
+ * Processes a single user: match jobs → build email → send.
+ * Returns a result object for stats tracking.
+ */
 async function processUser(user) {
     const { user_id, email, username, job_titles, skills, role_types } = user;
 
     try {
-        const matchedJobs = await findJobsForUser(
+        const tieredJobs = await findJobsForUser(
             user_id,
             job_titles || [],
             skills || [],
@@ -85,17 +89,26 @@ async function processUser(user) {
             MAX_JOBS_PER_EMAIL
         );
 
-        if (matchedJobs.length === 0) {
+        const { topPicks, recommended } = tieredJobs;
+        const allJobs = [...topPicks, ...recommended];
+
+        if (allJobs.length === 0) {
             return { status: "skipped", user_id, email };
         }
 
-        const subject = `🎯 ${matchedJobs.length} new job${matchedJobs.length > 1 ? "s" : ""} matching your preferences`;
-        const html = buildDigest({ username, email }, matchedJobs);
+        const totalCount = allJobs.length;
+        const subject = totalCount === 1
+            ? `🎯 1 new job match for your profile`
+            : `🎯 ${totalCount} new jobs matching your preferences`;
+
+        // Pass interests for personalization
+        const interests = [...(job_titles || []), ...(skills || [])];
+        const html = buildDigest({ username, email, interests }, tieredJobs);
 
         await sendEmail(email, subject, html);
-        await logEmailsSent(user_id, matchedJobs.map((j) => j.id));
+        await logEmailsSent(user_id, allJobs.map((j) => j.id));
 
-        return { status: "sent", user_id, email, jobCount: matchedJobs.length };
+        return { status: "sent", user_id, email, jobCount: totalCount };
 
     } catch (err) {
         // Log the failure but don't abort the batch
@@ -169,6 +182,10 @@ async function run() {
     console.log("=".repeat(50));
 
     return stats;
+}
+
+if (require.main === module) {
+    run();
 }
 
 module.exports = { run };

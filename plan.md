@@ -1,174 +1,247 @@
-# 🧑‍💻 Hire Me Page — Portfolio Section
+🧠 1. System Philosophy
 
-Create a **modern, Gen-Z styled “Hire Me” page** using the **existing typography, color palette, and design system of the project** (do NOT introduce new fonts).
+You are not “filtering jobs”.
 
-## 🎯 Overall Style
+You are:
 
-- Clean, bold, minimal, tech-focused
-- Grid-based layout (responsive)
-- Dark/light mode compatible
-- Smooth hover effects and micro-interactions
-- Glassmorphism / subtle shadows allowed
-- Looks like a modern startup engineer portfolio
-- Mobile-first responsive design
+🎯 Ranking jobs by relevance per user and sending a curated digest.
 
----
+That mindset shift changes everything.
 
-## 🧩 Layout Structure (Top → Bottom)
+🏗 2. Final Architecture Overview
+[Users + Preferences]
+        ↓
+[Candidate Job Pool Selection]
+        ↓
+[Scoring Engine (DB-side)]
+        ↓
+[Tiered Ranking + Deduplication]
+        ↓
+[Top N Selection]
+        ↓
+[Email Template Builder]
+        ↓
+[Logging + Anti-Duplicate Guard]
+🔹 Step 1 — Fetch Users in Batches (You Already Do This Well)
 
-### 1) Hero Section
+✔ Cursor-based pagination
+✔ Concurrency control
+✔ Single shared DB pool
 
-Display in a centered card:
+No changes needed here.
 
-- Name (large heading)
-- Short tagline: “Software Engineer • Full-Stack Developer • Competitive Programmer”
-- “Available for Internship / Full-Time” badge
-- CTA buttons:
-  - Hire Me
-  - Download Resume
-  - Contact
+🔹 Step 2 — Build a Candidate Job Pool (Important)
 
----
+Before scoring everything in the table, shrink the search space.
 
-### 2) Competitive Programming Stats (Grid)
+Instead of:
 
-Create a **3-column responsive grid** with platform cards.
+Scanning entire jobs table.
 
-#### Platforms & Usernames
+Do:
 
-- :contentReference[oaicite:0]{index=0} — `taralshah992005`
-- :contentReference[oaicite:1]{index=1} — `taralshah99`
-- :contentReference[oaicite:2]{index=2} — `taralshah09`
+Only consider:
 
-Each card should display:
+Jobs posted in last 7–10 days
 
-##### ✅ Platform Header
-- Logo
-- Username
-- External profile link icon
+Active jobs only
 
-##### 📊 Key Metrics
-Show ratings / stats prominently:
+Matching role type (if selected)
 
-- Codeforces → Rating
-- LeetCode →  Rating
+This keeps matching fast and relevant.
 
-##### 🔥 Heatmap
-Embed contribution / submission heatmap:
+🔹 Step 3 — Scoring Engine (Core of System)
 
-- LeetCode submission calendar (from leetcode.com)
-- Codeforces submission activity heatmap (from codeforces.com)
+This is the brain.
 
-Heatmap should be:
+Each job gets a relevance score per user.
 
-- Pixel/grid style
-- Color-intensity based activity (green colored theme just like the original one or to match the site's theme use orange color)
-- Tooltip on hover (date + count)
+Weighted Signals
+Signal	Weight	Why
+Preferred Company	100	Strong intent
+Preferred Title	60	Strong intent
+Role Type Match	40	Mandatory alignment
+Skill Overlap	10 per match	Supporting signal
+Recency Boost	+5 if <48h	Freshness
+Score Formula Concept
+score =
+  (company_match * 100) +
+  (title_match * 60) +
+  (role_type_match * 40) +
+  (skill_overlap_count * 10) +
+  recency_bonus
 
----
+Then:
 
-### 3) Projects Showcase (Featured Work)
+ORDER BY score DESC, posted_at DESC
+LIMIT 20
 
-Create a **2-column responsive grid** with project cards.
+Then from top 20 → send top 10.
 
+🔹 Step 4 — Tiered Result Bucketing (UX Upgrade)
 
-#### Project 1 — TrackHire
+Instead of sending just 10 jobs randomly ordered:
 
-Display:
+Segment inside the email:
 
-- Title
-- Tech stack badges
-- Live link button
-- GitHub link button
-- Description bullets:
+🥇 Top Picks (Score ≥ 120)
 
+Company + Title match
 
-concise the below text like a story teller:
+🥈 Strong Matches (Score ≥ 70)
+🥉 Relevant for You (Skill-based)
 
-Built a full-stack job aggregation platform using Node.js (cron-based scraper), Spring Boot (REST backend), and React that collects recent openings from company career pages and niche platforms.
+This feels curated instead of generic.
 
-Designed a custom data pipeline for large-scale job ingestion maintaining 10K+ active listings with daily automated updates.
+🔹 Step 5 — Deduplication & Diversity
 
-Implemented JWT authentication, job tracking, and personalized email notifications.
+Avoid:
 
----
+❌ 7 Amazon SDE Intern roles
+❌ Same job reposted
+❌ Similar titles from same company
 
-#### Project 2 — WebOS
+Implementation ideas:
 
-Display:
+Max 2 jobs per company
 
-- Title
-- Tech stack badges
-- Live link button
-- GitHub link button
-- Description bullets:
+Exclude already emailed job IDs
 
-Developed an OS-like browser desktop simulation with resizable windows, draggable apps, persistent editor, and terminal supporting Linux commands.
+Exclude jobs user clicked before (future enhancement)
 
-Architected a scalable modular-monolith backend enabling future microservice migration.
+🔹 Step 6 — Anti-Duplicate Window
 
-Optimized concurrency for 25+ active users with 99.9% uptime.
+You already log emails.
 
----
+Final logic should:
 
-### 4) Experience Section
+Exclude jobs already sent in last 7 days
 
-Timeline or stacked cards format.
+Prevents repetition fatigue.
 
-#### Software Development Intern — First Draft (Jun 2025 — Aug 2025)
+🔹 Step 7 — Smart Fallback Strategy
 
-- Built LLM-powered journalism platform (Next.js, Django, PostgreSQL)
-- APIs handling 10K+ daily requests (<200 ms latency)
-- Optimized queries reducing execution time by 40%
-- AI content analysis processing 500+ articles daily (92% accuracy)
+If user preferences are too strict:
 
----
+Example:
+Company: Google only
+Role: Intern only
 
-#### Software Development Intern — MatchMyCV (Aug 2024 — Dec 2024)
+If zero results:
 
-- Built scalable microservice for AI resume refinement using OpenAI API
-- Integrated Amazon S3 and Docker for reliability
-- Supported 500+ users with 99.9% uptime
-- Redesigned frontend using React + Redux with faster load times
+Instead of skipping email:
 
----
+Fallback tiers:
 
-### 5) Final CTA Section
+Remove company constraint
 
-Centered call-to-action card:
+Keep role type
 
-- “Let’s build something amazing together”
-- Buttons:
-  - Email Me
-  - LinkedIn
-  - GitHub
+Match by title
 
----
+Match by skills
 
-## ⚡ Interaction & Visual Details
+Still send something relevant.
 
-- Smooth hover elevation on cards
-- Gradient accents allowed
-- Subtle animated background optional
-- Icons for platforms and links
-- Maintain consistent spacing and typography
-- Avoid clutter — modern minimalist aesthetic
+🔹 Step 8 — Email Composition Strategy
 
----
+Instead of:
 
-## 📱 Responsiveness
+"10 jobs matching your preferences"
 
-- Desktop → 3-column grids
-- Tablet → 2 columns
-- Mobile → 1 column stacked layout
+Do:
 
----
+Subject examples:
 
-## 🏁 Goal
+🎯 3 Google internships + 5 curated matches
 
-Create a **high-impact recruiter-ready Hire Me page** that:
+🚀 Fresh Backend Intern roles at Amazon & more
 
-- Highlights engineering ability
-- Shows real activity via heatmaps
-- Feels modern and Gen-Z
-- Matches existing project design system
+Inside email:
+
+Hi Taral,
+
+Based on your interest in:
+• Internship roles
+• Backend / SWE
+• Companies like Google, Amazon
+
+Here are your top picks this week:
+
+This feels personal.
+
+🔹 Step 9 — Performance at Scale (100K+ Users)
+
+Final optimized version should:
+
+Use SQL scoring (not JS filtering)
+
+Avoid loading large arrays in memory
+
+Use indexed columns:
+
+company
+
+role_type
+
+title
+
+posted_at
+
+Add indexes:
+
+CREATE INDEX idx_jobs_company ON jobs(company);
+CREATE INDEX idx_jobs_role_type ON jobs(role_type);
+CREATE INDEX idx_jobs_posted_at ON jobs(posted_at DESC);
+🔹 Step 10 — Future-Level Improvements (Optional But Powerful)
+
+These make TrackHire feel elite:
+
+⭐ A) User Behavior Feedback
+
+Increase score if:
+
+User clicked similar company before
+
+User applied to similar title before
+
+⭐ B) TF-IDF or Vector Similarity
+
+Instead of ILIKE,
+store embeddings of job descriptions.
+
+Then:
+
+ORDER BY embedding <-> user_embedding
+
+Now you're at LinkedIn level.
+
+🎯 Final Mental Model
+
+You want:
+
+Generic Filtering ❌
+Relevance Ranking ✅
+Curated Digest ✅
+Freshness Prioritized ✅
+Diversity Enforced ✅
+No Duplicates ✅
+🏁 Final Implementation Summary
+
+Your final production system should:
+
+Fetch user batch
+
+Pull recent active jobs
+
+Score jobs using weighted ranking
+
+Exclude previously sent jobs
+
+Sort by score + recency
+
+Limit + diversify
+
+Send tiered digest
+
+Log sent jobs

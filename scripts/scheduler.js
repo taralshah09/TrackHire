@@ -125,8 +125,8 @@ async function runScheduler() {
         await runSkillhubPipeline();
     }
 
-    // 🔹 18:00 IST → Emails
-    if (hour === 18 && minute < 40) {
+    // 🔹 18:00 IST (6:00 PM) → Email Pipeline
+    if (hour === 18 && minute < 10) {
         console.log("⏰ Running email pipeline (18:00 IST window)");
 
         await runEmails();
