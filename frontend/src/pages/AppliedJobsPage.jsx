@@ -100,10 +100,20 @@ export default function AppliedJobsPage() {
     return (
         <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
             <style>{`
+                @media (max-width: 1024px) {
+                    .applied-table th:nth-child(3), .applied-table td:nth-child(3),
+                    .applied-table th:nth-child(5), .applied-table td:nth-child(5) { 
+                        display: none !important; 
+                    }
+                }
                 @media (max-width: 768px) {
-                    .applied-table th:nth-child(3),
-                    .applied-table td:nth-child(3) { display: none; }
-                    .applied-main-inner { padding: 72px 16px 24px !important; }
+                    .applied-main-inner { padding: 80px 16px 24px !important; }
+                    .applied-table th:nth-child(6), .applied-table td:nth-child(6) { 
+                        display: none !important; 
+                    }
+                }
+                @media (max-width: 480px) {
+                    .applied-main-inner { padding-top: 72px !important; }
                 }
             `}</style>
 

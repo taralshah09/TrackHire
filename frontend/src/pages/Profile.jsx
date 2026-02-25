@@ -303,8 +303,17 @@ export default function Profile() {
             <style>{`
                 @keyframes spin { to { transform: rotate(360deg); } }
                 input[type=range]::-webkit-slider-thumb { background: var(--color-orange) !important; }
-                @media (max-width: 1024px) { .profile-grid { grid-template-columns: 1fr !important; } }
-                @media (max-width: 768px)  { .profile-main-inner { padding: 80px 16px 100px !important; } }
+                @media (max-width: 1024px) { 
+                    .profile-grid { grid-template-columns: 1fr !important; } 
+                }
+                @media (max-width: 768px)  { 
+                    .profile-main-inner { padding: 80px 16px 100px !important; } 
+                    .personal-info-grid { grid-template-columns: 1fr !important; }
+                    .email-prefs-header { flex-direction: column; align-items: flex-start !important; gap: 12px; }
+                }
+                @media (max-width: 480px) {
+                    .profile-main-inner { padding-top: 72px !important; }
+                }
             `}</style>
 
             <Sidebar />
@@ -351,7 +360,7 @@ export default function Profile() {
                                         }}><FaUser /></span>
                                         Personal Information
                                     </h2>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                                    <div className="personal-info-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                                         <InputField label="Full Name" icon={<FaUser />} name="fullName" value={formData.fullName} onChange={handleChange} placeholder="Jane Doe" />
                                         <InputField label="Email Address" icon={<FaEnvelope />} name="email" value={formData.email} onChange={handleChange} type="email" placeholder="jane@example.com" />
                                         <div style={{ gridColumn: '1 / -1' }}>
@@ -526,7 +535,7 @@ export default function Profile() {
                                     </h2>
 
                                     {/* Email toggle */}
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                                    <div className="email-prefs-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
                                         <div>
                                             <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px', color: 'var(--color-white)', margin: '0 0 2px' }}>
                                                 Weekly Job Digest

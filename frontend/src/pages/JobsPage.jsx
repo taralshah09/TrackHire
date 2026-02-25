@@ -140,12 +140,23 @@ export default function JobsPage() {
                 @media (max-width: 768px) {
                     .jobs-search-grid { grid-template-columns: 1fr !important; }
                     .jobs-grid { grid-template-columns: 1fr !important; }
-                    .jobs-main-inner { padding: 72px 16px 24px !important; }
-                    .job-type-tabs { gap: 4px !important; }
+                    .jobs-main-inner { padding: 80px 16px 24px !important; }
+                    .job-type-tabs { 
+                        overflow-x: auto; 
+                        width: 100% !important; 
+                        justify-content: flex-start !important;
+                        -webkit-overflow-scrolling: touch;
+                        scrollbar-width: none;
+                    }
+                    .job-type-tabs::-webkit-scrollbar { display: none; }
                     .job-type-tab { padding: 8px 12px !important; font-size: 12px !important; }
                 }
                 @media (min-width: 769px) and (max-width: 1024px) {
                     .jobs-grid { grid-template-columns: 1fr 1fr !important; }
+                    .jobs-search-grid { grid-template-columns: 1fr 1fr !important; }
+                }
+                @media (max-width: 480px) {
+                    .jobs-main-inner { padding-top: 72px !important; }
                 }
                 .job-type-tab {
                     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);

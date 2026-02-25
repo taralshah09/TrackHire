@@ -30,7 +30,7 @@ export default function AppHeader({ left }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '0 32px',
+            padding: '0 16px', // Reduced from 32px for better mobile fit
             background: 'var(--color-surface-1)',
             borderBottom: '1px solid var(--color-border)',
             position: 'sticky',
@@ -38,20 +38,34 @@ export default function AppHeader({ left }) {
             zIndex: 50,
             flexShrink: 0,
         }}>
+            <style>{`
+                @media (min-width: 768px) {
+                    header { padding: 0 32px !important; }
+                }
+                @media (max-width: 768px) {
+                    .header-username { display: none !important; }
+                }
+            `}</style>
             {/* Left slot */}
-            {left ?? defaultLeft}
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
+                {left ?? defaultLeft}
+            </div>
 
             {/* Right — user identity */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <p style={{
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, marginLeft: '12px' }}>
+                <p className="header-username" style={{
                     fontFamily: 'var(--font-display)', fontWeight: 700,
                     fontSize: '13px', color: 'var(--color-white)',
                     margin: 0,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    maxWidth: '100px', // Prevent long names from breaking layout
                 }}>
                     {name}
                 </p>
                 <div style={{
-                    width: '36px', height: '36px', borderRadius: '50%',
+                    width: '32px', height: '32px', borderRadius: '50%',
                     border: '2px solid var(--color-orange-border)',
                     overflow: 'hidden', flexShrink: 0,
                 }}>

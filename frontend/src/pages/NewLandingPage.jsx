@@ -136,8 +136,45 @@ const GLOBAL_CSS = `
     .lp-nav-links { display: none !important; }
   }
   @media (max-width: 600px) {
-    .lp-hero-actions { flex-direction: column; align-items: center; }
+    .lp-hero-actions { flex-direction: column; align-items: center; width: 100%; gap: 12px !important; }
+    .lp-hero-actions > * { width: 100% !important; justify-content: center; }
     .lp-strip-divider { display: none !important; }
+  }
+
+  /* ── Grid Responsiveness ── */
+  @media (max-width: 900px) {
+    .lp-bento-grid { grid-template-columns: 1fr !important; }
+    .lp-pain-card-span-2 { grid-column: span 1 !important; }
+  }
+  
+  @media (max-width: 600px) {
+    .lp-nav-right-btn { display: none !important; }
+    .lp-hero-stats { 
+      display: grid !important;
+      grid-template-columns: repeat(2, 1fr) !important; 
+      padding: 16px !important;
+      gap: 16px !important;
+    }
+    .lp-hero-stats-item { padding: 0 !important; }
+    .lp-hero-content { margin-top: 80px !important; }
+    
+    .lp-testimonials-slider {
+      display: flex !important;
+      overflow-x: auto !important;
+      scroll-snap-type: x mandatory !important;
+      gap: 16px !important;
+      padding: 0 0 24px !important;
+      -webkit-overflow-scrolling: touch;
+    }
+    .lp-testimonials-slider::-webkit-scrollbar { display: none; }
+    .lp-testimonial-card {
+      min-width: 85% !important;
+      scroll-snap-align: center !important;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .lp-nav-right-btn { display: none !important; }
   }
 `;
 
@@ -254,10 +291,10 @@ function SectionH2({ children, center = false }) {
     return (
         <h2 style={{
             fontFamily: 'var(--font-display)', fontWeight: 800,
-            fontSize: 'clamp(32px, 4.5vw, 52px)', letterSpacing: '-0.03em',
+            fontSize: 'clamp(28px, 6vw, 52px)', letterSpacing: '-0.03em',
             lineHeight: 1.1, color: T.white,
             textAlign: center ? 'center' : 'left',
-            margin: center ? '0 auto 56px' : '0 0 56px',
+            margin: center ? '0 auto 40px' : '0 0 40px',
             maxWidth: center ? '640px' : 'unset',
         }}>{children}</h2>
     );
@@ -333,7 +370,7 @@ function Navbar({ scrolled }) {
         <nav style={{
             position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '0 40px', height: '64px',
+            padding: '0 clamp(16px, 4vw, 40px)', height: '64px',
             background: scrolled ? 'rgba(6,6,8,0.88)' : 'transparent',
             backdropFilter: scrolled ? 'blur(14px)' : 'none',
             borderBottom: scrolled ? `1px solid ${T.border}` : '1px solid transparent',
@@ -341,9 +378,11 @@ function Navbar({ scrolled }) {
         }}>
             {/* Logo */}
             <div style={{
-                fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '22px',
+                fontFamily: 'var(--font-display)', fontWeight: 800,
+                fontSize: 'clamp(18px, 4.5vw, 22px)',
                 color: T.white, letterSpacing: '-0.02em',
                 display: 'flex', alignItems: 'center',
+                marginTop: '4px', flexShrink: 0,
             }}>
                 Track<span style={{ color: T.orange }}>H</span>ire
             </div>
@@ -362,7 +401,7 @@ function Navbar({ scrolled }) {
 
             {/* Right */}
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                <a href={GITHUB_REPO} target="_blank" rel="noopener noreferrer" style={{
+                <a href={GITHUB_REPO} target="_blank" rel="noopener noreferrer" className="lp-nav-right-btn" style={{
                     display: 'inline-flex', alignItems: 'center', gap: '6px',
                     fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px',
                     color: T.w65, background: T.s2, border: `1px solid ${T.border}`,
@@ -382,7 +421,7 @@ function Navbar({ scrolled }) {
                     </Link>
                 ) : (
                     <>
-                        <Link to="/login" style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '14px', color: T.w65, transition: 'color 0.2s' }}
+                        <Link to="/login" style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 'clamp(12px, 3.5vw, 14px)', color: T.w65, transition: 'color 0.2s' }}
                             onMouseEnter={e => e.currentTarget.style.color = T.white}
                             onMouseLeave={e => e.currentTarget.style.color = T.w65}>
                             Log in
@@ -390,7 +429,7 @@ function Navbar({ scrolled }) {
                         <Link to="/register" style={primaryBtn}
                             onMouseEnter={e => { e.currentTarget.style.background = T.orangeD; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = `0 8px 24px ${T.orangeGlow}`; }}
                             onMouseLeave={e => { e.currentTarget.style.background = T.orange; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
-                            Get Started →
+                            Register
                         </Link>
                     </>
                 )}
@@ -401,8 +440,10 @@ function Navbar({ scrolled }) {
 
 /* ─── SHARED BUTTON STYLES ───────────────────────────────────────────────── */
 const primaryBtn = {
-    fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '14px',
-    color: '#000', background: T.orange, padding: '11px 22px',
+    fontFamily: 'var(--font-display)', fontWeight: 700,
+    fontSize: 'clamp(12px, 3vw, 14px)',
+    color: '#000', background: T.orange,
+    padding: 'clamp(8px, 2vw, 11px) clamp(16px, 4vw, 22px)',
     borderRadius: '9px', border: 'none', cursor: 'pointer',
     display: 'inline-flex', alignItems: 'center', gap: '6px',
     transition: 'all 0.2s', letterSpacing: '0.01em',
@@ -433,7 +474,7 @@ function HeroSection() {
         }}>
             <SplineHero />
 
-            <div style={{
+            <div className="lp-hero-content" style={{
                 position: 'relative', zIndex: 10, textAlign: 'center',
                 padding: '0 24px', maxWidth: '880px',
                 display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '26px',
@@ -459,7 +500,7 @@ function HeroSection() {
                 <div style={{ animation: 'lpFadeDown 0.6s 0.1s ease both' }}>
                     <div className="lp-glitch-wrap" style={{
                         fontFamily: 'var(--font-display)', fontWeight: 800,
-                        fontSize: 'clamp(42px, 7.5vw, 78px)', lineHeight: 1.05,
+                        fontSize: 'clamp(34px, 8vw, 78px)', lineHeight: 1.05,
                         letterSpacing: '-0.035em', color: T.white,
                     }}>
                         <span style={{ position: 'relative', zIndex: 2 }}>
@@ -477,7 +518,7 @@ function HeroSection() {
 
                 {/* Sub-copy */}
                 <p style={{
-                    fontFamily: 'var(--font-body)', fontWeight: 400, fontSize: '18px',
+                    fontFamily: 'var(--font-body)', fontWeight: 400, fontSize: 'clamp(15px, 4vw, 18px)',
                     lineHeight: 1.7, color: T.w65, maxWidth: '540px', margin: 0,
                     animation: 'lpFadeDown 0.6s 0.2s ease both',
                 }}>
@@ -503,8 +544,8 @@ function HeroSection() {
                 </div>
 
                 {/* Stats strip */}
-                <div style={{
-                    display: 'flex', gap: '0', flexWrap: 'wrap', justifyContent: 'center',
+                <div className="lp-hero-stats" style={{
+                    display: 'flex', alignItems: 'center', gap: '0',
                     padding: '20px 32px',
                     background: 'rgba(6,6,8,0.58)',
                     backdropFilter: 'blur(18px)',
@@ -514,20 +555,20 @@ function HeroSection() {
                 }}>
                     {STATS.map(({ stat, suffix, label }, i) => (
                         <React.Fragment key={label}>
-                            <div style={{ textAlign: 'center', padding: '0 28px' }}>
+                            <div className="lp-hero-stats-item" style={{ textAlign: 'center', padding: '0 28px', flex: 1 }}>
                                 <div style={{
-                                    fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '24px',
+                                    fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 'clamp(18px, 4.5vw, 24px)',
                                     color: T.orange, letterSpacing: '-0.02em', lineHeight: 1,
                                 }}>
                                     <Counter to={parseInt(stat)} suffix={suffix} />
                                 </div>
                                 <div style={{
-                                    fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '10px',
+                                    fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'clamp(8px, 2.5vw, 10px)',
                                     letterSpacing: '0.12em', color: T.w40, textTransform: 'uppercase', marginTop: '6px',
                                 }}>{label}</div>
                             </div>
                             {i < STATS.length - 1 && (
-                                <div className="lp-strip-divider" style={{ width: '1px', background: T.border, flexShrink: 0, margin: '4px 0' }} />
+                                <div className="lp-strip-divider" style={{ width: '1px', background: T.border, alignSelf: 'stretch', margin: '4px 0' }} />
                             )}
                         </React.Fragment>
                     ))}
@@ -557,11 +598,12 @@ function PainSection() {
                     </SectionH2>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+                <div className="lp-bento-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
                     {lines.map(({ number, suffix, color, desc, span }, i) => (
                         <div key={i}
                             onMouseEnter={() => setHovered(i)}
                             onMouseLeave={() => setHovered(null)}
+                            className={span === 2 ? 'lp-pain-card-span-2' : ''}
                             style={{
                                 gridColumn: `span ${span}`,
                                 background: T.s2,
@@ -615,7 +657,7 @@ function FeaturesSection() {
                 <SectionEye label="01 — Features" />
                 <SectionH2>Everything you need<br /><span style={{ color: T.orange }}>to land faster.</span></SectionH2>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+                <div className="lp-bento-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
                     {FEATURES.map(({ icon, title, desc, span }, i) => (
                         <div key={i}
                             onMouseEnter={() => setHovered(i)}
@@ -746,11 +788,12 @@ function TestimonialsSection() {
                     </SectionH2>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                <div className="lp-testimonials-slider lp-bento-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
                     {TESTIMONIALS.map(({ quote, name, role }, i) => (
                         <div key={i}
                             onMouseEnter={() => setHovered(i)}
                             onMouseLeave={() => setHovered(null)}
+                            className="lp-testimonial-card"
                             style={{
                                 background: T.s2,
                                 border: hovered === i ? `1px solid ${T.border2}` : `1px solid ${T.border}`,
@@ -759,17 +802,20 @@ function TestimonialsSection() {
                                 transform: hovered === i ? 'translateY(-4px) rotate(0.3deg)' : 'translateY(0)',
                                 boxShadow: hovered === i ? `0 16px 48px rgba(249,115,22,0.10)` : 'none',
                                 position: 'relative', overflow: 'hidden',
+                                display: 'flex', flexDirection: 'column',
                             }}>
                             {/* Quote mark */}
                             <div style={{
                                 fontFamily: 'var(--font-display)', fontSize: '64px', lineHeight: 1,
                                 color: T.orangeDim, marginBottom: '-16px', marginTop: '-8px',
+                                flexShrink: 0,
                             }}>"</div>
                             <p style={{
                                 fontFamily: 'var(--font-body)', fontSize: '14px',
                                 color: T.w65, lineHeight: 1.7, margin: '0 0 24px',
+                                flex: 1,
                             }}>{quote}</p>
-                            <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: '16px' }}>
+                            <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: '16px', marginTop: 'auto' }}>
                                 <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '14px', color: T.white, margin: '0 0 2px' }}>{name}</p>
                                 <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: T.orange, margin: 0 }}>{role}</p>
                             </div>

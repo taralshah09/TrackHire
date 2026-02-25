@@ -30,7 +30,7 @@ const PLATFORMS = [
 ];
 
 const TECH = [
-    "React", "Next.js", "Node.js", "Spring Boot", "Django", "PostgreSQL",
+    "React", "Next.js", "Node.js", "Spring Boot", "PostgreSQL",
     "Docker", "AWS S3", "Redis", "TypeScript", "Java", "Python",
     "WebSockets", "REST APIs", "GraphQL", "JWT", "Kubernetes", "CI/CD",
 ];
@@ -263,7 +263,7 @@ export default function MeetTheBuilder() {
                     <a className="btn-primary" href="mailto:hitmeup.taral@gmail.com">
                         <span>Let's Ship It</span>
                     </a>
-                    <a className="btn-ghost" target="_blank" href="https://drive.google.com/file/d/1bQHl27MC8U9WbwrLkbKk1ndN5WB94KR0/view">Resume</a>
+                    <a className="btn-ghost" target="_blank" href="https://drive.google.com/file/d/1NzA01Db9Us1uiQR8HdXVK0-SdKnd8O4a/view?usp=sharing">Resume</a>
                 </div>
             </section>
 

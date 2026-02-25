@@ -69,15 +69,25 @@ export default function DashboardPage() {
     return (
         <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
             <style>{`
+                @media (max-width: 1024px) {
+                    .dash-grid-4 { grid-template-columns: repeat(2, 1fr) !important; }
+                }
                 @media (max-width: 768px) {
                     .dash-main { padding-left: 0 !important; }
-                    .dash-main-inner { padding: 72px 16px 24px !important; }
+                    .dash-main-inner { padding: 80px 16px 24px !important; }
                     .dash-grid-4 { grid-template-columns: 1fr 1fr !important; }
                     .dash-bottom { flex-direction: column !important; }
                     .dash-saved-panel { width: 100% !important; }
+                    
+                    /* Table responsiveness */
+                    .activity-table th:nth-child(2), .activity-table td:nth-child(2),
+                    .activity-table th:nth-child(4), .activity-table td:nth-child(4) {
+                        display: none !important;
+                    }
                 }
                 @media (max-width: 480px) {
                     .dash-grid-4 { grid-template-columns: 1fr !important; }
+                    .dash-main-inner { padding-top: 72px !important; }
                 }
             `}</style>
 
@@ -153,7 +163,7 @@ export default function DashboardPage() {
                                     }}>View All →</Link>
                                 </div>
                                 <div style={{ overflowX: 'auto' }}>
-                                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                    <table className="activity-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                                         <thead>
                                             <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
                                                 {['Job Title', 'Company', 'Status', 'Date Applied'].map(h => (

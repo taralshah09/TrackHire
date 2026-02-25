@@ -199,6 +199,12 @@ export default function JobPage() {
                 }
                 @media (max-width: 768px) {
                     .job-main-inner { padding: 80px 16px 32px !important; }
+                    .job-action-btns { 
+                        flex-direction: column !important; 
+                        width: 100% !important;
+                    }
+                    .job-action-btns > * { width: 100% !important; }
+                    .job-action-btns select { width: 100% !important; }
                 }
             `}</style>
 
@@ -231,7 +237,9 @@ export default function JobPage() {
                                 onMouseLeave={e => e.target.style.color = 'var(--color-white-40)'}
                             >Browse Jobs</Link>
                             <span>/</span>
-                            <span style={{ color: 'var(--color-white-65)' }}>{job.title}</span>
+                            <span style={{ color: 'var(--color-white-65)' }}>
+                                {window.innerWidth <= 600 && job.title.length > 25 ? job.title.slice(0, 25) + '...' : job.title}
+                            </span>
                         </div>
                     </div>
                 } />
@@ -260,10 +268,10 @@ export default function JobPage() {
                                     <div>
                                         <h1 style={{
                                             fontFamily: 'var(--font-display)', fontWeight: 800,
-                                            fontSize: 'clamp(18px, 3vw, 26px)', letterSpacing: '-0.02em',
+                                            fontSize: 'clamp(16px, 2.8vw, 22px)', letterSpacing: '-0.02em',
                                             color: 'var(--color-white)', margin: '0 0 4px',
                                         }}>
-                                            {job.title}
+                                            {window.innerWidth <= 600 && job.title.length > 40 ? job.title.slice(0, 40) + '...' : job.title}
                                         </h1>
                                         <p style={{
                                             fontFamily: 'var(--font-body)', fontSize: '15px',
@@ -333,7 +341,7 @@ export default function JobPage() {
                             </div>
 
                             {/* Action buttons */}
-                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'flex-start', flexShrink: 0 }}>
+                            <div className="job-action-btns" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'flex-start', flexShrink: 0 }}>
                                 {/* Save */}
                                 <button
                                     onClick={handleSaveToggle}

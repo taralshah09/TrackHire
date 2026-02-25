@@ -110,7 +110,13 @@ export default function Sidebar() {
                         </Link>
                     )}
                     <button
-                        onClick={() => setCollapsed(c => !c)}
+                        onClick={() => {
+                            if (window.innerWidth <= 768) {
+                                setMobileOpen(false);
+                            } else {
+                                setCollapsed(c => !c);
+                            }
+                        }}
                         aria-label="Toggle sidebar"
                         style={{
                             background: 'transparent',
@@ -222,14 +228,19 @@ export default function Sidebar() {
                 @media (max-width: 768px) {
                     .trackhire-sidebar {
                         position: fixed !important;
-                        top: 0; left: ${mobileOpen ? '0' : '-260px'} !important;
-                        width: 240px !important;
-                        z-index: 200;
-                        transition: left 0.3s ease, width 0.25s ease !important;
-                        box-shadow: ${mobileOpen ? '4px 0 40px rgba(0,0,0,0.6)' : 'none'};
+                        top: 0; 
+                        left: ${mobileOpen ? '0' : '-260px'} !important;
+                        width: 260px !important; /* Slightly wider for better reach */
+                        z-index: 1000 !important;
+                        transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+                        box-shadow: ${mobileOpen ? '4px 0 40px rgba(0,0,0,0.8)' : 'none'};
                     }
                     .sidebar-mobile-btn {
                         display: flex !important;
+                        position: fixed !important;
+                        top: 12px !important;
+                        left: 12px !important;
+                        z-index: 100 !important; /* Below header if possible, but actually header is sticky 50 */
                     }
                 }
             `}</style>
