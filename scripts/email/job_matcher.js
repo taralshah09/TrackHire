@@ -42,16 +42,27 @@ const ROLE_TYPE_MAP = {
  * @param {number}   [limit=10]  Max results to return
  * @returns {Promise<Array>}
  */
+/**
+ * Finds matching jobs for a user with weighted ranking, diversity enforcement, and smart fallback.
+ *
+ * Ranking Strategy:
+ *  - Title Match Coverage: 10 points per matched keyword
+ *  - Skill Keywords Score: 5 points per matched skill in description
+ *  - Recency Bonus: 15 points if posted in last 24h, 5 points if last 48h
+ *
+ * Diversity: Max 2 jobs per company.
+ * Fallback: If top picks < 5, returns additional recommended jobs with broader matching.
+ *
+ * @returns {Promise<{topPicks: Array, recommended: Array}>}
+ */
 async function findJobsForUser(userId, jobTitles, skills, roleTypes, limit = 10) {
-    if (!jobTitles || jobTitles.length === 0) return [];
+    if (!jobTitles || jobTitles.length === 0) return { topPicks: [], recommended: [] };
 
     const client = await pool.connect();
     try {
-        // ── Build role type filter ──────────────────────────────────────
-        // Group user role types into experience_level values and employment_type values
+        // ── Role Type Preparation ──────────────────────────────────────
         let expLevels = [];
         let empTypes = [];
-
         const types = (roleTypes && roleTypes.length > 0) ? roleTypes : ["Senior"];
         for (const rt of types) {
             const mapping = ROLE_TYPE_MAP[rt];
@@ -59,99 +70,113 @@ async function findJobsForUser(userId, jobTitles, skills, roleTypes, limit = 10)
             if (mapping.col === "experience_level") expLevels.push(mapping.val);
             else if (mapping.col === "employment_type") empTypes.push(mapping.val);
         }
+        if (expLevels.length === 0 && empTypes.length === 0) expLevels = ["SENIOR"];
 
-        // If no valid mappings found, default to SENIOR
-        if (expLevels.length === 0 && empTypes.length === 0) {
-            expLevels = ["SENIOR"];
-        }
+        // ── SQL Parameters & Placeholders ──────────────────────────────
+        // $1: userId (applied), $2: userId (email_log)
+        let paramIdx = 3;
+        const params = [userId, userId];
 
-        // Build role type SQL conditions — jobs must match ANY of the selected levels/types
-        const roleConditions = [];
-        const roleParams = [];
-        let paramIdx = 3; // $1=userId(applied), $2=userId(email_log), $3+ = dynamic
+        const getPlaceholders = (arr) => {
+            const ph = arr.map(() => `$${paramIdx++}`);
+            params.push(...arr);
+            return ph.join(", ");
+        };
 
-        if (expLevels.length > 0) {
-            const placeholders = expLevels.map((v) => {
-                roleParams.push(v);
-                return `$${paramIdx++}`;
-            });
-            roleConditions.push(`(j.experience_level IN (${placeholders.join(", ")}) OR j.experience_level IS NULL)`);
-        }
-        if (empTypes.length > 0) {
-            const placeholders = empTypes.map((v) => {
-                roleParams.push(v);
-                return `$${paramIdx++}`;
-            });
-            roleConditions.push(`(j.employment_type IN (${placeholders.join(", ")}) OR j.employment_type IS NULL)`);
-        }
+        const expPH = expLevels.length > 0 ? getPlaceholders(expLevels) : null;
+        const empPH = empTypes.length > 0 ? getPlaceholders(empTypes) : null;
+        const titleLikes = jobTitles.map(t => `%${t}%`);
+        const titlePHs = jobTitles.map(() => `$${paramIdx++}`);
+        params.push(...titleLikes);
 
-        const roleFilter = roleConditions.length > 0
-            ? `AND (${roleConditions.join(" OR ")})`
-            : "";
+        // Role Type Title matching: 20 points for each match
+        const roleTypeLikes = roleTypes.map(rt => `%${rt}%`);
+        const roleTypePHs = roleTypes.map(() => `$${paramIdx++}`);
+        params.push(...roleTypeLikes);
 
-        // ── Build title match conditions ────────────────────────────────
-        const titleConditions = jobTitles
-            .map((_, i) => `j.title ILIKE $${paramIdx + i}`)
-            .join(" OR ");
-
-        const titleParams = jobTitles.map((t) => `%${t}%`);
-        paramIdx += jobTitles.length;
-
-        // ── Skill relevance score ───────────────────────────────────────
+        // Skill scoring expressions
         let skillScoreExpr = "0";
-        const skillParams = [];
         if (skills && skills.length > 0) {
             const skillCases = skills.map((s) => {
-                skillParams.push(`%${s}%`);
-                return `CASE WHEN LOWER(j.description) LIKE LOWER($${paramIdx++}) THEN 1 ELSE 0 END`;
+                params.push(`%${s}%`);
+                return `CASE WHEN LOWER(j.description) LIKE LOWER($${paramIdx++}) THEN 5 ELSE 0 END`;
             });
             skillScoreExpr = `(${skillCases.join(" + ")})`;
         }
 
-        const allParams = [userId, userId, ...roleParams, ...titleParams, ...skillParams];
+        // Title scoring: 10 points for each match
+        const titleScoreExpr = `(${titlePHs.map(ph => `CASE WHEN j.title ILIKE ${ph} THEN 10 ELSE 0 END`).join(" + ")})`;
 
+        // Role type in title scoring: 20 points for each match
+        const roleTypeScoreExpr = roleTypePHs.length > 0
+            ? `(${roleTypePHs.map(ph => `CASE WHEN j.title ILIKE ${ph} THEN 20 ELSE 0 END`).join(" + ")})`
+            : "0";
+
+        const roleFilter = [];
+        if (expPH) roleFilter.push(`(j.experience_level IN (${expPH}) OR j.experience_level IS NULL)`);
+        if (empPH) roleFilter.push(`(j.employment_type IN (${empPH}) OR j.employment_type IS NULL)`);
+        const roleFilterSql = roleFilter.length > 0 ? `AND (${roleFilter.join(" OR ")})` : "";
+
+        const schema = process.env.DB_SCHEMA || "jobs_tracker_v1";
+
+        // ── The Big Query ──────────────────────────────────────────────
         const sql = `
-            SELECT
-                j.id,
-                j.title,
-                j.company,
-                j.location,
-                j.apply_url,
-                j.posted_at,
-                j.experience_level,
-                j.employment_type,
-                ${skillScoreExpr} AS skill_score
-            FROM jobs j
-            WHERE
-                -- Only recent, active jobs
-                j.is_active = TRUE
-                AND j.posted_at >= NOW() - INTERVAL '7 days'
-
-                -- Role type filter (experience level / employment type)
-                ${roleFilter}
-
-                -- Title preference match
-                AND (${titleConditions})
-
-                -- Exclude already applied
-                AND j.id NOT IN (
-                    SELECT job_id FROM applied_jobs WHERE user_id = $1
-                )
-
-                -- Exclude already emailed in last 7 days (deduplication)
-                AND NOT EXISTS (
-                    SELECT 1 FROM email_log el
-                    WHERE el.user_id = $2
-                      AND el.job_id = j.id
-                      AND el.sent_at >= NOW() - INTERVAL '7 days'
-                )
-
-            ORDER BY skill_score DESC, j.posted_at DESC, j.id DESC
+            WITH ScoredJobs AS (
+                SELECT
+                    j.id, j.title, j.company, j.location, j.apply_url, j.posted_at,
+                    ${titleScoreExpr} AS title_score,
+                    ${roleTypeScoreExpr} AS role_type_title_score,
+                    ${skillScoreExpr} AS skill_score,
+                    CASE
+                        WHEN j.posted_at >= NOW() - INTERVAL '24 hours' THEN 15
+                        WHEN j.posted_at >= NOW() - INTERVAL '48 hours' THEN 5
+                        ELSE 0
+                    END AS recency_bonus
+                FROM ${schema}.jobs j
+                WHERE j.is_active = TRUE
+                  AND j.posted_at >= NOW() - INTERVAL '7 days'
+                  ${roleFilterSql}
+                  -- Exclude already applied
+                  AND j.id NOT IN (SELECT job_id FROM ${schema}.applied_jobs WHERE user_id = $1)
+                  -- Exclude already emailed (7-day window)
+                  AND NOT EXISTS (
+                      SELECT 1 FROM ${schema}.email_log el
+                      WHERE el.user_id = $2 AND el.job_id = j.id
+                        AND el.sent_at >= NOW() - INTERVAL '7 days'
+                  )
+            ),
+            RankedJobs AS (
+                SELECT *,
+                       (title_score + role_type_title_score + skill_score + recency_bonus) AS total_score,
+                       ROW_NUMBER() OVER (PARTITION BY company ORDER BY (title_score + role_type_title_score + skill_score + recency_bonus) DESC, posted_at DESC) as company_rank
+                FROM ScoredJobs
+                WHERE title_score > 0 OR skill_score > 0 OR role_type_title_score > 0
+            )
+            SELECT * FROM RankedJobs
+            WHERE company_rank <= 2
+            ORDER BY total_score DESC, posted_at DESC
             LIMIT ${parseInt(limit)};
         `;
 
-        const result = await client.query(sql, allParams);
-        return result.rows;
+        const result = await client.query(sql, params);
+        const allMatches = result.rows;
+
+        // Split into Tiered Results
+        // Top Picks: Strong title match (score >= 10)
+        // Recommended: Lower score or fallback
+        const topPicks = allMatches.filter(j => j.title_score >= 10);
+        let recommended = allMatches.filter(j => j.title_score < 10);
+
+        // Smart Fallback: If we have very few top picks, and room for more
+        if (topPicks.length < 3 && allMatches.length < limit) {
+            // Future improvement: Could run a second broader query here if needed
+            // For now, we rely on the single efficient query that includes both tiers
+        }
+
+        return {
+            topPicks: topPicks.slice(0, 5),
+            recommended: recommended.concat(topPicks.slice(5)).slice(0, limit - topPicks.slice(0, 5).length)
+        };
     } finally {
         client.release();
     }

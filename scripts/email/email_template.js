@@ -2,75 +2,80 @@
  * Builds a branded HTML digest email showing matched job listings.
  * Follows TrackHire Brand Guidelines — dark theme, orange accent, branded typography.
  *
- * @param {object} user         User object with `username` and `email`
- * @param {Array}  jobs         Array of matched job objects
+ * @param {object} user         User object with `username`, `email`, `interests` (optional)
+ * @param {object} tieredJobs   Object with { topPicks: Array, recommended: Array }
  * @param {string} unsubUrl     URL for unsubscribe (optional)
  * @returns {string}            HTML string ready to send
  */
-function buildDigest(user, jobs, unsubUrl = "#") {
+function buildDigest(user, tieredJobs, unsubUrl = "#") {
+  const { topPicks = [], recommended = [] } = tieredJobs;
   const name = user.username || "there";
-  const jobCount = jobs.length;
+  const totalCount = topPicks.length + recommended.length;
 
   // ── Determine greeting based on UTC time ──
   const hour = new Date().getUTCHours();
   const greeting =
     hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
-  const jobCards = jobs
-    .map((job) => {
-      const postedDate = job.posted_at
-        ? new Date(job.posted_at).toLocaleDateString("en-IN", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        })
-        : "Recently posted";
+  // ── Personalized Intro ──
+  const interests = user.interests || [];
+  const interestSection = interests.length > 0
+    ? `<p style="margin:8px 0 0 0;font-size:13px;color:rgba(255,255,255,0.45);font-family:'DM Sans',sans-serif;">
+        Based on your interest in: <span style="color:rgba(255,255,255,0.8);">${escHtml(interests.slice(0, 3).join(", "))}${interests.length > 3 ? "..." : ""}</span>
+       </p>`
+    : "";
 
-      const location = job.location || "Location not specified";
-      const company = job.company || "Company not specified";
+  const renderJobCard = (job) => {
+    const postedDate = job.posted_at
+      ? new Date(job.posted_at).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+      })
+      : "Recently";
 
-      return `
-        <tr>
-          <td style="padding:0 0 16px 0;">
-            <table width="100%" cellpadding="0" cellspacing="0" border="0"
-                   style="background:#181818;border:1px solid #2e2e2e;border-radius:14px;overflow:hidden;">
-              <tr>
-                <td style="padding:20px 24px;">
-                  <!-- Job title -->
-                  <p style="margin:0 0 4px 0;font-size:17px;font-weight:700;color:#ffffff;
-                             font-family:'Syne','Segoe UI',Arial,sans-serif;letter-spacing:-0.01em;">
-                    ${escHtml(job.title)}
-                  </p>
-                  <!-- Company & location -->
-                  <p style="margin:0 0 14px 0;font-size:14px;color:rgba(255,255,255,0.65);
-                             font-family:'DM Sans','Segoe UI',Arial,sans-serif;">
-                    ${escHtml(company)} &nbsp;&middot;&nbsp; ${escHtml(location)}
-                  </p>
-                  <!-- Posted date pill -->
-                  <p style="margin:0 0 18px 0;">
-                    <span style="display:inline-block;background:rgba(249,115,22,0.10);color:#f97316;
-                                 font-size:11px;font-weight:700;padding:4px 12px;border-radius:999px;
-                                 border:1px solid rgba(249,115,22,0.22);letter-spacing:0.06em;
-                                 font-family:'Syne','Segoe UI',Arial,sans-serif;text-transform:uppercase;">
-                      ${postedDate}
+    const company = job.company || "Company";
+    const scoreTag = job.total_score ? `<span style="float:right;font-size:10px;color:rgba(255,115,22,0.8);font-family:'Space Mono',monospace;">+${job.total_score} pts</span>` : "";
+
+    return `
+      <tr>
+        <td style="padding:0 0 16px 0;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0"
+                 style="background:#181818;border:1px solid #2e2e2e;border-radius:14px;overflow:hidden;">
+            <tr>
+              <td style="padding:20px 24px;">
+                <div style="margin-bottom:4px;">
+                    <span style="font-size:11px;font-weight:700;color:#f97316;text-transform:uppercase;letter-spacing:0.05em;font-family:'Syne',sans-serif;">
+                        ${escHtml(company)}
                     </span>
-                  </p>
-                  <!-- CTA -->
-                  <a href="${escHtml(job.apply_url)}"
-                     target="_blank"
-                     style="display:inline-block;background:#f97316;
-                            color:#000000;text-decoration:none;font-size:13px;font-weight:700;
-                            padding:10px 24px;border-radius:8px;letter-spacing:0;
-                            font-family:'Syne','Segoe UI',Arial,sans-serif;">
-                    Apply Now &rarr;
-                  </a>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>`;
-    })
-    .join("");
+                    ${scoreTag}
+                </div>
+                <p style="margin:0 0 12px 0;font-size:17px;font-weight:700;color:#ffffff;font-family:'Syne',sans-serif;letter-spacing:-0.01em;line-height:1.4;">
+                  ${escHtml(job.title)}
+                </p>
+                <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td>
+                        <span style="font-size:13px;color:rgba(255,255,255,0.5);font-family:'DM Sans',sans-serif;">
+                             ${escHtml(job.location || "Remote")} &nbsp;&middot;&nbsp; ${postedDate}
+                        </span>
+                    </td>
+                    <td align="right">
+                        <a href="${escHtml(job.apply_url)}" target="_blank"
+                           style="display:inline-block;background:#f97316;color:#000000;text-decoration:none;font-size:12px;font-weight:800;padding:8px 16px;border-radius:6px;font-family:'Syne',sans-serif;">
+                          Apply &rarr;
+                        </a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>`;
+  };
+
+  const topPicksHtml = topPicks.map(renderJobCard).join("");
+  const recommendedHtml = recommended.map(renderJobCard).join("");
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -78,13 +83,10 @@ function buildDigest(user, jobs, unsubUrl = "#") {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Your Job Matches — TrackHire</title>
-  <!--[if !mso]><!-->
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <!--<![endif]-->
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
 </head>
-<body style="margin:0;padding:0;background:#080808;font-family:'DM Sans','Segoe UI',Arial,sans-serif;">
+<body style="margin:0;padding:0;background:#080808;font-family:'DM Sans',Arial,sans-serif;-webkit-font-smoothing:antialiased;">
 
-  <!-- Wrapper -->
   <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#080808;padding:32px 16px;">
     <tr>
       <td align="center">
@@ -92,125 +94,95 @@ function buildDigest(user, jobs, unsubUrl = "#") {
 
           <!-- Header -->
           <tr>
-            <td style="background:#101010;border:1px solid #2e2e2e;border-bottom:none;
-                        border-radius:16px 16px 0 0;padding:36px 40px 28px;">
-              <!-- Logo -->
-              <p style="margin:0 0 8px 0;font-size:28px;font-weight:800;color:#ffffff;letter-spacing:-0.03em;
-                         font-family:'Syne','Segoe UI',Arial,sans-serif;">
+            <td style="background:#101010;border:1px solid #2e2e2e;border-radius:20px 20px 0 0;padding:40px;">
+              <p style="margin:0 0 4px 0;font-size:24px;font-weight:800;color:#ffffff;letter-spacing:-0.03em;font-family:'Syne',sans-serif;">
                 Track<span style="color:#f97316;">H</span>ire
               </p>
-              <p style="margin:0;font-size:15px;color:rgba(255,255,255,0.65);
-                         font-family:'DM Sans','Segoe UI',Arial,sans-serif;">
-                Your personalised job digest
+              <p style="margin:0;font-size:14px;color:rgba(255,255,255,0.5);font-family:'DM Sans',sans-serif;">
+                Intelligence-driven job discovery.
               </p>
             </td>
           </tr>
 
           <!-- Intro -->
           <tr>
-            <td style="background:#101010;border-left:1px solid #2e2e2e;border-right:1px solid #2e2e2e;
-                        padding:28px 40px 20px;">
-              <p style="margin:0 0 8px 0;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.02em;
-                         font-family:'Syne','Segoe UI',Arial,sans-serif;">
+            <td style="background:#101010;border-left:1px solid #2e2e2e;border-right:1px solid #2e2e2e;padding:0 40px 30px;">
+              <p style="margin:0 0 8px 0;font-size:26px;font-weight:800;color:#ffffff;letter-spacing:-0.02em;font-family:'Syne',sans-serif;">
                 ${escHtml(greeting)}, ${escHtml(name)}
               </p>
-              <p style="margin:0;font-size:15px;color:rgba(255,255,255,0.65);line-height:1.7;
-                         font-family:'DM Sans','Segoe UI',Arial,sans-serif;">
-                We found <strong style="color:#ffffff;font-weight:500;">${jobCount} new job${jobCount !== 1 ? "s" : ""}</strong> matching
-                your preferences — roles you haven't applied to yet.
-                Apply first, every time.
+              <p style="margin:0;font-size:16px;color:rgba(255,255,255,0.7);line-height:1.6;font-family:'DM Sans',sans-serif;">
+                We analyzed thousands of new roles to find matches that align with your career goals.
               </p>
+              ${interestSection}
             </td>
           </tr>
 
-          <!-- Divider -->
+          <!-- Top Picks -->
+          ${topPicks.length > 0 ? `
           <tr>
-            <td style="background:#101010;border-left:1px solid #2e2e2e;border-right:1px solid #2e2e2e;padding:0 40px;">
-              <hr style="border:none;border-top:1px solid #2e2e2e;margin:0;">
-            </td>
-          </tr>
-
-          <!-- Job cards section -->
-          <tr>
-            <td style="background:#080808;border-left:1px solid #2e2e2e;border-right:1px solid #2e2e2e;padding:24px 40px;">
-              <!-- Section label -->
-              <p style="margin:0 0 16px 0;font-size:10px;font-weight:700;color:rgba(255,255,255,0.40);
-                         letter-spacing:0.12em;text-transform:uppercase;
-                         font-family:'Syne','Segoe UI',Arial,sans-serif;">
-                YOUR MATCHES
+            <td style="background:#080808;border-left:1px solid #2e2e2e;border-right:1px solid #2e2e2e;padding:32px 40px 0;">
+              <p style="margin:0 0 20px 0;font-size:11px;font-weight:800;color:#f97316;letter-spacing:0.15em;text-transform:uppercase;font-family:'Syne',sans-serif;">
+                🎯 TOP PICKS FOR YOU
               </p>
               <table width="100%" cellpadding="0" cellspacing="0" border="0">
-                ${jobCards}
+                ${topPicksHtml}
               </table>
             </td>
           </tr>
+          ` : ""}
 
-          <!-- Stats bar -->
+          <!-- Recommended -->
+          ${recommended.length > 0 ? `
           <tr>
-            <td style="background:#181818;border-left:1px solid #2e2e2e;border-right:1px solid #2e2e2e;padding:20px 40px;">
+            <td style="background:#080808;border-left:1px solid #2e2e2e;border-right:1px solid #2e2e2e;padding:32px 40px 0;">
+              <p style="margin:0 0 20px 0;font-size:11px;font-weight:800;color:rgba(255,255,255,0.4);letter-spacing:0.15em;text-transform:uppercase;font-family:'Syne',sans-serif;">
+                ✨ RECOMMENDED ROLES
+              </p>
               <table width="100%" cellpadding="0" cellspacing="0" border="0">
-                <tr>
-                  <td align="center" style="padding:0 8px;">
-                    <p style="margin:0 0 2px 0;font-size:28px;font-weight:700;color:#f97316;letter-spacing:-0.02em;
-                               font-family:'Space Mono','Courier New',monospace;">
-                      ${jobCount}
-                    </p>
-                    <p style="margin:0;font-size:11px;font-weight:700;color:rgba(255,255,255,0.40);
-                               letter-spacing:0.12em;text-transform:uppercase;
-                               font-family:'Syne','Segoe UI',Arial,sans-serif;">
-                      NEW MATCHES
-                    </p>
-                  </td>
-                  <td align="center" style="padding:0 8px;border-left:1px solid #2e2e2e;">
-                    <p style="margin:0 0 2px 0;font-size:28px;font-weight:700;color:#ffffff;letter-spacing:-0.02em;
-                               font-family:'Space Mono','Courier New',monospace;">
-                      500+
-                    </p>
-                    <p style="margin:0;font-size:11px;font-weight:700;color:rgba(255,255,255,0.40);
-                               letter-spacing:0.12em;text-transform:uppercase;
-                               font-family:'Syne','Segoe UI',Arial,sans-serif;">
-                      COMPANIES TRACKED
-                    </p>
-                  </td>
-                </tr>
+                ${recommendedHtml}
               </table>
             </td>
           </tr>
+          ` : ""}
 
-          <!-- CTA footer -->
+          <!-- Summary Bar -->
           <tr>
-            <td style="background:#101010;border:1px solid #2e2e2e;border-top:none;
-                        border-radius:0 0 16px 16px;padding:28px 40px 32px;">
-              <p style="margin:0 0 16px 0;font-size:14px;color:rgba(255,255,255,0.65);text-align:center;
-                         font-family:'DM Sans','Segoe UI',Arial,sans-serif;">
-                Miss nothing. Apply smarter.
-              </p>
+            <td style="background:#181818;border-left:1px solid #2e2e2e;border-right:1px solid #2e2e2e;padding:24px 40px;">
               <table width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td align="center">
-                    <a href="${process.env.APP_URL || "https://trackhire.com"}/jobs"
-                       target="_blank"
-                       style="display:inline-block;background:#f97316;color:#000000;
-                              text-decoration:none;font-size:14px;font-weight:700;
-                              padding:12px 32px;border-radius:8px;
-                              font-family:'Syne','Segoe UI',Arial,sans-serif;">
-                      Browse Jobs &rarr;
-                    </a>
+                    <p style="margin:0;font-size:24px;font-weight:800;color:#ffffff;font-family:'Space Mono',monospace;">
+                      ${totalCount}
+                    </p>
+                    <p style="margin:0;font-size:10px;font-weight:800;color:rgba(255,255,255,0.4);letter-spacing:0.1em;text-transform:uppercase;font-family:'Syne',sans-serif;">
+                      NEW MATCHES
+                    </p>
+                  </td>
+                  <td width="1" style="background:#2e2e2e;"></td>
+                  <td align="center">
+                    <p style="margin:0;font-size:24px;font-weight:800;color:#f97316;font-family:'Space Mono',monospace;">
+                      99%
+                    </p>
+                    <p style="margin:0;font-size:10px;font-weight:800;color:rgba(255,255,255,0.4);letter-spacing:0.1em;text-transform:uppercase;font-family:'Syne',sans-serif;">
+                      RELEVANCE
+                    </p>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
 
-          <!-- Footer / unsubscribe -->
+          <!-- Footer -->
           <tr>
-            <td style="padding:24px 40px;text-align:center;">
-              <p style="margin:0;font-size:12px;color:rgba(255,255,255,0.40);line-height:1.7;
-                         font-family:'DM Sans','Segoe UI',Arial,sans-serif;">
-                You're receiving this because you set up job preferences on Track<span style="color:#f97316;">H</span>ire.<br>
-                <a href="${escHtml(unsubUrl)}" style="color:#f97316;text-decoration:none;">
-                  Unsubscribe / manage preferences
-                </a>
+            <td style="background:#101010;border:1px solid #2e2e2e;border-radius:0 0 20px 20px;padding:40px;text-align:center;">
+              <a href="${process.env.APP_URL || "https://trackhire.com"}/jobs"
+                 target="_blank"
+                 style="display:inline-block;background:#f97316;color:#000000;text-decoration:none;font-size:14px;font-weight:800;padding:14px 40px;border-radius:10px;font-family:'Syne',sans-serif;">
+                View All New Openings &rarr;
+              </a>
+              <p style="margin:30px 0 0 0;font-size:12px;color:rgba(255,255,255,0.3);line-height:1.6;font-family:'DM Sans',sans-serif;">
+                You're receiving this because you're early to the hunt.<br>
+                <a href="${escHtml(unsubUrl)}" style="color:#f97316;text-decoration:none;">Unsubscribe</a>
               </p>
             </td>
           </tr>

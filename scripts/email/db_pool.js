@@ -23,7 +23,7 @@ const pool = new Pool({
 });
 
 pool.on("connect", (client) => {
-    client.query(`SET search_path TO ${DB_SCHEMA}`);
+    client.query(`SET search_path TO ${DB_SCHEMA}, public`);
 });
 
 pool.on("error", (err) => {
