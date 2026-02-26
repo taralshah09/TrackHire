@@ -412,7 +412,7 @@ function Navbar({ scrolled }) {
                 <Link to="/meet-the-builder" style={linkStyle}
                     onMouseEnter={linkHoverStyle}
                     onMouseLeave={linkLeaveStyle}>Builder</Link>
-                <a href="https://www.producthunt.com/products/trackhire?launch=trackhire"
+                <a href="https://www.producthunt.com/products/trackhire"
                     style={linkStyle}
                     target="_blank"
                     rel="noopener noreferrer"
