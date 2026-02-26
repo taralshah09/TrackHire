@@ -126,11 +126,11 @@ async function runScheduler() {
     }
 
     // 🔹 19:10 IST (7:10 PM) → Email Pipeline
-    if (hour === 19 && minute >= 50 && minute < 60) {
-        console.log("⏰ Running email pipeline (19:20 IST window)");
+    // if (hour === 19 && minute >= 50 && minute < 60) {
+    // console.log("⏰ Running email pipeline (19:20 IST window)");
 
-        await runEmails();
-    }
+    await runEmails();
+    // }
 
     console.log("==============================================\n");
 }
