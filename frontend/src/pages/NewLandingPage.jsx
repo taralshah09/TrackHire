@@ -139,6 +139,8 @@ const GLOBAL_CSS = `
     .lp-hero-actions { flex-direction: column; align-items: center; width: 100%; gap: 12px !important; }
     .lp-hero-actions > * { width: 100% !important; justify-content: center; }
     .lp-strip-divider { display: none !important; }
+    .lp-github-text { display: none !important; }
+    .lp-nav-right-btn { padding: 8px !important; }
   }
 
   /* ── Grid Responsiveness ── */
@@ -362,8 +364,26 @@ function Navbar({ scrolled }) {
     const isLoggedIn = Boolean(Cookies.get('token') || Cookies.get('username') || Cookies.get('accessToken'));
 
     const linkStyle = {
-        fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '14px',
-        color: T.w65, transition: 'color 0.2s',
+        fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '12px',
+        color: T.w65, transition: 'all 0.2s',
+        padding: '8px 16px',
+        borderRadius: '8px',
+        background: '#000',
+        border: '1px solid transparent',
+        display: 'flex',
+        alignItems: 'center',
+    };
+
+    const linkHoverStyle = (e) => {
+        e.currentTarget.style.color = T.white;
+        e.currentTarget.style.background = '#333';
+        e.currentTarget.style.borderColor = '#fff';
+    };
+
+    const linkLeaveStyle = (e) => {
+        e.currentTarget.style.color = T.w65;
+        e.currentTarget.style.background = '#000';
+        e.currentTarget.style.borderColor = 'transparent';
     };
 
     return (
@@ -388,19 +408,35 @@ function Navbar({ scrolled }) {
             </div>
 
             {/* Links */}
-            <div className="lp-nav-links" style={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
-                {[['#features', 'Features'], ['#how-it-works', 'How It Works'], ['#testimonials', 'Testimonials']].map(([href, label]) => (
-                    <a key={label} href={href} style={linkStyle}
-                        onMouseEnter={e => e.currentTarget.style.color = T.white}
-                        onMouseLeave={e => e.currentTarget.style.color = T.w65}>{label}</a>
-                ))}
+            <div className="lp-nav-links" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                 <Link to="/meet-the-builder" style={linkStyle}
-                    onMouseEnter={e => e.currentTarget.style.color = T.white}
-                    onMouseLeave={e => e.currentTarget.style.color = T.w65}>Builder</Link>
+                    onMouseEnter={linkHoverStyle}
+                    onMouseLeave={linkLeaveStyle}>Builder</Link>
+                <a href="https://www.producthunt.com/products/trackhire?launch=trackhire"
+                    style={linkStyle}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="TrackHire on Product Hunt"
+                    onMouseEnter={linkHoverStyle}
+                    onMouseLeave={linkLeaveStyle}>Product Hunt</a>
             </div>
 
             {/* Right */}
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                {isLoggedIn ? (
+                    <Link to="/dashboard" style={primaryBtn}
+                        onMouseEnter={e => { e.currentTarget.style.background = T.orangeD; e.currentTarget.style.transform = 'scale(1.02)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = T.orange; e.currentTarget.style.transform = 'scale(1)'; }}>
+                        Dashboard
+                    </Link>
+                ) : (
+                    <Link to="/login" style={primaryBtn}
+                        onMouseEnter={e => { e.currentTarget.style.background = T.orangeD; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = `0 8px 24px ${T.orangeGlow}`; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = T.orange; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
+                        Log in
+                    </Link>
+                )}
+
                 <a href={GITHUB_REPO} target="_blank" rel="noopener noreferrer" className="lp-nav-right-btn" style={{
                     display: 'inline-flex', alignItems: 'center', gap: '6px',
                     fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px',
@@ -410,29 +446,8 @@ function Navbar({ scrolled }) {
                     onMouseEnter={e => { e.currentTarget.style.borderColor = T.border2; e.currentTarget.style.color = T.orange; e.currentTarget.style.background = T.orangeDim; }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.w65; e.currentTarget.style.background = T.s2; }}
                 >
-                    <FaStar style={{ fontSize: '11px' }} /> Star on GitHub
+                    <FaStar style={{ fontSize: '11px' }} /> <span className="lp-github-text">Star on GitHub</span>
                 </a>
-
-                {isLoggedIn ? (
-                    <Link to="/dashboard" style={primaryBtn}
-                        onMouseEnter={e => { e.currentTarget.style.background = T.orangeD; e.currentTarget.style.transform = 'scale(1.02)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = T.orange; e.currentTarget.style.transform = 'scale(1)'; }}>
-                        Dashboard
-                    </Link>
-                ) : (
-                    <>
-                        <Link to="/login" style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 'clamp(12px, 3.5vw, 14px)', color: T.w65, transition: 'color 0.2s' }}
-                            onMouseEnter={e => e.currentTarget.style.color = T.white}
-                            onMouseLeave={e => e.currentTarget.style.color = T.w65}>
-                            Log in
-                        </Link>
-                        <Link to="/register" style={primaryBtn}
-                            onMouseEnter={e => { e.currentTarget.style.background = T.orangeD; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = `0 8px 24px ${T.orangeGlow}`; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = T.orange; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
-                            Register
-                        </Link>
-                    </>
-                )}
             </div>
         </nav>
     );
@@ -929,8 +944,25 @@ function Footer() {
                             <FaGithub style={{ fontSize: '15px' }} /> View on GitHub
                         </a>
                     </div>
+
+                    <div>
+                        <div style={{
+                            fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '12px',
+                            color: T.white, marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '0.12em',
+                        }}>Project</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            <Link to="/meet-the-builder" style={{ color: T.w40, fontSize: '14px', transition: 'color 0.2s', fontFamily: 'var(--font-body)' }}
+                                onMouseEnter={e => e.currentTarget.style.color = T.white}
+                                onMouseLeave={e => e.currentTarget.style.color = T.w40}>Builder</Link>
+                            <a href="https://www.producthunt.com/products/trackhire?launch=trackhire" target="_blank" rel="noopener noreferrer"
+                                style={{ color: T.w40, fontSize: '14px', transition: 'color 0.2s', fontFamily: 'var(--font-body)' }}
+                                onMouseEnter={e => e.currentTarget.style.color = T.white}
+                                onMouseLeave={e => e.currentTarget.style.color = T.w40}>Product Hunt</a>
+                        </div>
+                    </div>
+
                     <div style={{
-                        maxWidth: '480px', fontFamily: 'var(--font-body)', fontSize: '14px',
+                        maxWidth: '400px', fontFamily: 'var(--font-body)', fontSize: '14px',
                         lineHeight: 1.7, color: 'rgba(255,255,255,0.35)', fontStyle: 'italic',
                     }}>
                         "Change will not come if we wait for some other person or some other time.
