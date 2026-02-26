@@ -22,6 +22,22 @@ Track every opportunity. Miss none.
 
 ---
 
+
+## Quick Demo
+
+<div align="center">
+<video src="./TrackHire.mp4" width="800" controls>
+  Your browser does not support the video tag.
+</video>
+
+<p>
+See TrackHire discover, organize, and track real opportunities in seconds.
+</p>
+
+</div>
+
+---
+
 ## What is TrackHire?
 
 **TrackHire** is a full-stack job discovery and tracking platform that aggregates opportunities directly from company career pages and exclusive sources — many of which never surface on mainstream platforms like LinkedIn or Indeed.
@@ -35,7 +51,7 @@ Users can browse 10,000+ curated, deduplicated job listings, save the ones they 
 - 📌 **Personal tracker** — save jobs and manage your application pipeline
 - 🔐 **Secure auth** — JWT-based authentication with refresh token support
 - 📊 **Dashboard** — at-a-glance stats on your search activity
-- 🔔 **Smart alerts** *(in development)* — email notifications for matched roles
+- 🔔 **Smart alerts** _(in development)_ — email notifications for matched roles
 
 ---
 
@@ -101,47 +117,47 @@ The real opportunities live on company career pages. Most never get indexed by m
 
 ### 🔐 Auth
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| `POST` | `/auth/register` | Public | Register a new user account |
-| `POST` | `/auth/login` | Public | Authenticate and receive access + refresh tokens |
-| `POST` | `/auth/refresh` | Public | Exchange refresh token for a new access token |
-| `POST` | `/auth/logout` | Protected | Invalidate the current session |
+| Method | Endpoint         | Auth      | Description                                      |
+| ------ | ---------------- | --------- | ------------------------------------------------ |
+| `POST` | `/auth/register` | Public    | Register a new user account                      |
+| `POST` | `/auth/login`    | Public    | Authenticate and receive access + refresh tokens |
+| `POST` | `/auth/refresh`  | Public    | Exchange refresh token for a new access token    |
+| `POST` | `/auth/logout`   | Protected | Invalidate the current session                   |
 
 ### 💼 Jobs
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| `GET` | `/jobs` | Protected | Fetch all jobs (paginated) |
-| `GET` | `/jobs/:id` | Protected | Fetch a single job by ID |
-| `GET` | `/jobs/search` | Protected | Search jobs by keyword, company, location |
-| `GET` | `/jobs/filter` | Protected | Filter jobs by type, experience level, work style |
+| Method | Endpoint       | Auth      | Description                                       |
+| ------ | -------------- | --------- | ------------------------------------------------- |
+| `GET`  | `/jobs`        | Protected | Fetch all jobs (paginated)                        |
+| `GET`  | `/jobs/:id`    | Protected | Fetch a single job by ID                          |
+| `GET`  | `/jobs/search` | Protected | Search jobs by keyword, company, location         |
+| `GET`  | `/jobs/filter` | Protected | Filter jobs by type, experience level, work style |
 
 ### 👤 User
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| `GET` | `/user/profile` | Protected | Get the authenticated user's profile |
-| `PUT` | `/user/profile` | Protected | Update profile details |
-| `POST` | `/user/jobs/:jobId/save` | Protected | Save a job to the user's list |
-| `DELETE` | `/user/jobs/:jobId/save` | Protected | Remove a job from saved list |
-| `GET` | `/user/jobs/saved` | Protected | Retrieve all saved jobs for the user |
+| Method   | Endpoint                 | Auth      | Description                          |
+| -------- | ------------------------ | --------- | ------------------------------------ |
+| `GET`    | `/user/profile`          | Protected | Get the authenticated user's profile |
+| `PUT`    | `/user/profile`          | Protected | Update profile details               |
+| `POST`   | `/user/jobs/:jobId/save` | Protected | Save a job to the user's list        |
+| `DELETE` | `/user/jobs/:jobId/save` | Protected | Remove a job from saved list         |
+| `GET`    | `/user/jobs/saved`       | Protected | Retrieve all saved jobs for the user |
 
 ### 📋 Applications
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| `POST` | `/applications` | Protected | Track a new job application |
-| `GET` | `/applications` | Protected | Get all applications for the user |
-| `PUT` | `/applications/:id` | Protected | Update application status or notes |
-| `DELETE` | `/applications/:id` | Protected | Remove a tracked application |
+| Method   | Endpoint            | Auth      | Description                        |
+| -------- | ------------------- | --------- | ---------------------------------- |
+| `POST`   | `/applications`     | Protected | Track a new job application        |
+| `GET`    | `/applications`     | Protected | Get all applications for the user  |
+| `PUT`    | `/applications/:id` | Protected | Update application status or notes |
+| `DELETE` | `/applications/:id` | Protected | Remove a tracked application       |
 
 ### 📊 Dashboard
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| `GET` | `/dashboard/stats` | Protected | Fetch user stats (saved count, applied count, etc.) |
-| `GET` | `/dashboard/activity` | Protected | Recent application and save activity feed |
+| Method | Endpoint              | Auth      | Description                                         |
+| ------ | --------------------- | --------- | --------------------------------------------------- |
+| `GET`  | `/dashboard/stats`    | Protected | Fetch user stats (saved count, applied count, etc.) |
+| `GET`  | `/dashboard/activity` | Protected | Recent application and save activity feed           |
 
 ---
 
@@ -250,12 +266,12 @@ node index.js
 
 ## Deployment
 
-| Layer | Platform | Notes |
-|-------|----------|-------|
-| **Frontend** | [Vercel](https://vercel.com) | Auto-deploys from `main` branch; set `VITE_API_BASE_URL` in project settings |
-| **Backend** | [Render](https://render.com) | Deployed as a Web Service; set all `application.properties` values as environment variables |
-| **Database** | [Supabase](https://supabase.com) | Serverless PostgreSQL; free tier sufficient for development |
-| **Cron Pipeline** | [Render Cron Jobs](https://render.com/docs/cronjobs) / [GitHub Actions](https://github.com/features/actions) | Scheduled daily via cron expression `0 2 * * *` (runs at 2 AM UTC) |
+| Layer             | Platform                                                                                                     | Notes                                                                                       |
+| ----------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| **Frontend**      | [Vercel](https://vercel.com)                                                                                 | Auto-deploys from `main` branch; set `VITE_API_BASE_URL` in project settings                |
+| **Backend**       | [Render](https://render.com)                                                                                 | Deployed as a Web Service; set all `application.properties` values as environment variables |
+| **Database**      | [Supabase](https://supabase.com)                                                                             | Serverless PostgreSQL; free tier sufficient for development                                 |
+| **Cron Pipeline** | [Render Cron Jobs](https://render.com/docs/cronjobs) / [GitHub Actions](https://github.com/features/actions) | Scheduled daily via cron expression `0 2 * * *` (runs at 2 AM UTC)                          |
 
 ### Deployment Steps (Frontend)
 
@@ -315,6 +331,6 @@ Built with intent by [Taral Shah](https://github.com/taralshah09)
 
 [![GitHub](https://img.shields.io/badge/GitHub-taralshah09-181717?style=flat-square&logo=github)](https://github.com/taralshah09)
 
-*If TrackHire helped you — a ⭐ on the repo goes a long way.*
+_If TrackHire helped you — a ⭐ on the repo goes a long way._
 
 </div>
