@@ -8,12 +8,6 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 const dns = require("dns");
 dns.setDefaultResultOrder("ipv4first"); // ← Must be before nodemailer import
 
-const nodemailer = require("nodemailer");
-const dotenv = require("dotenv");
-const path = require("path");
-
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
-
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: parseInt(process.env.SMTP_PORT) || 587,
