@@ -14,6 +14,8 @@ const transporter = nodemailer.createTransport({
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
     },
+    // Force IPv4 as some environments (like Railway/Render) may have IPv6 issues with Gmail
+    family: 4,
 });
 
 /**
@@ -36,8 +38,8 @@ async function sendEmail(to, subject, html) {
     try {
         await transporter.sendMail(mailOptions);
     } catch (err) {
-        // Retry once on transient SMTP errors (e.g. ECONNRESET, ETIMEDOUT)
-        const transient = ["ECONNRESET", "ETIMEDOUT", "ECONNREFUSED"];
+        // Retry once on transient SMTP errors (e.g. ECONNRESET, ETIMEDOUT, ENETUNREACH)
+        const transient = ["ECONNRESET", "ETIMEDOUT", "ECONNREFUSED", "ENETUNREACH"];
         if (transient.some((code) => err.code === code || err.message.includes(code))) {
             console.warn(`  ⚠️  Transient SMTP error for ${to}, retrying once…`);
             await new Promise((r) => setTimeout(r, 2000));
