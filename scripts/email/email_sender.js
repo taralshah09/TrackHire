@@ -4,18 +4,25 @@ const path = require("path");
 
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
-// ─── Transporter ─────────────────────────────────────────────────────────────
-// Supports any SMTP provider (Gmail App Password, Resend SMTP, SendGrid, etc.)
+// email_sender.js
+const dns = require("dns");
+dns.setDefaultResultOrder("ipv4first"); // ← Must be before nodemailer import
+
+const nodemailer = require("nodemailer");
+const dotenv = require("dotenv");
+const path = require("path");
+
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
+
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: parseInt(process.env.SMTP_PORT) || 587,
-    secure: process.env.SMTP_SECURE === "true", // true = port 465, false = STARTTLS
+    secure: process.env.SMTP_SECURE === "true",
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
     },
-    // Force IPv4 as some environments (like Railway/Render) may have IPv6 issues with Gmail
-    family: 4,
+    // family: 4 ← remove this, it's not reliably supported
 });
 
 /**
