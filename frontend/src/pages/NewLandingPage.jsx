@@ -1,6 +1,6 @@
 import React, { Suspense, lazy, useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { FaBolt, FaBullseye, FaClipboardList, FaChartBar, FaGithub, FaStar } from 'react-icons/fa';
+import { FaBolt, FaBullseye, FaClipboardList, FaChartBar, FaGithub, FaStar, FaProductHunt } from 'react-icons/fa';
 import Cookies from 'js-cookie';
 
 const GITHUB_REPO = 'https://github.com/taralshah09/TrackHire';
@@ -412,13 +412,29 @@ function Navbar({ scrolled }) {
                 <Link to="/meet-the-builder" style={linkStyle}
                     onMouseEnter={linkHoverStyle}
                     onMouseLeave={linkLeaveStyle}>Builder</Link>
-                <a href="https://www.producthunt.com/products/trackhire"
-                    style={linkStyle}
+                <a href="https://www.producthunt.com/products/trackhire?utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-trackhire"
                     target="_blank"
                     rel="noopener noreferrer"
-                    title="TrackHire on Product Hunt"
-                    onMouseEnter={linkHoverStyle}
-                    onMouseLeave={linkLeaveStyle}>Product Hunt</a>
+                    style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '8px',
+                        fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '12px',
+                        color: T.w65, background: T.s2, border: `1px solid ${T.border}`,
+                        borderRadius: '8px', padding: '8px 16px', transition: 'all 0.2s',
+                    }}
+                    onMouseEnter={e => {
+                        e.currentTarget.style.borderColor = T.orange;
+                        e.currentTarget.style.color = T.white;
+                        e.currentTarget.style.background = 'rgba(218, 85, 47, 0.1)';
+                    }}
+                    onMouseLeave={e => {
+                        e.currentTarget.style.borderColor = T.border;
+                        e.currentTarget.style.color = T.w65;
+                        e.currentTarget.style.background = T.s2;
+                    }}
+                >
+                    <FaProductHunt style={{ color: '#DA552F', fontSize: '16px' }} />
+                    <span>Product Hunt</span>
+                </a>
             </div>
 
             {/* Right */}
