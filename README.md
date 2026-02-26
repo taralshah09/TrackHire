@@ -22,18 +22,13 @@ Track every opportunity. Miss none.
 
 ---
 
-
 ## Quick Demo
 
 <div align="center">
-<video src="./TrackHire.mp4" width="800" controls>
-  Your browser does not support the video tag.
-</video>
-
-<p>
-See TrackHire discover, organize, and track real opportunities in seconds.
-</p>
-
+   <video src="./TrackHire.mp4" width="800" controls>
+   Your browser does not support the video tag.
+   </video>
+   <p>  See TrackHire discover, organize, and track real opportunities in seconds. </p>
 </div>
 
 ---
