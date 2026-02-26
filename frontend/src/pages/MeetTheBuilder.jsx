@@ -409,6 +409,7 @@ export default function MeetTheBuilder() {
                         </a>
                         <a className="btn-ghost" href="https://www.linkedin.com/in/taralshah9/" target="_blank" rel="noreferrer">LinkedIn</a>
                         <a className="btn-ghost" href="https://github.com/taralshah09" target="_blank" rel="noreferrer">GitHub</a>
+                        <a className="btn-ghost" href="https://x.com/taralshah995" target="_blank" rel="noreferrer">Twitter</a>
                     </div>
                 </div>
             </section>
