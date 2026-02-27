@@ -3,8 +3,22 @@ import Sidebar from '../components/Sidebar';
 import AppHeader from '../components/AppHeader';
 import JobCard from '../components/JobCard';
 import api from '../service/ApiService';
-import { FaBuilding, FaMapMarkerAlt, FaBriefcase, FaArrowRight, FaSearch, FaBolt } from 'react-icons/fa';
+import { FaBuilding, FaMapMarkerAlt, FaBriefcase, FaArrowRight, FaSearch, FaBolt, FaGlobe } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+
+const COUNTRIES = [
+    { code: '', label: '🌍 All Countries' },
+    { code: 'in', label: '🇮🇳 India' },
+    { code: 'us', label: '🇺🇸 United States' },
+    { code: 'gb', label: '🇬🇧 United Kingdom' },
+    { code: 'au', label: '🇦🇺 Australia' },
+    { code: 'ca', label: '🇨🇦 Canada' },
+    { code: 'sg', label: '🇸🇬 Singapore' },
+    { code: 'de', label: '🇩🇪 Germany' },
+    { code: 'nl', label: '🇳🇱 Netherlands' },
+    { code: 'fr', label: '🇫🇷 France' },
+    { code: 'nz', label: '🇳🇿 New Zealand' },
+];
 
 const JOB_TABS = [
     { key: 'all', label: 'All' },
@@ -23,7 +37,7 @@ export default function PreferredJobsPage() {
 
     // Search & Filter state
     const [filters, setFilters] = useState({
-        position: '', company: '', skills: '', locations: '',
+        position: '', company: '', skills: '', locations: '', countries: '',
     });
     const [appliedFilters, setAppliedFilters] = useState({ ...filters });
     const [inputFocus, setInputFocus] = useState('');
@@ -233,6 +247,31 @@ export default function PreferredJobsPage() {
                                         />
                                     </div>
                                 ))}
+                            </div>
+
+                            {/* Country selector */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                                <span style={{ fontSize: '14px', color: 'var(--color-white-40)', display: 'flex' }}><FaGlobe /></span>
+                                <select
+                                    value={filters.countries}
+                                    onChange={e => setFilters(prev => ({ ...prev, countries: e.target.value }))}
+                                    style={{
+                                        flex: 1,
+                                        padding: '10px 14px',
+                                        background: 'var(--color-surface-3)',
+                                        border: '1px solid var(--color-border)',
+                                        borderRadius: '8px',
+                                        color: filters.countries ? 'var(--color-white)' : 'var(--color-white-40)',
+                                        fontFamily: 'var(--font-body)', fontSize: '14px',
+                                        outline: 'none', cursor: 'pointer',
+                                    }}
+                                >
+                                    {COUNTRIES.map(c => (
+                                        <option key={c.code} value={c.code} style={{ background: 'var(--color-surface-2)' }}>
+                                            {c.label}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
 
                             <button

@@ -113,7 +113,8 @@ async function upsertBatch(client, tableName, batch) {
             true, // is_active
             job.salary_min || 0,
             job.salary_max || 0,
-            "DISCOVER" // job_category
+            "DISCOVER", // job_category
+            job.country_code || null // country_code
         ];
         values.push(...row);
 
@@ -126,7 +127,7 @@ async function upsertBatch(client, tableName, batch) {
             external_id, company, company_logo, title, location, department,
             employment_type, description, apply_url, posted_at,
             source, is_remote, experience_level, is_active,
-            min_salary, max_salary, job_category
+            min_salary, max_salary, job_category, country_code
         )
         VALUES ${placeholders.join(", ")}
         ON CONFLICT (external_id) DO UPDATE SET
@@ -134,8 +135,9 @@ async function upsertBatch(client, tableName, batch) {
             location = EXCLUDED.location,
             description = EXCLUDED.description,
             posted_at = EXCLUDED.posted_at,
+            country_code = EXCLUDED.country_code,
             updated_at = CURRENT_TIMESTAMP
-        WHERE 
+        WHERE
             ${tableName}.title IS DISTINCT FROM EXCLUDED.title OR
             ${tableName}.location IS DISTINCT FROM EXCLUDED.location OR
             ${tableName}.description IS DISTINCT FROM EXCLUDED.description
