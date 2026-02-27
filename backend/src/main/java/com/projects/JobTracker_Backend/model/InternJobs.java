@@ -80,6 +80,9 @@ public class InternJobs implements BaseJob {
     @Column(name = "is_active")
     private Boolean isActive = true;
 
+    @Column(name = "country_code", length = 5)
+    private String countryCode;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
