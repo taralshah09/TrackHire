@@ -28,14 +28,23 @@ function getISTTime() {
 // ─── Render Ping ──────────────────────────────────────────────────────────
 
 async function pingRenderServer() {
-    console.log("\n🔔 Pinging Render server...");
+    console.log("\n🔔 Pinging Render servers...");
 
-    try {
-        const res = await axios.get(RENDER_HEALTH_URL, { timeout: 15000 });
-        console.log(`  Render server pinged ✅ (${res.status})`);
-    } catch (err) {
-        console.error(`  Render ping failed ❌: ${err.message}`);
-    }
+    const urls = [
+        RENDER_HEALTH_URL,
+        "https://tl-dr.onrender.com/",
+    ];
+
+    await Promise.all(
+        urls.map(async (url) => {
+            try {
+                const res = await axios.get(url, { timeout: 15000 });
+                console.log(`  ${url} ✅ (${res.status})`);
+            } catch (err) {
+                console.error(`  ${url} ❌: ${err.message}`);
+            }
+        })
+    );
 }
 
 // ─── Pipelines ────────────────────────────────────────────────────────────
