@@ -39,7 +39,7 @@ export default function JobCard({ job }) {
         title = 'Software Engineer',
         company, companyName,
         location = 'Remote',
-
+        countryCode,
         employmentType,
         postedAt,
         isApplied = false,
@@ -210,6 +210,18 @@ export default function JobCard({ job }) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ fontSize: '12px', color: 'var(--color-white-40)', display: 'flex' }}><FaMapMarkerAlt /></span>
                     <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-65)' }}>{location}</span>
+                    {countryCode && (
+                        <span style={{
+                            fontFamily: 'var(--font-mono)', fontSize: '10px', fontWeight: 700,
+                            letterSpacing: '0.08em', textTransform: 'uppercase',
+                            padding: '1px 6px', borderRadius: '4px',
+                            background: 'var(--color-surface-3)',
+                            color: 'var(--color-white-40)',
+                            border: '1px solid var(--color-border)',
+                        }}>
+                            {countryCode.toUpperCase()}
+                        </span>
+                    )}
                 </div>
                 {employmentType && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>

@@ -17,6 +17,12 @@ const RENDER_HEALTH_URL =
     process.env.RENDER_HEALTH_URL ||
     "https://trackhire-9ve0.onrender.com/api/public/health";
 
+// Comma-separated Adzuna country codes to scrape — e.g. ADZUNA_COUNTRIES=in,us,gb,au,ca,sg
+const ADZUNA_COUNTRIES = (process.env.ADZUNA_COUNTRIES || "in")
+    .split(",")
+    .map(c => c.trim().toLowerCase())
+    .filter(Boolean);
+
 // ─── Time Helper (UTC → IST) ──────────────────────────────────────────────
 
 function getISTTime() {
@@ -49,8 +55,8 @@ async function pingRenderServer() {
 
 // ─── Pipelines ────────────────────────────────────────────────────────────
 
-async function runAdzunaPipeline() {
-    const pipelineName = "adzuna_v1";
+async function runAdzunaPipeline(countryCode) {
+    const pipelineName = `adzuna_v1_${countryCode}`;
     console.log(`\n🚀 ${pipelineName}`);
 
     let syncId;
@@ -59,7 +65,7 @@ async function runAdzunaPipeline() {
         syncId = await dbSync.startSync(pipelineName);
         const cursor = await dbSync.getLastCursor(pipelineName);
 
-        const scrapeStats = await adzunaScraper.run(cursor);
+        const scrapeStats = await adzunaScraper.run(cursor, countryCode);
 
         if (scrapeStats.count > 0) {
             const loadStats = await adzunaLoader.run(scrapeStats.filePath);
@@ -128,9 +134,11 @@ async function runScheduler() {
 
     // 🔹 03:30 IST → Job pipelines
     if (hour === 3 && minute < 10) {
-        console.log("⏰ Running scraping pipelines (03:30 IST window)");
+        console.log(`⏰ Running scraping pipelines (03:30 IST window) — countries: [${ADZUNA_COUNTRIES.join(", ")}]`);
 
-        await runAdzunaPipeline();
+        for (const countryCode of ADZUNA_COUNTRIES) {
+            await runAdzunaPipeline(countryCode);
+        }
         await runSkillhubPipeline();
     }
 

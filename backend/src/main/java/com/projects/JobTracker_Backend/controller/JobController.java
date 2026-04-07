@@ -72,6 +72,7 @@ public class JobController {
             @RequestParam(required = false) String sources,
             @RequestParam(required = false) String position,
             @RequestParam(required = false) String skills,
+            @RequestParam(required = false) String countries,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "postedAt") String sort,
@@ -86,6 +87,7 @@ public class JobController {
         List<InternJobs.Source> sourceList = parseEnumList(sources, InternJobs.Source.class);
         List<String> positionList = parseCommaSeparated(position);
         List<String> skillList = parseCommaSeparated(skills);
+        List<String> countryList = parseCommaSeparated(countries);
 
         Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC") ?
                 Sort.Direction.ASC : Sort.Direction.DESC;
@@ -93,7 +95,7 @@ public class JobController {
 
         Page<JobDTO> jobs = internJobsService.filterJobs(
                 keywordList, categoryList, locationList, employmentTypeList, experienceLevelList,
-                isRemote, minSalary, maxSalary, companyList, sourceList, positionList, skillList, pageable, securityUtil.getCurrentUser()
+                isRemote, minSalary, maxSalary, companyList, sourceList, positionList, skillList, countryList, pageable, securityUtil.getCurrentUser()
         );
         return ResponseEntity.ok(jobs);
     }
@@ -116,6 +118,7 @@ public class JobController {
             @RequestParam(required = false) String sources,
             @RequestParam(required = false) String position,
             @RequestParam(required = false) String skills,
+            @RequestParam(required = false) String countries,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "postedAt") String sort,
@@ -130,6 +133,7 @@ public class JobController {
         List<FulltimeJobs.Source> sourceList = parseEnumList(sources, FulltimeJobs.Source.class);
         List<String> positionList = parseCommaSeparated(position);
         List<String> skillList = parseCommaSeparated(skills);
+        List<String> countryList = parseCommaSeparated(countries);
 
         Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC") ?
                 Sort.Direction.ASC : Sort.Direction.DESC;
@@ -137,7 +141,7 @@ public class JobController {
 
         Page<JobDTO> jobs = fulltimeJobsService.filterJobs(
                 keywordList, categoryList, locationList, employmentTypeList, experienceLevelList,
-                isRemote, minSalary, maxSalary, companyList, sourceList, positionList, skillList, pageable, securityUtil.getCurrentUser()
+                isRemote, minSalary, maxSalary, companyList, sourceList, positionList, skillList, countryList, pageable, securityUtil.getCurrentUser()
         );
         return ResponseEntity.ok(jobs);
     }
@@ -203,6 +207,7 @@ public class JobController {
             @RequestParam(required = false) String sources,
             @RequestParam(required = false) String position,
             @RequestParam(required = false) String skills,
+            @RequestParam(required = false) String countries,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "postedAt") String sort,
@@ -217,6 +222,7 @@ public class JobController {
         List<Job.Source> sourceList = parseEnumList(sources, Job.Source.class);
         List<String> positionList = parseCommaSeparated(position);
         List<String> skillList = parseCommaSeparated(skills);
+        List<String> countryList = parseCommaSeparated(countries);
 
         Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC") ?
                 Sort.Direction.ASC : Sort.Direction.DESC;
@@ -224,7 +230,7 @@ public class JobController {
 
         Page<JobDTO> jobs = jobService.filterJobs(
                 keywordList, categoryList, locationList, employmentTypeList, experienceLevelList,
-                isRemote, minSalary, maxSalary, companyList, sourceList, positionList, skillList, pageable, securityUtil.getCurrentUser()
+                isRemote, minSalary, maxSalary, companyList, sourceList, positionList, skillList, countryList, pageable, securityUtil.getCurrentUser()
         );
 
         return ResponseEntity.ok(jobs);

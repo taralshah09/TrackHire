@@ -9,7 +9,9 @@ dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 const APP_ID = process.env.ADZUNA_APP_ID;
 const APP_KEY = process.env.ADZUNA_APP_KEY;
 
-const BASE_URL = process.env.ADZUNA_BASE_URL;
+// Template URL — country code is injected per run
+// e.g. ADZUNA_BASE_URL_TEMPLATE=https://api.adzuna.com/v1/api/jobs/{country}/search
+const BASE_URL_TEMPLATE = process.env.ADZUNA_BASE_URL_TEMPLATE || process.env.ADZUNA_BASE_URL;
 
 // Tech keywords to search
 const SEARCH_TERMS = [
@@ -224,9 +226,14 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
  * @param {string|null} cursorDate - ISO date string. Stop fetching if job.created <= cursor.
  * @returns {Promise<{ filePath: string, count: number, newCursor: string|null }>}
  */
-async function run(cursorDate) {
+async function run(cursorDate, countryCode = 'in') {
     const allJobs = [];
     let maxDate = null;
+
+    // Build country-specific base URL
+    const BASE_URL = BASE_URL_TEMPLATE
+        ? BASE_URL_TEMPLATE.replace('{country}', countryCode)
+        : `https://api.adzuna.com/v1/api/jobs/${countryCode}/search`;
 
     // ⏰ Hard 7-day age cutoff — skip jobs older than this
     const MAX_AGE_DAYS = 7;
@@ -234,7 +241,7 @@ async function run(cursorDate) {
 
     // Normalize cursor (incremental check on top of age filter)
     const cursorTime = cursorDate ? new Date(cursorDate).getTime() : 0;
-    console.log(`🚀 Starting Adzuna Scraper. Cursor: ${cursorDate || "NONE (Full Sync)"}`);
+    console.log(`🚀 Starting Adzuna Scraper [${countryCode.toUpperCase()}]. Cursor: ${cursorDate || "NONE (Full Sync)"}`);
     console.log(`📅 Age cutoff: only jobs newer than ${new Date(cutoffTime).toISOString().slice(0, 10)}`);
 
     for (const term of SEARCH_TERMS) {
@@ -301,7 +308,8 @@ async function run(cursorDate) {
                         salary_min: job.salary_min || null,
                         salary_max: job.salary_max || null,
                         source: "Adzuna",
-                        apply_url: applyUrl
+                        apply_url: applyUrl,
+                        country_code: countryCode
                     });
 
                     await sleep(500); // polite delay

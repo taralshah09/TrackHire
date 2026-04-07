@@ -120,7 +120,7 @@ public class InternJobsService {
         }
 
         Specification<InternJobs> spec = JobSpecification.filterJobs(
-                cleanedKeywords, null, null, null, null, null, null, null, null, null, null, null);
+                cleanedKeywords, null, null, null, null, null, null, null, null, null, null, null, null);
 
         Page<InternJobs> jobs = jobRepository.findAll(spec, pageable);
         return enrichJobsWithUserData(jobs, user);
@@ -142,7 +142,7 @@ public class InternJobsService {
         }
 
         Specification<InternJobs> spec = JobSpecification.filterJobs(
-                cleanedKeywords, List.of(category), null, null, null, null, null, null, null, null, null, null);
+                cleanedKeywords, List.of(category), null, null, null, null, null, null, null, null, null, null, null);
 
         Page<InternJobs> jobs = jobRepository.findAll(spec, pageable);
         return enrichJobsWithUserData(jobs, user);
@@ -161,11 +161,12 @@ public class InternJobsService {
             List<InternJobs.Source> sources,
             List<String> positions,
             List<String> skills,
+            List<String> countries,
             Pageable pageable,
             User user) {
         Specification<InternJobs> spec = JobSpecification.filterJobs(
                 keywords, categories, locations, employmentTypes, experienceLevels,
-                isRemote, minSalary, maxSalary, companies, sources, positions, skills);
+                isRemote, minSalary, maxSalary, companies, sources, positions, skills, countries);
 
         Page<InternJobs> jobs = jobRepository.findAll(spec, pageable);
         return enrichJobsWithUserData(jobs, user);

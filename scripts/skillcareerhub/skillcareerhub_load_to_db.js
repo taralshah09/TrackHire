@@ -63,7 +63,8 @@ async function upsertBatch(client, tableName, batch) {
             "SKILLCAREERHUB", // Source - Updated to match Enum
             isRemote,
             job.company_logo || null,
-            "DISCOVER" // job_category
+            "DISCOVER", // job_category
+            null // country_code — SkillCareerHub does not provide country
         ];
         values.push(...row);
 
@@ -74,7 +75,7 @@ async function upsertBatch(client, tableName, batch) {
     const sql = `
         INSERT INTO ${tableName}
         (external_id, company, title, location, department, employment_type,
-         description, apply_url, posted_at, source, is_remote, company_logo, job_category)
+         description, apply_url, posted_at, source, is_remote, company_logo, job_category, country_code)
         VALUES ${placeholders.join(", ")}
         ON CONFLICT (external_id) DO UPDATE SET
             title = EXCLUDED.title,

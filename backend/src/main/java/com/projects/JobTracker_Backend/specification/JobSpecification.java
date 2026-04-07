@@ -21,7 +21,8 @@ public class JobSpecification {
             List<String> companies,
             List<?> sources,
             List<String> positions,
-            List<String> skills
+            List<String> skills,
+            List<String> countries
     ) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -124,6 +125,17 @@ public class JobSpecification {
                     skillPredicates.add(criteriaBuilder.or(titleMatch, descMatch));
                 }
                 predicates.add(criteriaBuilder.or(skillPredicates.toArray(new Predicate[0])));
+            }
+
+            // Countries (OR within countries, exact match on country_code)
+            if (countries != null && !countries.isEmpty()) {
+                List<Predicate> countryPredicates = new ArrayList<>();
+                for (String country : countries) {
+                    countryPredicates.add(criteriaBuilder.equal(
+                            criteriaBuilder.lower(root.get("countryCode")),
+                            country.toLowerCase()));
+                }
+                predicates.add(criteriaBuilder.or(countryPredicates.toArray(new Predicate[0])));
             }
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));

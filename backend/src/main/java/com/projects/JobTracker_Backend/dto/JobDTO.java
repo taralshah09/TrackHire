@@ -35,6 +35,7 @@ public class JobDTO {
     private Integer minSalary;
     private Integer maxSalary;
     private Boolean isActive;
+    private String countryCode;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -83,6 +84,7 @@ public static JobDTO fromEntity(BaseJob baseJob) {
                 .minSalary(job.getMinSalary())
                 .maxSalary(job.getMaxSalary())
                 .isActive(job.getIsActive())
+                .countryCode(job.getCountryCode())
                 .createdAt(job.getCreatedAt())
                 .updatedAt(job.getUpdatedAt())
                 .isSaved(false)
@@ -111,6 +113,7 @@ public static JobDTO fromEntity(BaseJob baseJob) {
                 .minSalary(job.getMinSalary())
                 .maxSalary(job.getMaxSalary())
                 .isActive(job.getIsActive())
+                .countryCode(job.getCountryCode())
                 .createdAt(job.getCreatedAt())
                 .updatedAt(job.getUpdatedAt())
                 .isSaved(false)
@@ -139,6 +142,7 @@ public static JobDTO fromEntity(BaseJob baseJob) {
                 .minSalary(job.getMinSalary())
                 .maxSalary(job.getMaxSalary())
                 .isActive(job.getIsActive())
+                .countryCode(job.getCountryCode())
                 .createdAt(job.getCreatedAt())
                 .updatedAt(job.getUpdatedAt())
                 .isSaved(false)

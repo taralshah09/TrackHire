@@ -44,6 +44,13 @@ async function setup() {
         `);
         console.log("✅ Indices created.");
 
+        // Add country_code column to job tables (migration — safe to re-run)
+        console.log("Adding country_code column to job tables...");
+        for (const table of ["jobs", "intern_jobs", "fulltime_jobs"]) {
+            await client.query(`ALTER TABLE ${table} ADD COLUMN IF NOT EXISTS country_code VARCHAR(5);`);
+        }
+        console.log("✅ country_code column added.");
+
     } catch (err) {
         console.error("❌ Error setting up database:", err);
     } finally {
