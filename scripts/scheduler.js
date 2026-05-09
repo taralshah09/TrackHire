@@ -12,7 +12,7 @@ const skillhubScraper = require("./skillcareerhub/skillcareerhub_scrapper_v0");
 const skillhubLoader = require("./skillcareerhub/skillcareerhub_load_to_db");
 const multiAtsScraper = require("./multi_ats/multi_ats_scrapper");
 const multiAtsLoader = require("./multi_ats/multi_ats_load_to_db");
-const emailPipeline = require("./email/email_pipeline");
+const emailPipeline = require("./email/email_pipeline_batch");
 
 // Config
 const RENDER_HEALTH_URL =
@@ -113,7 +113,7 @@ async function runMultiAtsPipeline() {
         syncId = await dbSync.startSync(pipelineName);
 
         const scrapeStats = await multiAtsScraper.run();
-        
+
         if (scrapeStats.count > 0) {
             const loadStats = await multiAtsLoader.run(scrapeStats.filePath);
 
@@ -166,12 +166,12 @@ async function runScheduler() {
         await runMultiAtsPipeline();
     }
 
-    // 🔹 19:10 IST (7:10 PM) → Email Pipeline
-    // if (hour === 19 && minute >= 50 && minute < 60) {
-    // console.log("⏰ Running email pipeline (19:20 IST window)");
+    // 🔹 19:50 IST (7:50 PM) → Email Pipeline
+    if (hour === 19 && minute >= 50 && minute < 60) {
+        console.log("⏰ Running email pipeline (19:50 IST window)");
 
-    // await runEmails();
-    // }
+        // await runEmails();
+    }
 
     console.log("==============================================\n");
 }
