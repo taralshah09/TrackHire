@@ -16,7 +16,9 @@ export default {
         "background-dark": "#101622",
       },
       fontFamily: {
-        "display": ["Inter", "sans-serif"]
+        "display": ["Fjalla One", "sans-serif"],
+        "body": ["Instrument Serif", "serif"],
+        "serif": ["Instrument Serif", "serif"],
       },
       borderRadius: {
         "DEFAULT": "0.25rem",
