@@ -1,0 +1,19 @@
+{
+    "name": "india-job-scraper",
+    "version": "1.0.0",
+    "description": "Multi-ATS job scraper for India hiring — Ashby, Greenhouse, Lever, Workday, SmartRecruiters, Workable, BambooHR",
+    "type": "module",
+    "main": "scraper.js",
+    "scripts": {
+        "start": "node scraper.js",
+        "ashby": "node scraper.js --ats ashby",
+        "greenhouse": "node scraper.js --ats greenhouse",
+        "lever": "node scraper.js --ats lever",
+        "workday": "node scraper.js --ats workday",
+        "smartrecruiters": "node scraper.js --ats smartrecruiters"
+    },
+    "dependencies": {},
+    "engines": {
+        "node": ">=18.0.0"
+    }
+}

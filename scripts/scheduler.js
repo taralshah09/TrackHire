@@ -10,6 +10,8 @@ const adzunaScraper = require("./adzuna/v1/adzuna_scrapper_v1");
 const adzunaLoader = require("./adzuna/v1/adzuna_load_to_db");
 const skillhubScraper = require("./skillcareerhub/skillcareerhub_scrapper_v0");
 const skillhubLoader = require("./skillcareerhub/skillcareerhub_load_to_db");
+const multiAtsScraper = require("./multi_ats/multi_ats_scrapper");
+const multiAtsLoader = require("./multi_ats/multi_ats_load_to_db");
 const emailPipeline = require("./email/email_pipeline");
 
 // Config
@@ -101,6 +103,35 @@ async function runSkillhubPipeline() {
     }
 }
 
+async function runMultiAtsPipeline() {
+    const pipelineName = "multi_ats_v1";
+    console.log(`\n🚀 ${pipelineName}`);
+
+    let syncId;
+
+    try {
+        syncId = await dbSync.startSync(pipelineName);
+
+        const scrapeStats = await multiAtsScraper.run();
+        
+        if (scrapeStats.count > 0) {
+            const loadStats = await multiAtsLoader.run(scrapeStats.filePath);
+
+            await dbSync.completeSync(
+                syncId,
+                scrapeStats.count,
+                loadStats.inserted,
+                null
+            );
+        } else {
+            await dbSync.completeSync(syncId, 0, 0, null);
+        }
+    } catch (err) {
+        console.error(`❌ ${pipelineName} failed:`, err.message);
+        if (syncId) await dbSync.failSync(syncId, err.message);
+    }
+}
+
 async function runEmails() {
     console.log("\n📧 Email Pipeline");
 
@@ -132,6 +163,7 @@ async function runScheduler() {
 
         await runAdzunaPipeline();
         await runSkillhubPipeline();
+        await runMultiAtsPipeline();
     }
 
     // 🔹 19:10 IST (7:10 PM) → Email Pipeline

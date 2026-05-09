@@ -82,7 +82,15 @@ export default function JobsPage() {
             const newJobs = data.content || [];
 
             if (append) {
-                setJobs(prev => [...prev, ...newJobs]);
+                setJobs(prev => {
+                    const combined = [...prev, ...newJobs];
+                    const uniqueIds = new Set();
+                    return combined.filter(job => {
+                        if (uniqueIds.has(job.id)) return false;
+                        uniqueIds.add(job.id);
+                        return true;
+                    });
+                });
             } else {
                 setJobs(newJobs);
             }

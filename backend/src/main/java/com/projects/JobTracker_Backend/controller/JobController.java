@@ -48,7 +48,7 @@ public class JobController {
     ) {
         Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC") ?
                 Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort).and(Sort.by(Sort.Direction.DESC, "id")));
 
         Page<JobDTO> jobs = jobService.getAllJobs(pageable, securityUtil.getCurrentUser());
         return ResponseEntity.ok(jobs);
@@ -89,7 +89,7 @@ public class JobController {
 
         Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC") ?
                 Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort).and(Sort.by(Sort.Direction.DESC, "id")));
 
         Page<JobDTO> jobs = internJobsService.filterJobs(
                 keywordList, categoryList, locationList, employmentTypeList, experienceLevelList,
@@ -133,7 +133,7 @@ public class JobController {
 
         Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC") ?
                 Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort).and(Sort.by(Sort.Direction.DESC, "id")));
 
         Page<JobDTO> jobs = fulltimeJobsService.filterJobs(
                 keywordList, categoryList, locationList, employmentTypeList, experienceLevelList,
@@ -156,7 +156,7 @@ public class JobController {
     ) {
         Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC") ?
                 Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort).and(Sort.by(Sort.Direction.DESC, "id")));
 
         Page<JobDTO> jobs = jobService.getJobsByCategory(category, pageable, securityUtil.getCurrentUser());
         return ResponseEntity.ok(jobs);
@@ -179,7 +179,7 @@ public class JobController {
 
         Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC") ?
                 Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort).and(Sort.by(Sort.Direction.DESC, "id")));
 
         Page<JobDTO> jobs = jobService.searchJobsByCategory(keywordList, category, pageable, securityUtil.getCurrentUser());
         return ResponseEntity.ok(jobs);
@@ -220,7 +220,7 @@ public class JobController {
 
         Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC") ?
                 Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort).and(Sort.by(Sort.Direction.DESC, "id")));
 
         Page<JobDTO> jobs = jobService.filterJobs(
                 keywordList, categoryList, locationList, employmentTypeList, experienceLevelList,
@@ -246,7 +246,7 @@ public class JobController {
 
         Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC") ?
                 Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort).and(Sort.by(Sort.Direction.DESC, "id")));
 
         Page<JobDTO> jobs = jobService.searchJobs(keywordList, pageable, securityUtil.getCurrentUser());
         return ResponseEntity.ok(jobs);
@@ -306,7 +306,7 @@ public class JobController {
     ) {
         Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC") ?
                 Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort).and(Sort.by(Sort.Direction.DESC, "id")));
         Page<JobDTO> jobs = jobService.getSavedJobs(pageable, securityUtil.getCurrentUser());
         return ResponseEntity.ok(jobs);
     }
@@ -375,7 +375,7 @@ public class JobController {
 
         Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC") ?
                 Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort).and(Sort.by(Sort.Direction.DESC, "id")));
         Page<JobDTO> jobs = jobService.getAppliedJobs(statusList, pageable, securityUtil.getCurrentUser());
         return ResponseEntity.ok(jobs);
     }

@@ -105,10 +105,22 @@ public class JobService {
     }
 
     public JobDTO getJobById(Long jobId, User user) {
-        Job job = jobRepository.findById(jobId)
-                .orElseThrow(() -> new RuntimeException("Job not found with id: " + jobId));
+        BaseJob job = jobRepository.findById(jobId).map(j -> (BaseJob) j)
+                .orElseGet(() -> internJobRepository.findById(jobId).map(j -> (BaseJob) j)
+                        .orElseGet(() -> fulltimeJobsRepository.findById(jobId).map(j -> (BaseJob) j)
+                                .orElse(null)));
 
-        if (!job.getIsActive()) {
+        if (job == null) {
+            throw new RuntimeException("Job not found with id: " + jobId);
+        }
+
+        // Check isActive if the entity supports it
+        boolean isActive = true;
+        if (job instanceof Job) isActive = ((Job) job).getIsActive();
+        else if (job instanceof InternJobs) isActive = ((InternJobs) job).getIsActive();
+        else if (job instanceof FulltimeJobs) isActive = ((FulltimeJobs) job).getIsActive();
+
+        if (!isActive) {
             throw new RuntimeException("Job is not active");
         }
 
@@ -250,8 +262,7 @@ public class JobService {
             @CacheEvict(value = "userStats", key = "#user.id")
     })
     public void saveJob(Long jobId, User user) {
-        Job job = jobRepository.findById(jobId)
-                .orElseThrow(() -> new RuntimeException("Job not found with id: " + jobId));
+        BaseJob job = findAnyJobById(jobId);
 
         Class<?> jobClass = getJobEntityClass(job);
         if (savedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), jobId, jobClass)) {
@@ -270,8 +281,7 @@ public class JobService {
             @CacheEvict(value = "userStats", key = "#user.id")
     })
     public void unsaveJob(Long jobId, User user) {
-        Job job = jobRepository.findById(jobId)
-                .orElseThrow(() -> new RuntimeException("Job not found with id: " + jobId));
+        BaseJob job = findAnyJobById(jobId);
 
         Class<?> jobClass = getJobEntityClass(job);
         if (!savedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), jobId, jobClass)) {
@@ -311,8 +321,7 @@ public class JobService {
     }
 
     public SavedStatusDTO isJobSaved(Long jobId, User user) {
-        Job job = jobRepository.findById(jobId)
-                .orElseThrow(() -> new RuntimeException("Job not found with id: " + jobId));
+        BaseJob job = findAnyJobById(jobId);
         Class<?> jobClass = getJobEntityClass(job);
         boolean saved = savedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), jobId, jobClass);
         return SavedStatusDTO.builder().saved(saved).build();
@@ -333,8 +342,7 @@ public class JobService {
             @CacheEvict(value = "userStats", key = "#user.id")
     })
     public AppliedStatusDTO updateJobStatus(Long jobId, AppliedJob.ApplicationStatus status, User user) {
-        Job job = jobRepository.findById(jobId)
-                .orElseThrow(() -> new RuntimeException("Job not found with id: " + jobId));
+        BaseJob job = findAnyJobById(jobId);
 
         Class<?> jobClass = getJobEntityClass(job);
         Optional<AppliedJob> existingApplication = appliedJobRepository.findByUserIdAndJobIdAndJobType(user.getId(), jobId, jobClass);
@@ -371,8 +379,7 @@ public class JobService {
             @CacheEvict(value = "userStats", key = "#user.id")
     })
     public void withdrawApplication(Long jobId, User user) {
-        Job job = jobRepository.findById(jobId)
-                .orElseThrow(() -> new RuntimeException("Job not found with id: " + jobId));
+        BaseJob job = findAnyJobById(jobId);
         Class<?> jobClass = getJobEntityClass(job);
         if (!appliedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), jobId, jobClass)) {
             throw new RuntimeException("No application found to withdraw");
@@ -387,8 +394,7 @@ public class JobService {
      * Returns applied=true with status if applied
      */
     public AppliedStatusDTO getJobStatus(Long jobId, User user) {
-        Job job = jobRepository.findById(jobId)
-                .orElseThrow(() -> new RuntimeException("Job not found with id: " + jobId));
+        BaseJob job = findAnyJobById(jobId);
         Class<?> jobClass = getJobEntityClass(job);
         Optional<AppliedJob> appliedJob = appliedJobRepository.findByUserIdAndJobIdAndJobType(user.getId(), jobId, jobClass);
 
@@ -498,5 +504,11 @@ public class JobService {
         }
 
         return dto;
+    }
+    private BaseJob findAnyJobById(Long jobId) {
+        return jobRepository.findById(jobId).map(j -> (BaseJob) j)
+                .orElseGet(() -> internJobRepository.findById(jobId).map(j -> (BaseJob) j)
+                        .orElseGet(() -> fulltimeJobsRepository.findById(jobId).map(j -> (BaseJob) j)
+                                .orElseThrow(() -> new RuntimeException("Job not found with id: " + jobId))));
     }
 }
