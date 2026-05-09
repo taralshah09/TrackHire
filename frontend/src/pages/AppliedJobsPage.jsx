@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Sidebar from '../components/Sidebar';
 import AppHeader from '../components/AppHeader';
 import api from '../service/ApiService';
@@ -19,24 +19,25 @@ function getStatus(s) { return STATUS_STYLES[(s || 'APPLIED').toUpperCase().repl
 export default function AppliedJobsPage() {
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isFetchingMore, setIsFetchingMore] = useState(false);
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [totalElements, setTotalElements] = useState(0);
+    const [hasMore, setHasMore] = useState(false);
     const [sort, setSort] = useState('appliedAt');
     const [direction, setDirection] = useState('DESC');
     const [error, setError] = useState(null);
     const username = Cookies.get('username') || '';
 
-    const fetchJobs = async () => {
-        setLoading(true);
+    const loadJobs = useCallback(async (pageToLoad, append = false) => {
+        if (append) setIsFetchingMore(true);
+        else setLoading(true);
         setError(null);
 
         try {
-            const res = await api.getAppliedJobs({ page, size: 15, sort, direction });
+            const res = await api.getAppliedJobs({ page: pageToLoad, size: 15, sort, direction });
 
             let data;
-
-            // Handle fetch-style response
             if (res?.ok === false) {
                 throw new Error(`Server error: ${res.status}`);
             }
@@ -51,25 +52,27 @@ export default function AppliedJobsPage() {
                 data = res;
             }
 
-            // Defensive structure validation
             const safeContent = Array.isArray(data?.content)
                 ? data.content
                 : Array.isArray(data)
                     ? data
                     : [];
 
-            setJobs(safeContent);
-            setTotalPages(Number.isInteger(data?.totalPages) ? data.totalPages : 0);
+            if (append) {
+                setJobs(prev => [...prev, ...safeContent]);
+            } else {
+                setJobs(safeContent);
+            }
+
+            const totalP = Number.isInteger(data?.totalPages) ? data.totalPages : 0;
+            setTotalPages(totalP);
             setTotalElements(Number.isInteger(data?.totalElements) ? data.totalElements : 0);
+            setHasMore(pageToLoad < totalP - 1);
+            return data;
 
         } catch (err) {
             console.error("AppliedJobs fetch error:", err);
-
-            // Reset state to avoid stale UI
-            setJobs([]);
-            setTotalPages(0);
-            setTotalElements(0);
-
+            if (!append) setJobs([]);
             if (err?.name === "AbortError") {
                 setError("Request timed out. Please try again.");
             } else if (err?.message?.includes("Network")) {
@@ -77,25 +80,42 @@ export default function AppliedJobsPage() {
             } else {
                 setError("Unable to load applied jobs. Please try again later.");
             }
-
         } finally {
             setLoading(false);
+            setIsFetchingMore(false);
         }
-    };
+    }, [sort, direction]);
+
     useEffect(() => {
-        let isMounted = true;
-
-        const safeFetch = async () => {
-            if (!isMounted) return;
-            await fetchJobs();
+        const fetchInitialSets = async () => {
+            const firstSet = await loadJobs(0, false);
+            if (firstSet && firstSet.totalPages > 1) {
+                await loadJobs(1, true);
+                setPage(1);
+            } else {
+                setPage(0);
+            }
         };
+        fetchInitialSets();
+    }, [loadJobs]);
 
-        safeFetch();
+    useEffect(() => {
+        if (page > 1) {
+            loadJobs(page, true);
+        }
+    }, [page, loadJobs]);
 
-        return () => {
-            isMounted = false;
-        };
-    }, [page, sort, direction]);
+    const observer = useRef();
+    const lastJobElementRef = useCallback(node => {
+        if (loading || isFetchingMore) return;
+        if (observer.current) observer.current.disconnect();
+        observer.current = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && hasMore) {
+                setPage(prevPage => prevPage + 1);
+            }
+        });
+        if (node) observer.current.observe(node);
+    }, [loading, isFetchingMore, hasMore]);
 
     return (
         <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
@@ -235,7 +255,7 @@ export default function AppliedJobsPage() {
                                             <tr><td colSpan="7" style={{ padding: '64px', textAlign: 'center' }}>
                                                 <p style={{ fontFamily: 'var(--font-body)', fontSize: '15px', color: '#f87171', margin: '0 0 12px' }}>{error}</p>
                                                 <button
-                                                    onClick={fetchJobs}
+                                                    onClick={() => loadJobs(0, false)}
                                                     style={{
                                                         background: 'var(--color-surface-3)', border: '1px solid var(--color-border)',
                                                         color: 'var(--color-white)', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer'
@@ -249,89 +269,72 @@ export default function AppliedJobsPage() {
                                                 <p style={{ fontFamily: 'var(--font-body)', fontSize: '15px', color: 'var(--color-white-65)', margin: '0 0 6px' }}>No applications tracked yet.</p>
                                                 <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-20)', margin: 0 }}>Start applying to jobs and track your pipeline here.</p>
                                             </td></tr>
-                                        ) : jobs?.map((job) => {
-                                            const st = getStatus(job?.applicationStatus);
-                                            return (
-                                                <tr key={job?.id} style={{ borderBottom: '1px solid rgba(46,46,46,0.5)' }}>
-                                                    <td style={{ padding: '14px 20px' }}>
-                                                        <span style={{
-                                                            fontFamily: 'var(--font-display)', fontWeight: 700,
-                                                            fontSize: '14px', color: 'var(--color-white)',
-                                                        }}>
-                                                            {job?.title || job?.role}
-                                                        </span>
-                                                    </td>
-                                                    <td style={{ padding: '14px 20px', fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--color-white-65)' }}>
-                                                        {job?.companyName || job?.company}
-                                                    </td>
-                                                    <td style={{ padding: '14px 20px', fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)' }}>
-                                                        {job?.location || '—'}
-                                                    </td>
-                                                    <td style={{ padding: '14px 20px' }}>
-                                                        <span style={{
-                                                            fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '11px',
-                                                            letterSpacing: '0.06em',
-                                                            background: st.bg, color: st.color, border: `1px solid ${st.border}`,
-                                                            padding: '4px 10px', borderRadius: '999px', whiteSpace: 'nowrap',
-                                                        }}>
-                                                            {job?.applicationStatus || 'Applied'}
-                                                        </span>
-                                                    </td>
-                                                    <td style={{ padding: '14px 20px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-white-40)', whiteSpace: 'nowrap' }}>
-                                                        {job?.postedAt ? new Date(job.postedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
-                                                    </td>
-                                                    <td style={{ padding: '14px 20px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-white-40)', whiteSpace: 'nowrap' }}>
-                                                        {job?.appliedAt ? new Date(job.appliedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
-                                                    </td>
-                                                    <td style={{ padding: '14px 20px' }}>
-                                                        <Link to={`/jobs/${job?.jobId || job?.id}`} style={{
-                                                            fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '12px',
-                                                            color: 'var(--color-orange)', textDecoration: 'none',
-                                                            transition: 'color 0.2s',
-                                                        }}
-                                                            onMouseEnter={e => e.target.style.color = 'var(--color-orange-hover)'}
-                                                            onMouseLeave={e => e.target.style.color = 'var(--color-orange)'}
-                                                        >View →</Link>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-
+                                        ) : (
+                                            <>
+                                                {jobs?.map((job, idx) => {
+                                                    const st = getStatus(job?.applicationStatus);
+                                                    const isLast = jobs.length === idx + 1;
+                                                    return (
+                                                        <tr key={job?.id} ref={isLast ? lastJobElementRef : null} style={{ borderBottom: '1px solid rgba(46,46,46,0.5)' }}>
+                                                            <td style={{ padding: '14px 20px' }}>
+                                                                <span style={{
+                                                                    fontFamily: 'var(--font-display)', fontWeight: 700,
+                                                                    fontSize: '14px', color: 'var(--color-white)',
+                                                                }}>
+                                                                    {job?.title || job?.role}
+                                                                </span>
+                                                            </td>
+                                                            <td style={{ padding: '14px 20px', fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--color-white-65)' }}>
+                                                                {job?.companyName || job?.company}
+                                                            </td>
+                                                            <td style={{ padding: '14px 20px', fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)' }}>
+                                                                {job?.location || '—'}
+                                                            </td>
+                                                            <td style={{ padding: '14px 20px' }}>
+                                                                <span style={{
+                                                                    fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '11px',
+                                                                    letterSpacing: '0.06em',
+                                                                    background: st.bg, color: st.color, border: `1px solid ${st.border}`,
+                                                                    padding: '4px 10px', borderRadius: '999px', whiteSpace: 'nowrap',
+                                                                }}>
+                                                                    {job?.applicationStatus || 'Applied'}
+                                                                </span>
+                                                            </td>
+                                                            <td style={{ padding: '14px 20px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-white-40)', whiteSpace: 'nowrap' }}>
+                                                                {job?.postedAt ? new Date(job.postedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                                                            </td>
+                                                            <td style={{ padding: '14px 20px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-white-40)', whiteSpace: 'nowrap' }}>
+                                                                {job?.appliedAt ? new Date(job.appliedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                                                            </td>
+                                                            <td style={{ padding: '14px 20px' }}>
+                                                                <Link to={`/jobs/${job?.jobId || job?.id}`} style={{
+                                                                    fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '12px',
+                                                                    color: 'var(--color-orange)', textDecoration: 'none',
+                                                                    transition: 'color 0.2s',
+                                                                }}
+                                                                    onMouseEnter={e => e.target.style.color = 'var(--color-orange-hover)'}
+                                                                    onMouseLeave={e => e.target.style.color = 'var(--color-orange)'}
+                                                                >View →</Link>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                                {isFetchingMore && (
+                                                    <tr>
+                                                        <td colSpan="7" style={{ padding: '24px', textAlign: 'center', color: 'var(--color-white-40)', fontFamily: 'var(--font-body)', fontSize: '13px' }}>
+                                                            Loading more applications…
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </>
+                                        )}
                                     </tbody>
                                 </table>
                             </div>
                         </div>
 
 
-                        {/* Pagination */}
-                        {!loading && jobs.length > 0 && totalPages > 1 && (
-                            <div style={{
-                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                marginTop: '24px', flexWrap: 'wrap', gap: '12px',
-                            }}>
-                                <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)' }}>
-                                    Page {page + 1} of {totalPages}
-                                </span>
-                                <div style={{ display: 'flex', gap: '8px' }}>
-                                    {[...Array(Math.min(totalPages, 7))].map((_, i) => (
-                                        <button key={i}
-                                            onClick={() => setPage(i)}
-                                            style={{
-                                                padding: '8px 12px',
-                                                border: `1px solid ${page === i ? 'var(--color-orange-border)' : 'var(--color-border)'}`,
-                                                borderRadius: '8px',
-                                                background: page === i ? 'var(--color-orange-dim)' : 'var(--color-surface-2)',
-                                                color: page === i ? 'var(--color-orange)' : 'var(--color-white-65)',
-                                                cursor: 'pointer',
-                                                fontFamily: 'var(--font-mono)', fontSize: '13px', fontWeight: 700,
-                                            }}
-                                        >
-                                            {i + 1}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                        {/* Pagination removed */}
                     </div>
                 </div>
             </main>

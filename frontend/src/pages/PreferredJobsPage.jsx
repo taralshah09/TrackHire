@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Sidebar from '../components/Sidebar';
 import AppHeader from '../components/AppHeader';
 import JobCard from '../components/JobCard';
@@ -15,10 +15,12 @@ const JOB_TABS = [
 export default function PreferredJobsPage() {
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isFetchingMore, setIsFetchingMore] = useState(false);
     const [activeTab, setActiveTab] = useState('all');
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [totalElements, setTotalElements] = useState(0);
+    const [hasMore, setHasMore] = useState(false);
     const [preferredCompanies, setPreferredCompanies] = useState([]);
 
     // Search & Filter state
@@ -41,32 +43,69 @@ export default function PreferredJobsPage() {
         fetchPrefs();
     }, []);
 
-    const fetchJobs = useCallback(async () => {
-        setLoading(true);
+    const loadJobs = useCallback(async (pageToLoad, append = false) => {
+        if (append) setIsFetchingMore(true);
+        else setLoading(true);
         try {
             const params = {
                 type: activeTab,
-                page,
+                page: pageToLoad,
                 size: 9,
                 ...appliedFilters
             };
 
             const response = await api.getPreferredJobs(params);
             const data = response.json ? await response.json() : response;
+            const newJobs = data.content || [];
 
-            setJobs(data.content || []);
+            if (append) {
+                setJobs(prev => [...prev, ...newJobs]);
+            } else {
+                setJobs(newJobs);
+            }
+
             setTotalPages(data.totalPages || 0);
             setTotalElements(data.totalElements || 0);
+            setHasMore(pageToLoad < (data.totalPages || 0) - 1);
+            return data;
         } catch (e) {
             console.error('Failed to fetch preferred jobs:', e);
         } finally {
             setLoading(false);
+            setIsFetchingMore(false);
         }
-    }, [page, activeTab, appliedFilters]);
+    }, [activeTab, appliedFilters]);
 
     useEffect(() => {
-        fetchJobs();
-    }, [fetchJobs]);
+        const fetchInitialSets = async () => {
+            const firstSet = await loadJobs(0, false);
+            if (firstSet && firstSet.totalPages > 1) {
+                await loadJobs(1, true);
+                setPage(1);
+            } else {
+                setPage(0);
+            }
+        };
+        fetchInitialSets();
+    }, [loadJobs]);
+
+    useEffect(() => {
+        if (page > 1) {
+            loadJobs(page, true);
+        }
+    }, [page, loadJobs]);
+
+    const observer = useRef();
+    const lastJobElementRef = useCallback(node => {
+        if (loading || isFetchingMore) return;
+        if (observer.current) observer.current.disconnect();
+        observer.current = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && hasMore) {
+                setPage(prevPage => prevPage + 1);
+            }
+        });
+        if (node) observer.current.observe(node);
+    }, [loading, isFetchingMore, hasMore]);
 
     const handleTabChange = (tabKey) => {
         setActiveTab(tabKey);
@@ -277,50 +316,26 @@ export default function PreferredJobsPage() {
                                 </Link>
                             </div>
                         ) : (
-                            <div
-                                style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px', marginBottom: '32px' }}
-                            >
-                                {jobs.map((job, i) => <JobCard key={job.id || i} job={job} />)}
-                            </div>
+                            <>
+                                <div
+                                    style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px', marginBottom: '32px' }}
+                                >
+                                    {jobs.map((job, i) => {
+                                        if (jobs.length === i + 1) {
+                                            return <div ref={lastJobElementRef} key={job.id || i}><JobCard job={job} /></div>;
+                                        }
+                                        return <JobCard key={job.id || i} job={job} />;
+                                    })}
+                                </div>
+                                {isFetchingMore && (
+                                    <div style={{ textAlign: 'center', padding: '24px', color: 'var(--color-white-40)', fontFamily: 'var(--font-body)', fontSize: '14px' }}>
+                                        Loading more jobs…
+                                    </div>
+                                )}
+                            </>
                         )}
 
-                        {/* Pagination */}
-                        {!loading && jobs.length > 0 && (
-                            <div style={{
-                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                paddingTop: '24px', borderTop: '1px solid var(--color-border)',
-                                flexWrap: 'wrap', gap: '12px',
-                            }}>
-                                <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)' }}>
-                                    Showing {jobs.length} of {totalElements} jobs
-                                </span>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <button
-                                        onClick={() => handlePageChange(page - 1)}
-                                        disabled={page === 0}
-                                        style={{
-                                            padding: '8px 14px', background: 'var(--color-surface-2)',
-                                            border: '1px solid var(--color-border)', borderRadius: '8px',
-                                            color: 'var(--color-white-65)', cursor: page === 0 ? 'not-allowed' : 'pointer',
-                                            opacity: page === 0 ? 0.4 : 1, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px',
-                                        }}
-                                    >← Prev</button>
-                                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--color-white-65)' }}>
-                                        {page + 1} / {totalPages}
-                                    </span>
-                                    <button
-                                        onClick={() => handlePageChange(page + 1)}
-                                        disabled={page >= totalPages - 1}
-                                        style={{
-                                            padding: '8px 14px', background: 'var(--color-surface-2)',
-                                            border: '1px solid var(--color-border)', borderRadius: '8px',
-                                            color: 'var(--color-white-65)', cursor: page >= totalPages - 1 ? 'not-allowed' : 'pointer',
-                                            opacity: page >= totalPages - 1 ? 0.4 : 1, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px',
-                                        }}
-                                    >Next →</button>
-                                </div>
-                            </div>
-                        )}
+                        {/* Pagination removed */}
                     </div>
                 </div>
             </main>

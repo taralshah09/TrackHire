@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import AppHeader from '../components/AppHeader';
@@ -22,10 +22,12 @@ export default function JobsPage() {
 
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isFetchingMore, setIsFetchingMore] = useState(false);
 
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [totalElements, setTotalElements] = useState(0);
+    const [hasMore, setHasMore] = useState(false);
     const [activeTab, setActiveTab] = useState(initialTab);
     const [tabCounts, setTabCounts] = useState({});
     const [filters, setFilters] = useState({
@@ -53,10 +55,12 @@ export default function JobsPage() {
         fetchCounts();
     }, []);
 
-    const fetchJobs = useCallback(async () => {
-        setLoading(true);
+    const loadJobs = useCallback(async (pageToLoad, append = false) => {
+        if (append) setIsFetchingMore(true);
+        else setLoading(true);
+
         try {
-            const params = { page, size: 9, sort: filters.sort, direction: filters.direction };
+            const params = { page: pageToLoad, size: 9, sort: filters.sort, direction: filters.direction };
             if (appliedFilters.position) params.position = appliedFilters.position;
             if (appliedFilters.company) params.companies = appliedFilters.company;
             if (appliedFilters.skills) params.skills = appliedFilters.skills;
@@ -75,17 +79,58 @@ export default function JobsPage() {
                 response = await api.filterJobs(params);
             }
             const data = response.json ? await response.json() : response;
-            setJobs(data.content || []);
+            const newJobs = data.content || [];
+
+            if (append) {
+                setJobs(prev => [...prev, ...newJobs]);
+            } else {
+                setJobs(newJobs);
+            }
+
             setTotalPages(data.totalPages || 0);
             setTotalElements(data.totalElements || 0);
+            setHasMore(pageToLoad < (data.totalPages || 0) - 1);
+            return data;
         } catch (e) {
             console.error(e);
         } finally {
             setLoading(false);
+            setIsFetchingMore(false);
         }
-    }, [page, activeTab, appliedFilters, filters.sort, filters.direction]);
+    }, [activeTab, appliedFilters, filters.sort, filters.direction]);
 
-    useEffect(() => { fetchJobs(); }, [fetchJobs]);
+    // Triggered on filter/tab changes: Reset and load initial 2 sets
+    useEffect(() => {
+        const fetchInitialSets = async () => {
+            const firstSet = await loadJobs(0, false);
+            if (firstSet && firstSet.totalPages > 1) {
+                await loadJobs(1, true);
+                setPage(1);
+            } else {
+                setPage(0);
+            }
+        };
+        fetchInitialSets();
+    }, [loadJobs]);
+
+    // Triggered when page increments via IntersectionObserver
+    useEffect(() => {
+        if (page > 1) {
+            loadJobs(page, true);
+        }
+    }, [page, loadJobs]);
+
+    const observer = useRef();
+    const lastJobElementRef = useCallback(node => {
+        if (loading || isFetchingMore) return;
+        if (observer.current) observer.current.disconnect();
+        observer.current = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && hasMore) {
+                setPage(prevPage => prevPage + 1);
+            }
+        });
+        if (node) observer.current.observe(node);
+    }, [loading, isFetchingMore, hasMore]);
 
     const handleTabChange = (tabKey) => {
         setActiveTab(tabKey);
@@ -110,7 +155,7 @@ export default function JobsPage() {
     };
 
     const handlePageChange = (newPage) => {
-        if (newPage >= 0 && newPage < totalPages) setPage(newPage);
+        // Not used anymore in infinite scroll
     };
 
     const inputStyle = (name) => ({
@@ -347,58 +392,27 @@ export default function JobsPage() {
                                 <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)', margin: 0 }}>Try adjusting your search.</p>
                             </div>
                         ) : (
-                            <div
-                                className="jobs-grid"
-                                style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '32px' }}
-                            >
-                                {jobs.map((job, i) => <JobCard key={job.id || i} job={job} />)}
-                            </div>
+                            <>
+                                <div
+                                    className="jobs-grid"
+                                    style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '32px' }}
+                                >
+                                    {jobs.map((job, i) => {
+                                        if (jobs.length === i + 1) {
+                                            return <div ref={lastJobElementRef} key={job.id || i}><JobCard job={job} /></div>;
+                                        }
+                                        return <JobCard key={job.id || i} job={job} />;
+                                    })}
+                                </div>
+                                {isFetchingMore && (
+                                    <div style={{ textAlign: 'center', padding: '24px', color: 'var(--color-white-40)', fontFamily: 'var(--font-body)', fontSize: '14px' }}>
+                                        Loading more jobs…
+                                    </div>
+                                )}
+                            </>
                         )}
 
-                        {/* Pagination */}
-                        {!loading && jobs.length > 0 && (
-                            <div style={{
-                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                paddingTop: '24px', borderTop: '1px solid var(--color-border)',
-                                flexWrap: 'wrap', gap: '12px',
-                            }}>
-                                <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)' }}>
-                                    Showing {jobs.length} of {totalElements} jobs
-                                </span>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <button
-                                        onClick={() => handlePageChange(page - 1)}
-                                        disabled={page === 0}
-                                        style={{
-                                            padding: '8px 14px',
-                                            background: 'var(--color-surface-2)',
-                                            border: '1px solid var(--color-border)',
-                                            borderRadius: '8px', color: 'var(--color-white-65)',
-                                            cursor: page === 0 ? 'not-allowed' : 'pointer',
-                                            opacity: page === 0 ? 0.4 : 1,
-                                            fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px',
-                                            transition: 'background 0.2s',
-                                        }}
-                                    >← Prev</button>
-                                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--color-white-65)' }}>
-                                        {page + 1} / {totalPages}
-                                    </span>
-                                    <button
-                                        onClick={() => handlePageChange(page + 1)}
-                                        disabled={page >= totalPages - 1}
-                                        style={{
-                                            padding: '8px 14px',
-                                            background: 'var(--color-surface-2)',
-                                            border: '1px solid var(--color-border)',
-                                            borderRadius: '8px', color: 'var(--color-white-65)',
-                                            cursor: page >= totalPages - 1 ? 'not-allowed' : 'pointer',
-                                            opacity: page >= totalPages - 1 ? 0.4 : 1,
-                                            fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px',
-                                        }}
-                                    >Next →</button>
-                                </div>
-                            </div>
-                        )}
+                        {/* Pagination removed */}
                     </div>
                 </div>
             </main>

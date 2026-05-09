@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Sidebar from '../components/Sidebar';
 import AppHeader from '../components/AppHeader';
 import JobCard from '../components/JobCard';
@@ -10,24 +10,25 @@ import { FaBookmark } from 'react-icons/fa';
 export default function SavedJobsPage() {
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isFetchingMore, setIsFetchingMore] = useState(false);
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [totalElements, setTotalElements] = useState(0);
+    const [hasMore, setHasMore] = useState(false);
     const [sort, setSort] = useState('savedAt');
     const [direction, setDirection] = useState('DESC');
     const [error, setError] = useState(null);
     const username = Cookies.get('username') || '';
 
-    const fetchJobs = async () => {
-        setLoading(true);
+    const loadJobs = useCallback(async (pageToLoad, append = false) => {
+        if (append) setIsFetchingMore(true);
+        else setLoading(true);
         setError(null);
 
         try {
-            const res = await api.getSavedJobs({ page, size: 9, sort, direction });
+            const res = await api.getSavedJobs({ page: pageToLoad, size: 9, sort, direction });
 
-            // Handle fetch-style response
             let data;
-
             if (res?.ok === false) {
                 throw new Error(`Server error: ${res.status}`);
             }
@@ -42,24 +43,27 @@ export default function SavedJobsPage() {
                 data = res;
             }
 
-            // Validate structure safely
             const safeContent = Array.isArray(data?.content)
                 ? data.content
                 : Array.isArray(data)
                     ? data
                     : [];
 
-            setJobs(safeContent);
-            setTotalPages(Number.isInteger(data?.totalPages) ? data.totalPages : 0);
+            if (append) {
+                setJobs(prev => [...prev, ...safeContent]);
+            } else {
+                setJobs(safeContent);
+            }
+
+            const totalP = Number.isInteger(data?.totalPages) ? data.totalPages : 0;
+            setTotalPages(totalP);
             setTotalElements(Number.isInteger(data?.totalElements) ? data.totalElements : 0);
+            setHasMore(pageToLoad < totalP - 1);
+            return data;
 
         } catch (err) {
             console.error("SavedJobs fetch error:", err);
-
-            setJobs([]); // Prevent stale UI
-            setTotalPages(0);
-            setTotalElements(0);
-
+            if (!append) setJobs([]);
             setError(
                 err?.message?.includes("Network")
                     ? "Network error. Please check your internet connection."
@@ -67,23 +71,40 @@ export default function SavedJobsPage() {
             );
         } finally {
             setLoading(false);
+            setIsFetchingMore(false);
         }
-    };
+    }, [sort, direction]);
 
     useEffect(() => {
-        let isMounted = true;
-
-        const safeFetch = async () => {
-            if (!isMounted) return;
-            await fetchJobs();
+        const fetchInitialSets = async () => {
+            const firstSet = await loadJobs(0, false);
+            if (firstSet && firstSet.totalPages > 1) {
+                await loadJobs(1, true);
+                setPage(1);
+            } else {
+                setPage(0);
+            }
         };
+        fetchInitialSets();
+    }, [loadJobs]);
 
-        safeFetch();
+    useEffect(() => {
+        if (page > 1) {
+            loadJobs(page, true);
+        }
+    }, [page, loadJobs]);
 
-        return () => {
-            isMounted = false;
-        };
-    }, [page, sort, direction]);
+    const observer = useRef();
+    const lastJobElementRef = useCallback(node => {
+        if (loading || isFetchingMore) return;
+        if (observer.current) observer.current.disconnect();
+        observer.current = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && hasMore) {
+                setPage(prevPage => prevPage + 1);
+            }
+        });
+        if (node) observer.current.observe(node);
+    }, [loading, isFetchingMore, hasMore]);
 
     return (
         <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
@@ -169,7 +190,7 @@ export default function SavedJobsPage() {
                             }}>
                                 <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '18px', color: '#f87171', margin: '0 0 12px' }}>{error}</p>
                                 <button
-                                    onClick={fetchJobs}
+                                    onClick={() => loadJobs(0, false)}
                                     style={{
                                         background: 'var(--color-surface-3)', border: '1px solid var(--color-border)',
                                         color: 'var(--color-white)', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer'
@@ -216,45 +237,19 @@ export default function SavedJobsPage() {
                                     className="saved-jobs-grid"
                                     style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '32px' }}
                                 >
-                                    {jobs?.map((job, i) => <JobCard key={job?.id || i} job={job} />)}
+                                    {jobs?.map((job, i) => {
+                                        if (jobs.length === i + 1) {
+                                            return <div ref={lastJobElementRef} key={job?.id || i}><JobCard job={job} /></div>;
+                                        }
+                                        return <JobCard key={job?.id || i} job={job} />;
+                                    })}
                                 </div>
-
-                                {/* Pagination */}
-                                {totalPages > 1 && (
-                                    <div style={{
-                                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                        paddingTop: '24px', borderTop: '1px solid var(--color-border)',
-                                        flexWrap: 'wrap', gap: '12px',
-                                    }}>
-                                        <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)' }}>
-                                            Page {page + 1} of {totalPages}
-                                        </span>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button
-                                                onClick={() => setPage(p => Math.max(0, p - 1))}
-                                                disabled={page === 0}
-                                                style={{
-                                                    padding: '8px 14px',
-                                                    border: '1px solid var(--color-border)', borderRadius: '8px',
-                                                    background: 'var(--color-surface-2)', color: 'var(--color-white-65)',
-                                                    cursor: page === 0 ? 'not-allowed' : 'pointer', opacity: page === 0 ? 0.4 : 1,
-                                                    fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px',
-                                                }}
-                                            >← Prev</button>
-                                            <button
-                                                onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
-                                                disabled={page >= totalPages - 1}
-                                                style={{
-                                                    padding: '8px 14px',
-                                                    border: '1px solid var(--color-border)', borderRadius: '8px',
-                                                    background: 'var(--color-surface-2)', color: 'var(--color-white-65)',
-                                                    cursor: page >= totalPages - 1 ? 'not-allowed' : 'pointer', opacity: page >= totalPages - 1 ? 0.4 : 1,
-                                                    fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px',
-                                                }}
-                                            >Next →</button>
-                                        </div>
+                                {isFetchingMore && (
+                                    <div style={{ textAlign: 'center', padding: '24px', color: 'var(--color-white-40)', fontFamily: 'var(--font-body)', fontSize: '14px' }}>
+                                        Loading more saved jobs…
                                     </div>
                                 )}
+                                {/* Pagination removed */}
                             </>
                         )}
                     </div>
