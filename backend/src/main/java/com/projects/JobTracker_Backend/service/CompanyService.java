@@ -5,10 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.projects.JobTracker_Backend.dto.CompanyDTO;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,32 +27,28 @@ public class CompanyService {
 
     private void loadCompanies() {
         try {
-            // available_companies.json is in the root directory relative to where the backend runs
-            // In development, the root is usually d:\JobTracker
-            File file = new File("../available_companies.json");
-            if (!file.exists()) {
-                log.warn("available_companies.json not found at {}, checking absolute path", file.getAbsolutePath());
-                file = new File("d:/JobTracker/available_companies.json");
-            }
-
-            if (file.exists()) {
-                log.info("Loading companies from: {}", file.getAbsolutePath());
-                List<CompanyDTO> dtos = objectMapper.readValue(file, new TypeReference<List<CompanyDTO>>() {});
-                if (dtos != null) {
-                    availableCompanies = dtos.stream()
-                            .filter(d -> d != null && d.getCompany() != null)
-                            .map(CompanyDTO::getCompany)
-                            .map(String::trim)
-                            .distinct()
-                            .sorted()
-                            .collect(Collectors.toList());
-                    log.info("Successfully loaded {} unique companies", availableCompanies.size());
+            ClassPathResource resource = new ClassPathResource("available_companies.json");
+            if (resource.exists()) {
+                log.info("Loading companies from classpath: {}", resource.getPath());
+                try (InputStream inputStream = resource.getInputStream()) {
+                    List<CompanyDTO> dtos = objectMapper.readValue(inputStream, new TypeReference<List<CompanyDTO>>() {
+                    });
+                    if (dtos != null) {
+                        availableCompanies = dtos.stream()
+                                .filter(d -> d != null && d.getCompany() != null)
+                                .map(CompanyDTO::getCompany)
+                                .map(String::trim)
+                                .distinct()
+                                .sorted()
+                                .collect(Collectors.toList());
+                        log.info("Successfully loaded {} unique companies from classpath", availableCompanies.size());
+                    }
                 }
             } else {
-                log.error("available_companies.json NOT FOUND at expected locations. Paths checked: ../available_companies.json and d:/JobTracker/available_companies.json");
+                log.error("available_companies.json NOT FOUND in classpath resources.");
             }
         } catch (Exception e) {
-            log.error("FATAL ERROR loading available_companies.json: {}", e.getMessage(), e);
+            log.error("FATAL ERROR loading available_companies.json from classpath: {}", e.getMessage(), e);
         }
     }
 
@@ -61,6 +57,8 @@ public class CompanyService {
     }
 
     public boolean isValidCompany(String companyName) {
+        if (companyName == null)
+            return false;
         return availableCompanies.contains(companyName.trim());
     }
 }
