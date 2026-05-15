@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -E \"\\\\.js$\")",
+      "Bash(grep -E \"\\\\.js$|\\\\.py$\")",
+      "Bash(node --test multi_ats/multi_ats_worker.test.js)"
+    ]
+  }
+}

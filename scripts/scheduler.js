@@ -16,7 +16,6 @@ const emailPipeline = require("./email/email_pipeline_batch");
 
 // Config
 const RENDER_HEALTH_URL =
-    process.env.RENDER_HEALTH_URL ||
     "https://trackhire-9ve0.onrender.com/api/public/health";
 
 // ─── Time Helper (UTC → IST) ──────────────────────────────────────────────
