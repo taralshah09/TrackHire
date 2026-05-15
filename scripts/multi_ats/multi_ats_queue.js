@@ -5,13 +5,16 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const REDIS_URL = process.env.REDIS_URL;
 
-const REDIS_CONFIG = REDIS_URL ? REDIS_URL : {
+const REDIS_CONFIG = REDIS_URL ? {
+    url: REDIS_URL,
+    maxRetriesPerRequest: null
+} : {
     host: process.env.REDIS_HOST || "127.0.0.1",
     port: parseInt(process.env.REDIS_PORT) || 6379,
     password: process.env.REDIS_PASSWORD || undefined,
-    // Enable TLS for cloud providers like Upstash (uses rediss://)
+    // Enable TLS if using hostname and not local
     tls: (process.env.REDIS_HOST && !process.env.REDIS_HOST.includes("127.0.0.1")) ? {} : undefined,
-    maxRetriesPerRequest: null // Required by BullMQ
+    maxRetriesPerRequest: null
 };
 
 const QUEUE_NAME = "description-scraper";

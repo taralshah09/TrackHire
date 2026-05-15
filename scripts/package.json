@@ -5,6 +5,8 @@
   "main": "script.js",
   "scripts": {
     "start": "node scheduler.js",
+    "worker": "node multi_ats/multi_ats_worker.js",
+    "postinstall": "npx puppeteer browsers install chrome",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
