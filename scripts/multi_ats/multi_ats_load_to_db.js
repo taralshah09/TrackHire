@@ -6,6 +6,9 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const DB_SCHEMA = process.env.DB_SCHEMA || "jobs_tracker_v1";
 
+// Shared pool used by the long-running worker process
+let _workerPool = null;
+
 const DB_CONFIG = {
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -26,11 +29,13 @@ function generateId(company, title, id, date) {
     const normalize = str =>
         str
             ?.toLowerCase()
-            .replace(/\s+/g, "_")
-            .replace(/[^\w]/g, "") || "unknown";
+            .trim()
+            .replace(/\s+/g, "-")
+            .replace(/[^\w-]/g, "") || "unknown";
 
-    const dateStr = date ? new Date(date).toISOString().slice(0, 10) : "unknown";
-    return `${normalize(company)}_${normalize(title)}_${id}_${dateStr}`;
+    const dateStr = date ? new Date(date).toISOString().slice(0, 10) : "no-date";
+    // Using a clear separator to match the requested components
+    return `${normalize(company)}--${normalize(title)}--${id}--${dateStr}`;
 }
 
 function mapEmploymentType(type) {
@@ -74,7 +79,7 @@ async function upsertBatch(client, tableName, batch) {
     // Deduplicate batch by external_id to avoid "ON CONFLICT DO UPDATE command cannot affect row a second time"
     const uniqueBatchMap = new Map();
     for (const job of batch) {
-        const extId = generateId(job.company, job.title, job.id, job.date_posted);
+        const extId = job.external_id || generateId(job.company, job.title, job.jobId || job.id, job.date_posted);
         if (!uniqueBatchMap.has(extId)) {
             uniqueBatchMap.set(extId, { ...job, extId });
         }
@@ -120,11 +125,14 @@ async function upsertBatch(client, tableName, batch) {
             location = EXCLUDED.location,
             department = EXCLUDED.department,
             posted_at = EXCLUDED.posted_at,
+            description = COALESCE(EXCLUDED.description, ${tableName}.description),
+            is_active = EXCLUDED.is_active,
             updated_at = CURRENT_TIMESTAMP
         WHERE 
             ${tableName}.title IS DISTINCT FROM EXCLUDED.title OR
             ${tableName}.location IS DISTINCT FROM EXCLUDED.location OR
-            ${tableName}.department IS DISTINCT FROM EXCLUDED.department
+            ${tableName}.department IS DISTINCT FROM EXCLUDED.department OR
+            (EXCLUDED.description IS NOT NULL AND ${tableName}.description IS DISTINCT FROM EXCLUDED.description)
         RETURNING (xmax = 0) AS inserted
     `;
 
@@ -188,4 +196,56 @@ async function run(filePath) {
     }
 }
 
-module.exports = { run };
+function getWorkerPool() {
+    if (!_workerPool) {
+        _workerPool = new Pool(DB_CONFIG);
+        _workerPool.on("connect", (client) => {
+            client.query(`SET search_path TO ${DB_SCHEMA}`);
+        });
+    }
+    return _workerPool;
+}
+
+async function upsertSingleJob(jobData) {
+    const pool = getWorkerPool();
+    const client = await pool.connect();
+    try {
+        await upsertBatch(client, "jobs", [jobData]);
+        const isIntern = (jobData.title || "").toLowerCase().includes("intern");
+        if (isIntern) {
+            await upsertBatch(client, "intern_jobs", [jobData]);
+        } else {
+            await upsertBatch(client, "fulltime_jobs", [jobData]);
+        }
+    } finally {
+        client.release();
+    }
+}
+
+async function closeWorkerPool() {
+    if (_workerPool) {
+        await _workerPool.end();
+        _workerPool = null;
+    }
+}
+
+async function getExistingExternalIds(externalIds) {
+    if (externalIds.length === 0) return new Set();
+    const pool = new Pool(DB_CONFIG);
+    try {
+        await pool.query(`SET search_path TO ${DB_SCHEMA}`);
+        const res = await pool.query(
+            `SELECT external_id FROM ${DB_SCHEMA}.jobs          WHERE external_id = ANY($1)
+             UNION
+             SELECT external_id FROM ${DB_SCHEMA}.fulltime_jobs WHERE external_id = ANY($1)
+             UNION
+             SELECT external_id FROM ${DB_SCHEMA}.intern_jobs   WHERE external_id = ANY($1)`,
+            [externalIds]
+        );
+        return new Set(res.rows.map(r => r.external_id));
+    } finally {
+        await pool.end();
+    }
+}
+
+module.exports = { run, upsertSingleJob, closeWorkerPool, generateId, getExistingExternalIds };

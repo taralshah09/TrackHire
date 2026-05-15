@@ -1,21 +1,20 @@
 const path = require("path");
-const fs = require("fs-extra");
-const loader = require("./multi_ats_load_to_db");
+const { enqueueJob, queue } = require("./multi_ats_queue");
+const { generateId, getExistingExternalIds } = require("./multi_ats_load_to_db");
 
 /**
  * Multi-ATS Pipeline
- * Scrapes jobs using the new-scrapper, normalizes them, and loads them to DB.
+ * Discovers jobs via job-boards/scraper.js, filters to India, normalises,
+ * and enqueues each job into the BullMQ `description-scraper` queue.
+ * The worker (multi_ats_worker.js) fetches descriptions and writes to the DB.
  */
 async function run() {
     console.log("\n🔍 Starting Multi-ATS Pipeline...");
-    
-    // 1. Scrape using job-boards
-    // Since scraper.js is ESM, we use dynamic import
+
+    // 1. Scrape using job-boards (ESM module, dynamic import required)
     const scraperPath = path.resolve(__dirname, "../job-boards/scraper.js");
-    
     let scrapedJobs = [];
     try {
-        // Fix for Windows paths in dynamic import
         const scraperUrl = `file://${scraperPath.replace(/\\/g, "/")}`;
         const { runScraper } = await import(scraperUrl);
         scrapedJobs = await runScraper();
@@ -26,73 +25,71 @@ async function run() {
 
     if (scrapedJobs.length === 0) {
         console.log("⚠️ No jobs found by Multi-ATS scraper.");
+        await queue.close();
         return { count: 0, filePath: null };
     }
 
-    // 2. Extra filter for India and Deduplicate (just in case)
-    const indiaKeywords = [
-        "india", "bengaluru", "bangalore", "hyderabad", "mumbai", "pune",
-        "chennai", "delhi", "gurugram", "gurgaon", "noida", "kolkata",
-        "ahmedabad", "remote, india", "in", "blr", "hyd", "mum",
-    ];
-
-    const isIndia = (location = "") => {
-        const loc = location.toLowerCase();
-        return indiaKeywords.some((kw) => loc.includes(kw));
-    };
+    // 2. Filter to India jobs and deduplicate
+    const indiaRegex = /\b(india|bengaluru|bangalore|hyderabad|mumbai|pune|chennai|delhi|gurugram|gurgaon|noida|kolkata|ahmedabad|blr|hyd|mum)\b/i;
 
     const seenUrls = new Set();
     const indiaJobs = scrapedJobs.filter(job => {
         if (!job.url || seenUrls.has(job.url)) return false;
-        
-        const loc = (job.location || "").toLowerCase();
-        const title = (job.title || "").toLowerCase();
-        
-        const match = isIndia(loc) || isIndia(title);
-        
-        if (match) {
-            seenUrls.add(job.url);
-            return true;
-        }
+        // Only match against location to be precise
+        const locMatch = job.location && indiaRegex.test(job.location);
+        if (locMatch) { seenUrls.add(job.url); return true; }
         return false;
     });
 
     console.log(`🇮🇳 Filtered to ${indiaJobs.length} India-specific jobs`);
 
-    // 3. Normalize to the format expected by the loader
-    // Required format: { company, title, id, location, job_type, description, apply_url, date_posted, source, is_remote, department }
-    const normalizedJobs = indiaJobs.map(job => {
-        // Create a unique ID from the URL
-        const id = Buffer.from(job.url).toString("base64").substring(0, 16).replace(/[+/=]/g, "");
-        
+    // 3. Normalise all India jobs and compute their external_ids
+    const normalized = indiaJobs.map(job => {
+        const urlId = Buffer.from(job.url).toString("base64").substring(0, 16).replace(/[+/=]/g, "");
+        const jobId = job.jobId || urlId;
+        const date_posted = job.postedAt || new Date().toISOString();
         return {
+            id: urlId,
+            jobId,
+            external_id: generateId(job.company, job.title, jobId, date_posted),
+            url: job.url,
             company: job.company,
             title: job.title,
-            id: id,
-            location: job.location,
-            job_type: job.title.toLowerCase().includes("intern") ? "INTERNSHIP" : "FULL_TIME",
-            description: null, // Scraper doesn't fetch description yet
-            apply_url: job.url,
-            date_posted: job.postedAt || new Date().toISOString(),
-            source: `ATS_${job.ats.toUpperCase()}`,
+            ats: job.ats,
+            location: job.location || null,
+            source: `ATS_${(job.ats || "unknown").toUpperCase()}`,
+            job_type: (job.title || "").toLowerCase().includes("intern") ? "INTERNSHIP" : "FULL_TIME",
+            date_posted,
             is_remote: !!job.remote,
             department: job.department || null,
             salary_min: 0,
-            salary_max: 0
+            salary_max: 0,
         };
     });
 
-    // 3. Save to temporary file
-    const outputDir = path.resolve(__dirname, "../job-boards");
-    const filePath = path.join(outputDir, "multi_ats_normalized.json");
-    await fs.writeJson(filePath, normalizedJobs, { spaces: 2 });
-    
-    console.log(`✅ Normalized ${normalizedJobs.length} jobs and saved to ${filePath}`);
-    
-    return {
-        count: normalizedJobs.length,
-        filePath: filePath
-    };
+    // 4. Check which external_ids already exist in the DB — skip those
+    console.log(`🔎 Checking ${normalized.length} jobs against DB for duplicates...`);
+    const existingIds = await getExistingExternalIds(normalized.map(j => j.external_id));
+    const newJobs = normalized.filter(j => !existingIds.has(j.external_id));
+
+    console.log(`📋 ${existingIds.size} already in DB, ${newJobs.length} new jobs to enqueue`);
+
+    // 5. Enqueue only new jobs — worker handles description fetch + DB write
+    for (const job of newJobs) {
+        await enqueueJob(job);
+    }
+
+    console.log(`✅ Enqueued ${newJobs.length} jobs for description scraping`);
+    await queue.close();
+
+    return { count: newJobs.length, filePath: null };
 }
 
 module.exports = { run };
+
+if (require.main === module) {
+    run().catch(err => {
+        console.error("Fatal error:", err);
+        process.exit(1);
+    });
+}
