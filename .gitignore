@@ -9,3 +9,7 @@ BRAND_GUIDELINES.md
 # Spec-driven pipeline runtime state
 agent-state/
 !agent-state/.gitkeep
+.claude
+.gemini
+.idea
+.vscode
