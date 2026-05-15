@@ -115,14 +115,15 @@ async function runMultiAtsPipeline() {
         const scrapeStats = await multiAtsScraper.run();
 
         if (scrapeStats.count > 0) {
-            const loadStats = await multiAtsLoader.run(scrapeStats.filePath);
-
-            await dbSync.completeSync(
-                syncId,
-                scrapeStats.count,
-                loadStats.inserted,
-                null
-            );
+            if (scrapeStats.filePath) {
+                // Legacy file-based path
+                const loadStats = await multiAtsLoader.run(scrapeStats.filePath);
+                await dbSync.completeSync(syncId, scrapeStats.count, loadStats.inserted, null);
+            } else {
+                // Queue-based path — worker handles DB writes asynchronously
+                console.log(`📬 ${scrapeStats.count} jobs enqueued; worker will write descriptions to DB`);
+                await dbSync.completeSync(syncId, scrapeStats.count, 0, null);
+            }
         } else {
             await dbSync.completeSync(syncId, 0, 0, null);
         }
