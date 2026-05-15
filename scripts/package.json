@@ -13,6 +13,7 @@
   "type": "commonjs",
   "dependencies": {
     "axios": "^1.13.5",
+    "bullmq": "^5.76.8",
     "cheerio": "^1.2.0",
     "dotenv": "^17.3.1",
     "fs-extra": "^11.3.3",
@@ -20,6 +21,8 @@
     "nodemailer": "^8.0.1",
     "p-limit": "^3.1.0",
     "pg": "^8.11.3",
+    "puppeteer": "^24.43.1",
+    "redis": "^5.12.1",
     "resend": "^6.9.2"
   },
   "engines": {

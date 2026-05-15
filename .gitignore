@@ -5,3 +5,7 @@ BRAND_GUIDELINES.md
 .env
 .agent
 # new-scrapper
+
+# Spec-driven pipeline runtime state
+agent-state/
+!agent-state/.gitkeep

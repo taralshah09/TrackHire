@@ -256,16 +256,22 @@ async function fetchJSON(url, options = {}) {
 /**
  * Normalize a raw job object into a standard shape
  */
-function normalize({ title, location, url, department, remote, company, ats, postedAt }) {
-    return { title, location, url, department, remote: !!remote, company, ats, postedAt };
+function normalize({ title, location, url, department, remote, company, ats, postedAt, jobId }) {
+    return { title, location, url, department, remote: !!remote, company, ats, postedAt, jobId };
 }
 
 /**
- * Check if a location string matches India
+ * Check if a location string matches India using precise keyword matching
  */
 function isIndia(location = "") {
+    if (!location) return false;
     const loc = location.toLowerCase();
-    return CONFIG.indiaKeywords.some((kw) => loc.includes(kw));
+    
+    // Use word boundaries to prevent matching substrings like "in" in "Berlin" or "Insurance"
+    // Also removed "in" as a standalone keyword because it's too ambiguous (e.g. "Engineer in London")
+    const indiaRegex = /\b(india|bengaluru|bangalore|hyderabad|mumbai|pune|chennai|delhi|gurugram|gurgaon|noida|kolkata|ahmedabad|blr|hyd|mum)\b/i;
+    
+    return indiaRegex.test(loc);
 }
 
 // ── Ashby ─────────────────────────────────────────────────────────────────────
@@ -286,6 +292,7 @@ async function fetchAshby(company) {
                 company: company.name,
                 ats: "ashby",
                 postedAt: j.publishedAt,
+                jobId: j.id,
             })
         );
 }
@@ -316,6 +323,7 @@ async function fetchGreenhouse(company) {
                 company: company.name,
                 ats: "greenhouse",
                 postedAt: j.updated_at,
+                jobId: j.id?.toString(),
             });
         });
 }
@@ -343,6 +351,7 @@ async function fetchLever(company) {
                 company: company.name,
                 ats: "lever",
                 postedAt: j.createdAt ? new Date(j.createdAt).toISOString() : null,
+                jobId: j.id,
             })
         );
 }
@@ -384,6 +393,7 @@ async function fetchWorkday(company) {
                 company: company.name,
                 ats: "workday",
                 postedAt: j.postedOn,
+                jobId: j.externalPath?.split("/").pop(),
             });
         });
 }
@@ -429,6 +439,7 @@ async function fetchSmartRecruiters(company) {
                 company: company.name,
                 ats: "smartrecruiters",
                 postedAt: j.releasedDate,
+                jobId: j.id,
             })
         );
 }
@@ -455,6 +466,7 @@ async function fetchWorkable(company) {
                 company: company.name,
                 ats: "workable",
                 postedAt: j.published_on,
+                jobId: j.shortcode,
             })
         );
 }
@@ -478,6 +490,7 @@ async function fetchBambooHR(company) {
                 company: company.name,
                 ats: "bamboohr",
                 postedAt: j.datePosted,
+                jobId: j.id?.toString(),
             })
         );
 }
@@ -638,6 +651,11 @@ export async function runScraper(options = {}) {
 async function main() {
     const opts = parseArgs();
     const unique = await runScraper(opts);
+    const companiesCount = opts.ats 
+        ? COMPANIES.filter((c) => c.ats === opts.ats).length
+        : opts.company
+            ? COMPANIES.filter((c) => c.name.toLowerCase().includes(opts.company)).length
+            : COMPANIES.length;
 
     // Stats breakdown
     const byAts = unique.reduce((acc, j) => {
@@ -653,7 +671,7 @@ async function main() {
     const output = {
         scrapedAt: new Date().toISOString(),
         totalJobs: unique.length,
-        companiesScraped: companies.length,
+        companiesScraped: companiesCount,
         jobs: unique,
     };
 
