@@ -157,8 +157,8 @@ async function runScheduler() {
     // Always ping Render
     await pingRenderServer();
 
-    // 🔹 03:30 IST → Job pipelines
-    if (hour === 3 && minute < 10) {
+    // 🔹 03:30 IST → Job pipelines (triggered within the 03:30 to 03:40 window by the 10-minute Railway cron)
+    if (hour === 3 && minute >= 30 && minute < 40) {
         console.log("⏰ Running scraping pipelines (03:30 IST window)");
 
         await runAdzunaPipeline();
@@ -166,7 +166,7 @@ async function runScheduler() {
         await runMultiAtsPipeline();
     }
 
-    // 🔹 19:50 IST (7:50 PM) → Email Pipeline
+    // 🔹 19:50 IST (7:50 PM) → Email Pipeline (triggered within the 19:50 to 20:00 window by the 10-minute Railway cron)
     if (hour === 19 && minute >= 50 && minute < 60) {
         console.log("⏰ Running email pipeline (19:50 IST window)");
 
@@ -185,10 +185,14 @@ async function runScheduler() {
         await runScheduler();
     } catch (err) {
         console.error("Scheduler failure ❌", err);
+        process.exit(1);
     } finally {
         try {
             await dbSync.pool.end();
         } catch (_) { }
+        process.exit(0);
     }
 })();
+
+
 
