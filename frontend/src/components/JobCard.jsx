@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaMapMarkerAlt, FaBriefcase } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaBriefcase, FaBookmark, FaRegBookmark, FaCheck, FaChevronDown } from 'react-icons/fa';
+import { toast } from 'react-hot-toast';
 import api from '../service/ApiService';
 
 /* Brand-accurate status badge styles per guidelines */
@@ -48,11 +49,119 @@ export default function JobCard({ job }) {
     } = job || {};
 
     const companyLabel = companyName || company || 'Company';
-    const statusStyle = isApplied && applicationStatus ? getStatusStyle(applicationStatus) : null;
+
+    const [saved, setSaved] = useState(isSaved);
+    const [applied, setApplied] = useState(isApplied);
+    const [statusState, setStatusState] = useState(applicationStatus);
+    const [bookmarkLoading, setBookmarkLoading] = useState(false);
+    const [applyLoading, setApplyLoading] = useState(false);
+
+    useEffect(() => {
+        setSaved(isSaved);
+        setApplied(isApplied);
+        setStatusState(applicationStatus);
+    }, [isSaved, isApplied, applicationStatus]);
+
+    const statusStyle = applied && statusState ? getStatusStyle(statusState) : null;
 
 
     const [followed, setFollowed] = useState(job.isFollowed || false);
     const [followLoading, setFollowLoading] = useState(false);
+
+    const handleBookmarkClick = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (bookmarkLoading) return;
+
+        setBookmarkLoading(true);
+        try {
+            if (saved) {
+                await api.unsaveJob(id);
+                setSaved(false);
+                toast.success('Job removed from Saved');
+            } else {
+                await api.saveJob(id);
+                setSaved(true);
+                toast.success('Job saved!');
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error('Failed to update bookmark');
+        } finally {
+            setBookmarkLoading(false);
+        }
+    };
+
+    const handleAppliedCheckboxChange = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (applyLoading) return;
+
+        setApplyLoading(true);
+        try {
+            if (applied) {
+                await api.withdrawApplication(id);
+                setApplied(false);
+                setStatusState(null);
+                toast.success('Application withdrawn');
+            } else {
+                await api.updateJobStatus(id, 'APPLIED');
+                setApplied(true);
+                setStatusState('APPLIED');
+                toast.success('Marked as Applied!');
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error('Failed to update application');
+        } finally {
+            setApplyLoading(false);
+        }
+    };
+
+    const handleDropdownChange = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const newStatus = e.target.value;
+
+        if (applyLoading || bookmarkLoading) return;
+
+        setApplyLoading(true);
+        try {
+            if (newStatus === 'NOT_APPLIED') {
+                if (applied) {
+                    await api.withdrawApplication(id);
+                }
+                if (saved) {
+                    await api.unsaveJob(id);
+                }
+                setApplied(false);
+                setSaved(false);
+                setStatusState(null);
+                toast.success('Job reset (not saved, not applied)');
+            } else if (newStatus === 'SAVED') {
+                if (!saved) {
+                    await api.saveJob(id);
+                }
+                if (applied) {
+                    await api.withdrawApplication(id);
+                }
+                setApplied(false);
+                setSaved(true);
+                setStatusState(null);
+                toast.success('Job moved to Saved');
+            } else {
+                await api.updateJobStatus(id, newStatus);
+                setApplied(true);
+                setStatusState(newStatus);
+                toast.success(`Job marked as ${newStatus.toLowerCase().replace('_', ' ')}`);
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error('Failed to update job status');
+        } finally {
+            setApplyLoading(false);
+        }
+    };
 
     const handleFollowToggle = async (e) => {
         e.preventDefault();
@@ -108,7 +217,7 @@ export default function JobCard({ job }) {
                     Prioritized
                 </div>
             )}
-            {/* Top row: company initial + saved badge */}
+            {/* Top row: company initial + bookmark button */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                 <div style={{
                     width: '40px', height: '40px',
@@ -123,21 +232,34 @@ export default function JobCard({ job }) {
                 }}>
                     {companyLabel.charAt(0).toUpperCase()}
                 </div>
-                {isSaved && (
-                    <span style={{
-                        fontFamily: 'var(--font-display)',
-                        fontWeight: 700,
-                        fontSize: '11px',
-                        letterSpacing: '0.06em',
-                        background: STATUS_STYLES.SAVED.bg,
-                        color: STATUS_STYLES.SAVED.color,
-                        border: `1px solid ${STATUS_STYLES.SAVED.border}`,
-                        padding: '3px 10px',
-                        borderRadius: '999px',
-                    }}>
-                        Saved
-                    </span>
-                )}
+                <button
+                    onClick={handleBookmarkClick}
+                    disabled={bookmarkLoading}
+                    title={saved ? "Remove Bookmark" : "Bookmark Job"}
+                    style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: saved ? '#c084fc' : 'var(--color-white-40)',
+                        fontSize: '18px',
+                        cursor: 'pointer',
+                        padding: '8px',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.2s',
+                    }}
+                    onMouseEnter={e => {
+                        e.currentTarget.style.color = saved ? '#c084fc' : 'var(--color-white-65)';
+                        e.currentTarget.style.background = 'var(--color-surface-3)';
+                    }}
+                    onMouseLeave={e => {
+                        e.currentTarget.style.color = saved ? '#c084fc' : 'var(--color-white-40)';
+                        e.currentTarget.style.background = 'transparent';
+                    }}
+                >
+                    {saved ? <FaBookmark /> : <FaRegBookmark />}
+                </button>
             </div>
 
             {/* Title + company */}
@@ -221,6 +343,90 @@ export default function JobCard({ job }) {
 
             {/* Divider */}
             <div style={{ borderTop: '1px solid var(--color-border)', marginBottom: '16px' }} />
+
+            {/* Interactive Actions Row */}
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '12px',
+                marginBottom: '16px',
+                background: 'rgba(255,255,255,0.02)',
+                border: '1px solid var(--color-border)',
+                borderRadius: '8px',
+                padding: '8px 12px',
+            }}>
+                <div
+                    onClick={handleAppliedCheckboxChange}
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        cursor: 'pointer',
+                        userSelect: 'none',
+                        fontFamily: 'var(--font-display)',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        color: applied ? '#60a5fa' : 'var(--color-white-40)',
+                        transition: 'color 0.2s',
+                    }}
+                >
+                    <div style={{
+                        width: '16px',
+                        height: '16px',
+                        border: applied ? '1px solid rgba(59,130,246,0.6)' : '1px solid var(--color-border)',
+                        borderRadius: '4px',
+                        background: applied ? 'rgba(59,130,246,0.12)' : 'transparent',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#60a5fa',
+                        fontSize: '10px',
+                        transition: 'all 0.2s',
+                    }}>
+                        {applied && <FaCheck />}
+                    </div>
+                    <span>Applied</span>
+                </div>
+
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <select
+                        value={applied ? (statusState || 'APPLIED') : (saved ? 'SAVED' : 'NOT_APPLIED')}
+                        disabled={applyLoading || bookmarkLoading}
+                        onChange={handleDropdownChange}
+                        style={{
+                            appearance: 'none',
+                            background: 'var(--color-surface-3)',
+                            border: '1px solid var(--color-border)',
+                            borderRadius: '6px',
+                            padding: '4px 24px 4px 10px',
+                            color: 'var(--color-white-65)',
+                            fontFamily: 'var(--font-display)',
+                            fontWeight: 600,
+                            fontSize: '11px',
+                            cursor: 'pointer',
+                            outline: 'none',
+                            transition: 'all 0.2s',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-white-40)'}
+                        onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-border)'}
+                    >
+                        <option value="NOT_APPLIED">Not Applied</option>
+                        <option value="SAVED">Saved</option>
+                        <option value="APPLIED">Applied</option>
+                        <option value="INTERVIEW">Interview</option>
+                        <option value="OFFER">Offer</option>
+                        <option value="REJECTED">Rejected</option>
+                    </select>
+                    <FaChevronDown style={{
+                        position: 'absolute',
+                        right: '8px',
+                        pointerEvents: 'none',
+                        fontSize: '9px',
+                        color: 'var(--color-white-40)'
+                    }} />
+                </div>
+            </div>
 
             {/* Footer: date + status + CTA */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>

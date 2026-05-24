@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import ProtectedRoute from './components/ProtectedRoute';
 import GuestRoute from './components/GuestRoute';
 import LoginPage from './pages/LoginPage';
@@ -19,7 +20,30 @@ import MeetTheBuilder from './pages/MeetTheBuilder';
 
 function App() {
   return (
-
+    <>
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          style: {
+            background: 'var(--color-surface-2)',
+            color: 'var(--color-white)',
+            border: '1px solid var(--color-border)',
+            fontFamily: 'var(--font-display)',
+            fontSize: '13px',
+            borderRadius: '8px',
+          },
+          success: {
+            style: {
+              borderLeft: '4px solid #4ade80',
+            },
+          },
+          error: {
+            style: {
+              borderLeft: '4px solid #f87171',
+            },
+          },
+        }}
+      />
       <Router>
         <Routes>
           {/* Public (guest-only) Routes — redirect to /dashboard if already logged in */}
@@ -116,7 +140,7 @@ function App() {
           <Route path="/error" element={<Error />} />
         </Routes>
       </Router>
-
+    </>
   );
 }
 

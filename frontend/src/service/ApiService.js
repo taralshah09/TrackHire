@@ -174,12 +174,11 @@ export const api = {
     },
 
     // Application Status Management (Simplified)
-    updateJobStatus: (id, status = 'APPLIED') => {
+    updateJobStatus: (id, status = 'APPLIED') =>
         apiRequest(`/jobs/${id}/status`, {
             method: 'POST',
             body: JSON.stringify({ status })
-        })
-    },
+        }),
 
     withdrawApplication: (id) =>
         apiRequest(`/jobs/${id}/status`, { method: 'DELETE' }),
