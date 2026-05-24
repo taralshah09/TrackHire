@@ -17,8 +17,10 @@ import OnboardingPage from './pages/OnboardingPage';
 import CompanyPreferences from './pages/CompanyPreferences';
 import PreferredJobsPage from './pages/PreferredJobsPage';
 import MeetTheBuilder from './pages/MeetTheBuilder';
+import useDynamicMetadata from './hooks/useDynamicMetadata';
 
 function App() {
+  useDynamicMetadata();
   return (
     <>
       <Toaster
