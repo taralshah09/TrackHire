@@ -81,9 +81,12 @@ export default function JobsPage() {
             const data = response.json ? await response.json() : response;
             const newJobs = data.content || [];
 
+            // Filter out jobs that the user has already applied to
+            const unappliedJobs = newJobs.filter(job => !job.isApplied);
+
             if (append) {
                 setJobs(prev => {
-                    const combined = [...prev, ...newJobs];
+                    const combined = [...prev, ...unappliedJobs];
                     const uniqueIds = new Set();
                     return combined.filter(job => {
                         if (uniqueIds.has(job.id)) return false;
@@ -92,7 +95,7 @@ export default function JobsPage() {
                     });
                 });
             } else {
-                setJobs(newJobs);
+                setJobs(unappliedJobs);
             }
 
             setTotalPages(data.totalPages || 0);
@@ -152,6 +155,13 @@ export default function JobsPage() {
         }
         setSearchParams(newParams, { replace: true });
     };
+
+    const handleJobAppliedChange = useCallback((jobId, isAppliedNow) => {
+        if (isAppliedNow) {
+            setJobs(prev => prev.filter(j => j.id !== jobId));
+            setTotalElements(prev => Math.max(0, prev - 1));
+        }
+    }, []);
 
     const handleSearch = () => {
         setAppliedFilters({ ...filters });
@@ -407,9 +417,9 @@ export default function JobsPage() {
                                 >
                                     {jobs.map((job, i) => {
                                         if (jobs.length === i + 1) {
-                                            return <div ref={lastJobElementRef} key={job.id || i}><JobCard job={job} /></div>;
+                                            return <div ref={lastJobElementRef} key={job.id || i}><JobCard job={job} onAppliedChange={handleJobAppliedChange} /></div>;
                                         }
-                                        return <JobCard key={job.id || i} job={job} />;
+                                        return <JobCard key={job.id || i} job={job} onAppliedChange={handleJobAppliedChange} />;
                                     })}
                                 </div>
                                 {isFetchingMore && (

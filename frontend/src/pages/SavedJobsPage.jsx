@@ -49,10 +49,13 @@ export default function SavedJobsPage() {
                     ? data
                     : [];
 
+            // Filter out saved jobs that have already been applied to
+            const unappliedSavedJobs = safeContent.filter(job => !job?.isApplied);
+
             if (append) {
-                setJobs(prev => [...prev, ...safeContent]);
+                setJobs(prev => [...prev, ...unappliedSavedJobs]);
             } else {
-                setJobs(safeContent);
+                setJobs(unappliedSavedJobs);
             }
 
             const totalP = Number.isInteger(data?.totalPages) ? data.totalPages : 0;
@@ -74,6 +77,20 @@ export default function SavedJobsPage() {
             setIsFetchingMore(false);
         }
     }, [sort, direction]);
+
+    const handleJobAppliedChange = useCallback((jobId, isAppliedNow) => {
+        if (isAppliedNow) {
+            setJobs(prev => prev.filter(j => j?.id !== jobId));
+            setTotalElements(prev => Math.max(0, prev - 1));
+        }
+    }, []);
+
+    const handleJobBookmarkChange = useCallback((jobId, isSavedNow) => {
+        if (!isSavedNow) {
+            setJobs(prev => prev.filter(j => j?.id !== jobId));
+            setTotalElements(prev => Math.max(0, prev - 1));
+        }
+    }, []);
 
     useEffect(() => {
         const fetchInitialSets = async () => {
@@ -239,9 +256,9 @@ export default function SavedJobsPage() {
                                 >
                                     {jobs?.map((job, i) => {
                                         if (jobs.length === i + 1) {
-                                            return <div ref={lastJobElementRef} key={job?.id || i}><JobCard job={job} /></div>;
+                                            return <div ref={lastJobElementRef} key={job?.id || i}><JobCard job={job} onAppliedChange={handleJobAppliedChange} onBookmarkChange={handleJobBookmarkChange} /></div>;
                                         }
-                                        return <JobCard key={job?.id || i} job={job} />;
+                                        return <JobCard key={job?.id || i} job={job} onAppliedChange={handleJobAppliedChange} onBookmarkChange={handleJobBookmarkChange} />;
                                     })}
                                 </div>
                                 {isFetchingMore && (

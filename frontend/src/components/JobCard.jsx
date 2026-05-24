@@ -32,7 +32,7 @@ function formatPostedDate(dateString) {
     return `${Math.floor(diff / 30)} months ago`;
 }
 
-export default function JobCard({ job }) {
+export default function JobCard({ job, onAppliedChange, onBookmarkChange }) {
     const [hovered, setHovered] = useState(false);
 
     const {
@@ -46,6 +46,7 @@ export default function JobCard({ job }) {
         isApplied = false,
         isSaved = false,
         applicationStatus,
+        applyUrl,
     } = job || {};
 
     const companyLabel = companyName || company || 'Company';
@@ -79,10 +80,12 @@ export default function JobCard({ job }) {
                 await api.unsaveJob(id);
                 setSaved(false);
                 toast.success('Job removed from Saved');
+                if (onBookmarkChange) onBookmarkChange(id, false);
             } else {
                 await api.saveJob(id);
                 setSaved(true);
                 toast.success('Job saved!');
+                if (onBookmarkChange) onBookmarkChange(id, true);
             }
         } catch (err) {
             console.error(err);
@@ -104,11 +107,13 @@ export default function JobCard({ job }) {
                 setApplied(false);
                 setStatusState(null);
                 toast.success('Application withdrawn');
+                if (onAppliedChange) onAppliedChange(id, false);
             } else {
                 await api.updateJobStatus(id, 'APPLIED');
                 setApplied(true);
                 setStatusState('APPLIED');
                 toast.success('Marked as Applied!');
+                if (onAppliedChange) onAppliedChange(id, true);
             }
         } catch (err) {
             console.error(err);
@@ -138,6 +143,8 @@ export default function JobCard({ job }) {
                 setSaved(false);
                 setStatusState(null);
                 toast.success('Job reset (not saved, not applied)');
+                if (onAppliedChange) onAppliedChange(id, false);
+                if (onBookmarkChange) onBookmarkChange(id, false);
             } else if (newStatus === 'SAVED') {
                 if (!saved) {
                     await api.saveJob(id);
@@ -149,11 +156,14 @@ export default function JobCard({ job }) {
                 setSaved(true);
                 setStatusState(null);
                 toast.success('Job moved to Saved');
+                if (onAppliedChange) onAppliedChange(id, false);
+                if (onBookmarkChange) onBookmarkChange(id, true);
             } else {
                 await api.updateJobStatus(id, newStatus);
                 setApplied(true);
                 setStatusState(newStatus);
                 toast.success(`Job marked as ${newStatus.toLowerCase().replace('_', ' ')}`);
+                if (onAppliedChange) onAppliedChange(id, true);
             }
         } catch (err) {
             console.error(err);
@@ -450,35 +460,66 @@ export default function JobCard({ job }) {
                 )}
             </div>
 
-            {/* View Details CTA */}
-            <Link
-                to={`/jobs/${id}`}
-                style={{
-                    display: 'block',
-                    textAlign: 'center',
-                    marginTop: '12px',
-                    padding: '10px',
-                    borderRadius: '8px',
-                    background: 'var(--color-orange-dim)',
-                    border: '1px solid var(--color-orange-border)',
-                    color: 'var(--color-orange)',
-                    fontFamily: 'var(--font-display)',
-                    fontWeight: 700,
-                    fontSize: '13px',
-                    textDecoration: 'none',
-                    transition: 'background 0.2s, color 0.2s',
-                }}
-                onMouseEnter={e => {
-                    e.currentTarget.style.background = 'var(--color-orange)';
-                    e.currentTarget.style.color = '#000';
-                }}
-                onMouseLeave={e => {
-                    e.currentTarget.style.background = 'var(--color-orange-dim)';
-                    e.currentTarget.style.color = 'var(--color-orange)';
-                }}
-            >
-                View Details →
-            </Link>
+            {/* Bottom CTAs */}
+            <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                <Link
+                    to={`/jobs/${id}`}
+                    style={{
+                        flex: 1,
+                        textAlign: 'center',
+                        padding: '10px',
+                        borderRadius: '8px',
+                        background: 'transparent',
+                        border: '1px solid var(--color-border)',
+                        color: 'var(--color-white-65)',
+                        fontFamily: 'var(--font-display)',
+                        fontWeight: 700,
+                        fontSize: '13px',
+                        textDecoration: 'none',
+                        transition: 'all 0.2s',
+                    }}
+                    onMouseEnter={e => {
+                        e.currentTarget.style.borderColor = 'var(--color-white-40)';
+                        e.currentTarget.style.color = 'var(--color-white)';
+                    }}
+                    onMouseLeave={e => {
+                        e.currentTarget.style.borderColor = 'var(--color-border)';
+                        e.currentTarget.style.color = 'var(--color-white-65)';
+                    }}
+                >
+                    View Details
+                </Link>
+
+                {applyUrl && (
+                    <a
+                        href={applyUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                            flex: 1,
+                            textAlign: 'center',
+                            padding: '10px',
+                            borderRadius: '8px',
+                            background: 'var(--color-orange)',
+                            border: 'none',
+                            color: '#000',
+                            fontFamily: 'var(--font-display)',
+                            fontWeight: 700,
+                            fontSize: '13px',
+                            textDecoration: 'none',
+                            transition: 'background 0.2s',
+                        }}
+                        onMouseEnter={e => {
+                            e.currentTarget.style.background = 'var(--color-orange-hover)';
+                        }}
+                        onMouseLeave={e => {
+                            e.currentTarget.style.background = 'var(--color-orange)';
+                        }}
+                    >
+                        Apply
+                    </a>
+                )}
+            </div>
         </div>
     );
 }
