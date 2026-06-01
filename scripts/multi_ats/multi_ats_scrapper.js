@@ -62,6 +62,7 @@ async function run() {
             date_posted,
             is_remote: !!job.remote,
             department: job.department || null,
+            description: job.description || null,
             salary_min: 0,
             salary_max: 0,
         };
