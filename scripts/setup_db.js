@@ -44,6 +44,67 @@ async function setup() {
         `);
         console.log("✅ Indices created.");
 
+        // ---------- Relevance System Tables ----------
+        console.log("Creating Relevance System tables...");
+
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS job_skills (
+                job_id BIGINT NOT NULL,
+                skill VARCHAR(255) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+                PRIMARY KEY(job_id, skill),
+
+                CONSTRAINT fk_job_skills_job
+                FOREIGN KEY(job_id)
+                REFERENCES jobs(id) ON DELETE CASCADE
+            );
+        `);
+        
+        await client.query(`
+            CREATE INDEX IF NOT EXISTS idx_job_skills_skill ON job_skills(skill);
+            CREATE INDEX IF NOT EXISTS idx_job_skills_job ON job_skills(job_id);
+        `);
+
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS user_job_relevance (
+                user_id BIGINT NOT NULL,
+                job_id BIGINT NOT NULL,
+
+                score SMALLINT NOT NULL,
+                reasons JSONB,
+
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+                PRIMARY KEY(user_id, job_id),
+
+                FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY(job_id) REFERENCES jobs(id) ON DELETE CASCADE
+            );
+        `);
+        
+        await client.query(`
+            CREATE INDEX IF NOT EXISTS idx_relevance_user_score ON user_job_relevance(user_id, score DESC);
+            CREATE INDEX IF NOT EXISTS idx_relevance_job ON user_job_relevance(job_id);
+        `);
+
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS job_enrichment (
+                job_id BIGINT PRIMARY KEY,
+
+                extracted_skills JSONB,
+                role_family VARCHAR(100),
+                seniority VARCHAR(50),
+
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+                FOREIGN KEY(job_id) REFERENCES jobs(id) ON DELETE CASCADE
+            );
+        `);
+
+        console.log("✅ Relevance System tables created successfully.");
+
     } catch (err) {
         console.error("❌ Error setting up database:", err);
     } finally {

@@ -51,6 +51,7 @@ export default function JobPage() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [job, setJob] = useState(null);
+    const [skills, setSkills] = useState([]);
     const [loading, setLoading] = useState(true);
     const [saved, setSaved] = useState(false);
     const [applied, setApplied] = useState(false);
@@ -65,12 +66,18 @@ export default function JobPage() {
         (async () => {
             try {
                 setLoading(true);
-                const res = await api.getJobById(id);
-                const data = await res.json();
+                const [jobRes, skillsRes] = await Promise.all([
+                    api.getJobById(id),
+                    api.getJobSkills(id),
+                ]);
+                const data = await jobRes.json();
                 setJob(data);
                 setSaved(data.isSaved || false);
                 setApplied(data.isApplied || false);
                 setApplicationStatus(data.applicationStatus || null);
+                if (skillsRes.ok) {
+                    setSkills(await skillsRes.json());
+                }
             } catch (e) {
                 console.error(e);
             } finally {
@@ -458,32 +465,76 @@ export default function JobPage() {
                             </div>
 
                             {/* Skills */}
-                            {job.skills && job.skills.length > 0 && (
-                                <div style={card}>
-                                    <h2 style={{
-                                        fontFamily: 'var(--font-display)', fontWeight: 700,
-                                        fontSize: '16px', color: 'var(--color-white)',
-                                        margin: '0 0 16px', letterSpacing: '-0.01em',
-                                    }}>
-                                        Required Skills
-                                    </h2>
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                        {job.skills.map((skill, i) => (
-                                            <span key={i} style={{
-                                                fontFamily: 'var(--font-display)', fontWeight: 700,
-                                                fontSize: '11px', letterSpacing: '0.06em',
-                                                textTransform: 'uppercase',
-                                                background: 'var(--color-orange-dim)',
-                                                color: 'var(--color-orange)',
-                                                border: '1px solid var(--color-orange-border)',
-                                                padding: '5px 12px', borderRadius: '999px',
-                                            }}>
-                                                {skill}
-                                            </span>
-                                        ))}
+                            {skills.length > 0 && (() => {
+                                const SKILL_COLORS = {
+                                    'Required': {
+                                        bg: 'rgba(249,115,22,0.10)',
+                                        color: 'var(--color-orange)',
+                                        border: 'rgba(249,115,22,0.22)',
+                                    },
+                                    'Nice to Have': {
+                                        bg: 'rgba(59,130,246,0.10)',
+                                        color: '#60a5fa',
+                                        border: 'rgba(59,130,246,0.20)',
+                                    },
+                                };
+                                const fallbackColors = {
+                                    bg: 'var(--color-surface-3)',
+                                    color: 'var(--color-white-65)',
+                                    border: 'var(--color-border)',
+                                };
+
+                                const groups = skills.reduce((acc, s) => {
+                                    const key = s.category || '';
+                                    if (!acc[key]) acc[key] = [];
+                                    acc[key].push(s.skillName);
+                                    return acc;
+                                }, {});
+
+                                const groupEntries = Object.entries(groups);
+                                const hasCategories = groupEntries.some(([key]) => key !== '');
+
+                                return (
+                                    <div style={card}>
+                                        <h2 style={{
+                                            fontFamily: 'var(--font-display)', fontWeight: 700,
+                                            fontSize: '16px', color: 'var(--color-white)',
+                                            margin: '0 0 16px', letterSpacing: '-0.01em',
+                                        }}>
+                                            Skills
+                                        </h2>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                            {groupEntries.map(([category, names]) => {
+                                                const colors = SKILL_COLORS[category] || fallbackColors;
+                                                return (
+                                                    <div key={category || 'uncategorized'}>
+                                                        {hasCategories && category && (
+                                                            <div style={{ ...labelStyle, marginBottom: '10px' }}>
+                                                                {category}
+                                                            </div>
+                                                        )}
+                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                                            {names.map((name, i) => (
+                                                                <span key={i} style={{
+                                                                    fontFamily: 'var(--font-display)', fontWeight: 700,
+                                                                    fontSize: '11px', letterSpacing: '0.06em',
+                                                                    textTransform: 'uppercase',
+                                                                    background: colors.bg,
+                                                                    color: colors.color,
+                                                                    border: `1px solid ${colors.border}`,
+                                                                    padding: '5px 12px', borderRadius: '999px',
+                                                                }}>
+                                                                    {name}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                );
+                            })()}
                         </div>
 
                         {/* Right sidebar — job overview */}

@@ -130,6 +130,9 @@ export const api = {
     getJobById: (id) =>
         apiRequest(`/jobs/${id}`, { method: 'GET' }),
 
+    getJobSkills: (id) =>
+        apiRequest(`/jobs/${id}/skills`, { method: 'GET' }),
+
     searchJobs: (params) => {
         const query = new URLSearchParams(params).toString();
         return apiRequest(`/jobs/search?${query}`, { method: 'GET' });

@@ -6,6 +6,7 @@ import com.projects.JobTracker_Backend.repository.AppliedJobRepository;
 import com.projects.JobTracker_Backend.repository.FulltimeJobsRepository;
 import com.projects.JobTracker_Backend.repository.InternJobRepository;
 import com.projects.JobTracker_Backend.repository.JobRepository;
+import com.projects.JobTracker_Backend.repository.JobSkillsRepository;
 import com.projects.JobTracker_Backend.repository.SavedJobRepository;
 import com.projects.JobTracker_Backend.specification.JobSpecification;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class JobService {
     private final FulltimeJobsRepository fulltimeJobsRepository;
     private final SavedJobRepository savedJobRepository;
     private final AppliedJobRepository appliedJobRepository;
+    private final JobSkillsRepository jobSkillsRepository;
     private final PreferenceService preferenceService;
 
     // ================== PUBLIC ENDPOINTS ==================
@@ -116,15 +118,26 @@ public class JobService {
 
         // Check isActive if the entity supports it
         boolean isActive = true;
-        if (job instanceof Job) isActive = ((Job) job).getIsActive();
-        else if (job instanceof InternJobs) isActive = ((InternJobs) job).getIsActive();
-        else if (job instanceof FulltimeJobs) isActive = ((FulltimeJobs) job).getIsActive();
+        if (job instanceof Job)
+            isActive = ((Job) job).getIsActive();
+        else if (job instanceof InternJobs)
+            isActive = ((InternJobs) job).getIsActive();
+        else if (job instanceof FulltimeJobs)
+            isActive = ((FulltimeJobs) job).getIsActive();
 
         if (!isActive) {
             throw new RuntimeException("Job is not active");
         }
 
         return enrichJobWithUserData(job, user);
+    }
+
+    @Transactional(readOnly = true)
+    public List<JobSkillDTO> getJobSkills(Long jobId) {
+        return jobSkillsRepository.findByJobId(jobId)
+                .stream()
+                .map(JobSkillDTO::fromEntity)
+                .collect(Collectors.toList());
     }
 
     public Page<JobDTO> searchJobs(List<String> keywords, Pageable pageable, User user) {
@@ -142,15 +155,14 @@ public class JobService {
         }
 
         Specification<Job> spec = JobSpecification.filterJobs(
-                cleanedKeywords, null, null, null, null, null, null, null, null, null, null, null
-        );
+                cleanedKeywords, null, null, null, null, null, null, null, null, null, null, null);
 
         Page<Job> jobs = jobRepository.findAll(spec, pageable);
         return enrichJobsWithUserData(jobs, user);
     }
 
     public Page<JobDTO> searchJobsByCategory(List<String> keywords, Job.JobCategory category,
-                                             Pageable pageable, User user) {
+            Pageable pageable, User user) {
         if (keywords == null || keywords.isEmpty()) {
             return getJobsByCategory(category, pageable, user);
         }
@@ -165,8 +177,7 @@ public class JobService {
         }
 
         Specification<Job> spec = JobSpecification.filterJobs(
-                cleanedKeywords, List.of(category), null, null, null, null, null, null, null, null, null, null
-        );
+                cleanedKeywords, List.of(category), null, null, null, null, null, null, null, null, null, null);
 
         Page<Job> jobs = jobRepository.findAll(spec, pageable);
         return enrichJobsWithUserData(jobs, user);
@@ -186,27 +197,24 @@ public class JobService {
             List<String> positions,
             List<String> skills,
             Pageable pageable,
-            User user
-    ) {
+            User user) {
         Specification<Job> spec = JobSpecification.filterJobs(
                 keywords, categories, locations, employmentTypes, experienceLevels,
-                isRemote, minSalary, maxSalary, companies, sources, positions, skills
-        );
+                isRemote, minSalary, maxSalary, companies, sources, positions, skills);
 
         Page<Job> jobs = jobRepository.findAll(spec, pageable);
         return enrichJobsWithUserData(jobs, user);
     }
 
     public Page<JobDTO> getPreferredJobs(
-            String type, 
-            List<String> preferredCompanies, 
+            String type,
+            List<String> preferredCompanies,
             String position,
             String company,
             String locations,
             String skills,
-            Pageable pageable, 
-            User user
-    ) {
+            Pageable pageable,
+            User user) {
         if (preferredCompanies == null || preferredCompanies.isEmpty()) {
             return new PageImpl<>(Collections.emptyList(), pageable, 0);
         }
@@ -222,19 +230,21 @@ public class JobService {
 
         Specification<BaseJob> searchSpec = JobSpecification.filterJobs(
                 null, null, locList, null, null,
-                null, null, null, compList, null, posList, skillList
-        );
+                null, null, null, compList, null, posList, skillList);
 
         spec = spec.and(searchSpec);
 
         if ("intern".equalsIgnoreCase(type)) {
-            Page<InternJobs> jobs = internJobRepository.findAll(Specification.where((Specification<InternJobs>)(Specification<?>)spec), pageable);
+            Page<InternJobs> jobs = internJobRepository
+                    .findAll(Specification.where((Specification<InternJobs>) (Specification<?>) spec), pageable);
             return jobs.map(job -> enrichJobWithUserData(job, user));
         } else if ("fulltime".equalsIgnoreCase(type)) {
-            Page<FulltimeJobs> jobs = fulltimeJobsRepository.findAll(Specification.where((Specification<FulltimeJobs>)(Specification<?>)spec), pageable);
+            Page<FulltimeJobs> jobs = fulltimeJobsRepository
+                    .findAll(Specification.where((Specification<FulltimeJobs>) (Specification<?>) spec), pageable);
             return jobs.map(job -> enrichJobWithUserData(job, user));
         } else {
-            Page<Job> jobs = jobRepository.findAll(Specification.where((Specification<Job>)(Specification<?>)spec), pageable);
+            Page<Job> jobs = jobRepository.findAll(Specification.where((Specification<Job>) (Specification<?>) spec),
+                    pageable);
             return jobs.map(job -> enrichJobWithUserData(job, user));
         }
     }
@@ -242,19 +252,19 @@ public class JobService {
     // ================== SAVED JOBS ==================
 
     // = [NEW] helper for polymorphic entity class lookup
-   private Class<?> getJobEntityClass(BaseJob job) {
-    // Unwrap proxy to get the real entity class
-    BaseJob unproxied = (BaseJob) Hibernate.unproxy(job);
+    private Class<?> getJobEntityClass(BaseJob job) {
+        // Unwrap proxy to get the real entity class
+        BaseJob unproxied = (BaseJob) Hibernate.unproxy(job);
 
-    if (unproxied instanceof InternJobs) {
-        return InternJobs.class;
-    } else if (unproxied instanceof FulltimeJobs) {
-        return FulltimeJobs.class;
-    } else if (unproxied instanceof Job) {
-        return Job.class;
+        if (unproxied instanceof InternJobs) {
+            return InternJobs.class;
+        } else if (unproxied instanceof FulltimeJobs) {
+            return FulltimeJobs.class;
+        } else if (unproxied instanceof Job) {
+            return Job.class;
+        }
+        throw new IllegalArgumentException("Unknown job type: " + unproxied.getClass());
     }
-    throw new IllegalArgumentException("Unknown job type: " + unproxied.getClass());
-}
 
     @Transactional
     @Caching(evict = {
@@ -298,15 +308,19 @@ public class JobService {
         List<JobDTO> dtoList = savedJobs.getContent().stream()
                 .map(savedJob -> {
                     JobDTO dto = JobDTO.fromEntity(savedJob.getJob());
-                    if (dto == null) return null;
+                    if (dto == null)
+                        return null;
 
                     dto.setIsSaved(true);
 
-                    // Note: Since savedJob.getJob() could be of any type, we need to check its actual type for the application status lookup
+                    // Note: Since savedJob.getJob() could be of any type, we need to check its
+                    // actual type for the application status lookup
                     Class<?> jobClass = getJobEntityClass(savedJob.getJob());
-                    dto.setIsApplied(appliedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), savedJob.getJob().getId(), jobClass));
+                    dto.setIsApplied(appliedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(),
+                            savedJob.getJob().getId(), jobClass));
                     if (dto.getIsApplied()) {
-                        appliedJobRepository.findByUserIdAndJobIdAndJobType(user.getId(), savedJob.getJob().getId(), jobClass)
+                        appliedJobRepository
+                                .findByUserIdAndJobIdAndJobType(user.getId(), savedJob.getJob().getId(), jobClass)
                                 .ifPresent(applied -> {
                                     dto.setApplicationStatus(applied.getStatus().name());
                                     dto.setAppliedAt(applied.getAppliedAt());
@@ -345,7 +359,8 @@ public class JobService {
         BaseJob job = findAnyJobById(jobId);
 
         Class<?> jobClass = getJobEntityClass(job);
-        Optional<AppliedJob> existingApplication = appliedJobRepository.findByUserIdAndJobIdAndJobType(user.getId(), jobId, jobClass);
+        Optional<AppliedJob> existingApplication = appliedJobRepository.findByUserIdAndJobIdAndJobType(user.getId(),
+                jobId, jobClass);
 
         AppliedJob appliedJob;
         if (existingApplication.isPresent()) {
@@ -396,7 +411,8 @@ public class JobService {
     public AppliedStatusDTO getJobStatus(Long jobId, User user) {
         BaseJob job = findAnyJobById(jobId);
         Class<?> jobClass = getJobEntityClass(job);
-        Optional<AppliedJob> appliedJob = appliedJobRepository.findByUserIdAndJobIdAndJobType(user.getId(), jobId, jobClass);
+        Optional<AppliedJob> appliedJob = appliedJobRepository.findByUserIdAndJobIdAndJobType(user.getId(), jobId,
+                jobClass);
 
         if (appliedJob.isPresent()) {
             return AppliedStatusDTO.builder()
@@ -416,7 +432,7 @@ public class JobService {
     @Transactional(readOnly = true)
     @Cacheable(value = "appliedJobs", key = "#user.id + '-' + #pageable.pageNumber + '-' + #pageable.sort.toString() + '-' + (#statuses != null ? #statuses.toString() : 'all')")
     public Page<JobDTO> getAppliedJobs(List<AppliedJob.ApplicationStatus> statuses,
-                                       Pageable pageable, User user) {
+            Pageable pageable, User user) {
         Page<AppliedJob> appliedJobs;
 
         if (statuses != null && !statuses.isEmpty()) {
@@ -428,14 +444,16 @@ public class JobService {
         List<JobDTO> dtoList = appliedJobs.getContent().stream()
                 .map(appliedJob -> {
                     JobDTO dto = JobDTO.fromEntity(appliedJob.getJob());
-                    if (dto == null) return null;
+                    if (dto == null)
+                        return null;
 
                     dto.setIsApplied(true);
                     dto.setApplicationStatus(appliedJob.getStatus().name());
                     dto.setAppliedAt(appliedJob.getAppliedAt());
 
                     Class<?> jobClass = getJobEntityClass(appliedJob.getJob());
-                    dto.setIsSaved(savedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), appliedJob.getJob().getId(), jobClass));
+                    dto.setIsSaved(savedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(),
+                            appliedJob.getJob().getId(), jobClass));
                     return dto;
                 })
                 .filter(Objects::nonNull)
@@ -484,12 +502,14 @@ public class JobService {
 
     private JobDTO enrichJobWithUserData(BaseJob job, User user) {
         JobDTO dto = JobDTO.fromEntity(job);
-        if (dto == null) return null;
+        if (dto == null)
+            return null;
 
         if (user != null) {
             Class<?> jobClass = getJobEntityClass(job);
             dto.setIsSaved(savedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), job.getId(), jobClass));
-            dto.setIsApplied(appliedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), job.getId(), jobClass));
+            dto.setIsApplied(
+                    appliedJobRepository.existsByUserIdAndJobIdAndJobType(user.getId(), job.getId(), jobClass));
 
             if (dto.getIsApplied()) {
                 appliedJobRepository.findByUserIdAndJobIdAndJobType(user.getId(), job.getId(), jobClass)
@@ -505,6 +525,7 @@ public class JobService {
 
         return dto;
     }
+
     private BaseJob findAnyJobById(Long jobId) {
         return jobRepository.findById(jobId).map(j -> (BaseJob) j)
                 .orElseGet(() -> internJobRepository.findById(jobId).map(j -> (BaseJob) j)

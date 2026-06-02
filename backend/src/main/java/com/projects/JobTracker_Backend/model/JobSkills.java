@@ -5,38 +5,27 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "job_skills", indexes = {
-        @Index(name = "idx_job_skills_job_id", columnList = "job_id")
-})
+@Table(name = "job_skills")
+@IdClass(JobSkillsId.class)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class JobSkills {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "job_id", nullable = false)
+    private Long jobId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "job_id", nullable = false)
-    private Job job;
-
-    @Column(name = "skill_name", nullable = false)
-    private String skillName;
-
-    @Column(name = "category")
-    private String category; // e.g., "Required", "Nice to Have"
+    @Id
+    @Column(name = "skill", nullable = false)
+    private String skill;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
 }
