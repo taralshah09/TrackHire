@@ -58,6 +58,7 @@ export default function JobPage() {
     const [applicationStatus, setApplicationStatus] = useState(null);
     const [showDropdown, setShowDropdown] = useState(false);
     const [actionLoading, setActionLoading] = useState(false);
+    const [descExpanded, setDescExpanded] = useState(false);
     const dropdownRef = useRef(null);
 
     /* fetch ── */
@@ -456,12 +457,37 @@ export default function JobPage() {
                                 }}>
                                     Job Description
                                 </h2>
-                                <div style={{
-                                    fontFamily: 'var(--font-body)', fontSize: '14px', lineHeight: 1.8,
-                                    color: 'var(--color-white-65)', whiteSpace: 'pre-wrap',
-                                }}>
-                                    {job.description || 'No description provided.'}
-                                </div>
+                                {(() => {
+                                    const DESC_LIMIT = 500;
+                                    const desc = job.description || 'No description provided.';
+                                    const isLong = desc.length > DESC_LIMIT;
+                                    const displayed = isLong && !descExpanded
+                                        ? desc.slice(0, DESC_LIMIT) + '…'
+                                        : desc;
+                                    return (
+                                        <>
+                                            <div style={{
+                                                fontFamily: 'var(--font-body)', fontSize: '14px', lineHeight: 1.8,
+                                                color: 'var(--color-white-65)', whiteSpace: 'pre-wrap',
+                                            }}>
+                                                {displayed}
+                                            </div>
+                                            {isLong && (
+                                                <button
+                                                    onClick={() => setDescExpanded(e => !e)}
+                                                    style={{
+                                                        background: 'none', border: 'none', cursor: 'pointer',
+                                                        color: 'var(--color-orange)', fontSize: '13px',
+                                                        fontFamily: 'var(--font-body)', fontWeight: 600,
+                                                        marginTop: '12px', padding: 0,
+                                                    }}
+                                                >
+                                                    {descExpanded ? 'Read less' : 'Read more'}
+                                                </button>
+                                            )}
+                                        </>
+                                    );
+                                })()}
                             </div>
 
                             {/* Skills */}
