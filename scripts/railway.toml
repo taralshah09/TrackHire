@@ -1,7 +1,15 @@
+# ── Scheduler service ──────────────────────────────────────────────────────
+# Railway service: "scheduler"
+# Type: Cron job — triggered every 10 minutes by Railway cron
+# Cron expression: */10 * * * *
+# Root directory: scripts/
+# Config file: railway.toml  (this file)
+
 [build]
 builder = "NIXPACKS"
 buildCommand = "npm install"
 
 [deploy]
 startCommand = "node scheduler.js"
-restartPolicyType = "ALWAYS"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
