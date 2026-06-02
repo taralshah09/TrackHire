@@ -38,6 +38,59 @@ const GLOBAL_CSS = `
             linear-gradient(to bottom, rgba(6,6,8,0.2) 2px, transparent 2px);
         background-size: 64px 64px;
     }
+    
+    /* Custom Responsive Fixes */
+    @media (max-width: 860px) {
+        .kpi-section-container {
+            display: none !important;
+        }
+    }
+
+    @media (max-width: 900px) {
+        .problems-grid-container {
+            display: flex !important;
+            flex-direction: column !important;
+        }
+        .problems-right-grid {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 16px !important;
+        }
+        .problem-pipeline-box {
+            grid-column: span 2 !important;
+        }
+        .problem-box {
+            padding: 16px !important;
+            box-shadow: 6px 6px 0px 0px #060608 !important;
+        }
+        .problem-icon {
+            font-size: 32px !important;
+        }
+        .problem-title {
+            font-size: 16px !important;
+        }
+        .problem-desc {
+            font-size: 10px !important;
+        }
+    }
+    
+    @media (max-width: 420px) {
+        .problems-right-grid {
+            display: flex !important;
+            flex-direction: column !important;
+        }
+    }
+
+    .process-step-block {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+    }
+
+    .footer-weekly-sprint {
+        margin-top: -30px !important;
+    }
 `;
 
 function GlobalStyles() {
@@ -60,7 +113,7 @@ export default function NewLandingPage() {
         <div className="bg-surface text-brutalist-black font-body-lg overflow-x-hidden selection:bg-vibrant-orange selection:text-pure-white">
             <GlobalStyles />
             {/* TopNavBar */}
-            <nav style={{ "padding": "10px 25px" }} className="w-full sticky top-0 z-50 bg-surface border-b-4 border-brutalist-black px-8 md:px-12 lg:px-16">
+            <nav className="w-full sticky top-0 z-50 bg-surface border-b-4 border-brutalist-black px-4 md:px-8 lg:px-16 py-2 md:py-3">
                 <div className="w-full flex justify-between items-center py-6 gap-4">
                     {/* Brand */}
                     <Link to="/" className="font-headline-md text-headline-md uppercase tracking-tighter text-brutalist-black shrink-0">
@@ -115,22 +168,22 @@ export default function NewLandingPage() {
                 <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-pure-white/40 via-transparent to-pure-white/5"></div>
 
                 <div className="max-w-5xl mx-auto text-center relative z-10 w-full flex flex-col items-center mt-12">
-                    <h1 className="font-black text-[60px] md:text-[120px] uppercase leading-[0.85] mb-6 text-brutalist-black tracking-tighter text-center">
+                    <h1 className="font-black text-[48px] sm:text-[64px] md:text-[90px] lg:text-[120px] uppercase leading-[0.85] mb-4 md:mb-6 text-brutalist-black tracking-tighter text-center">
                         Stop Hunting.<br />Start Landing.
                     </h1>
-                    <p className="font-bold text-lg md:text-2xl mb-12 max-w-2xl mx-auto text-brutalist-black text-center">
+                    <p className="font-bold text-base md:text-2xl mb-8 md:mb-12 max-w-2xl mx-auto text-brutalist-black text-center px-4">
                         We watch every career page you care about, 24/7; so you apply first, every single time.
                     </p>
-                    <div className="mb-10 md:mb-0 flex flex-col md:flex-row gap-6 justify-center items-center w-full">
+                    <div className="mb-10 md:mb-0 flex flex-col md:flex-row gap-4 md:gap-6 justify-center items-center w-full px-4">
                         <Link
                             to="/jobs"
-                            className="w-full md:w-auto font-label-mono bg-vibrant-orange text-brutalist-black border-4 border-brutalist-black rounded-full px-16 py-6 brutalist-shadow active-btn text-center block uppercase font-black text-xl md:text-2xl transition-transform"
+                            className="w-full md:w-auto font-label-mono bg-vibrant-orange text-brutalist-black border-4 border-brutalist-black rounded-full px-8 py-4 md:px-16 md:py-6 brutalist-shadow active-btn text-center block uppercase font-black text-lg md:text-2xl transition-transform"
                         >
                             Browse Jobs
                         </Link>
                         <a
                             href="#features"
-                            className="w-full md:w-auto font-label-mono bg-brutalist-black text-pure-white border-4 border-brutalist-black rounded-full px-16 py-6 brutalist-shadow active-btn text-center block uppercase font-black text-xl md:text-2xl transition-transform"
+                            className="w-full md:w-auto font-label-mono bg-brutalist-black text-pure-white border-4 border-brutalist-black rounded-full px-8 py-4 md:px-16 md:py-6 brutalist-shadow active-btn text-center block uppercase font-black text-lg md:text-2xl transition-transform"
                         >
                             Learn More
                         </a>
@@ -138,7 +191,7 @@ export default function NewLandingPage() {
                 </div>
 
                 {/* KPI Cards Row — Stepped Brutalist Layout */}
-                <div className="relative z-10 mt-40 md:mt-56 w-full max-w-[1200px] mx-auto flex justify-center pb-16">
+                <div className="relative z-10 mt-40 md:mt-56 w-full max-w-[1200px] mx-auto flex justify-center pb-16 kpi-section-container">
 
                     {/* Left Orange Starburst */}
                     <div className="absolute left-0 md:left-12 bottom-4 md:bottom-12 z-30 sticker-rotate-neg pointer-events-none hidden md:block">
@@ -200,13 +253,13 @@ export default function NewLandingPage() {
 
             {/* Problem Section */}
             <section style={{ "padding": "25px 25px" }} className="py-24 px-4 md:px-8 bg-[#F4F4F4] border-t-[6px] border-brutalist-black overflow-hidden flex justify-center">
-                <div className="max-w-[1100px] w-full grid grid-cols-1 lg:grid-cols-2 gap-16 md:gap-24 items-center justify-items-center">
+                <div className="max-w-[1100px] w-full grid grid-cols-1 lg:grid-cols-2 gap-16 md:gap-24 items-center justify-items-center problems-grid-container">
 
                     {/* Left Column */}
                     <div className="relative flex flex-col items-center text-center w-full">
                         <div className="absolute -top-10 font-label-mono font-black text-sm bg-brutalist-black text-pure-white px-4 py-2 sticker-rotate-neg z-20 shadow-[4px_4px_0px_0px_#FF6B00]">PROBLEMS WE SOLVE</div>
 
-                        <h2 className="w-[100%] font-black text-[48px] md:text-[64px] uppercase mb-12 leading-[0.9] text-brutalist-black tracking-tighter text-center">
+                        <h2 className="w-[100%] font-black text-[36px] sm:text-[48px] md:text-[64px] uppercase mb-8 md:mb-12 leading-[0.9] text-brutalist-black tracking-tighter text-center">
                             Every Morning.<br />The Same Routine.
                         </h2>
 
@@ -230,28 +283,28 @@ export default function NewLandingPage() {
                     </div>
 
                     {/* Right Column */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10 w-full">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10 w-full problems-right-grid">
 
                         {/* Instant Alerts */}
-                        <div className="border-[5px] border-brutalist-black bg-pure-white p-8 md:p-10 flex flex-col aspect-square justify-center transition-transform hover:scale-[1.02]" style={{ boxShadow: '12px 12px 0px 0px #060608' }}>
+                        <div className="border-[5px] border-brutalist-black bg-pure-white p-8 md:p-10 flex flex-col aspect-square justify-center transition-transform hover:scale-[1.02] problem-box" style={{ boxShadow: '12px 12px 0px 0px #060608' }}>
                             <div className="flex flex-col items-center text-center gap-4">
-                                <span className="material-symbols-outlined text-[48px] md:text-[56px] text-brutalist-black">notifications_active</span>
-                                <h4 className="font-black text-2xl md:text-3xl mt-2">Instant Alerts</h4>
-                                <p className="font-label-mono font-bold text-sm mt-4 text-center">14 new matches in the last hour. Efficiency is key.</p>
+                                <span className="material-symbols-outlined text-[48px] md:text-[56px] text-brutalist-black problem-icon">notifications_active</span>
+                                <h4 className="font-black text-2xl md:text-3xl mt-2 problem-title">Instant Alerts</h4>
+                                <p className="font-label-mono font-bold text-sm mt-4 text-center problem-desc">14 new matches in the last hour. Efficiency is key.</p>
                             </div>
                         </div>
 
                         {/* Smart Match */}
-                        <div className="border-[5px] border-brutalist-black bg-vibrant-orange p-8 md:p-10 flex flex-col aspect-square justify-center text-pure-white transition-transform hover:scale-[1.02]" style={{ boxShadow: '12px 12px 0px 0px #060608' }}>
+                        <div className="border-[5px] border-brutalist-black bg-vibrant-orange p-8 md:p-10 flex flex-col aspect-square justify-center text-pure-white transition-transform hover:scale-[1.02] problem-box" style={{ boxShadow: '12px 12px 0px 0px #060608' }}>
                             <div className="flex flex-col items-center text-center gap-4">
-                                <span className="material-symbols-outlined text-[48px] md:text-[56px] text-pure-white">person_search</span>
-                                <h4 className="font-black text-2xl md:text-3xl text-pure-white mt-2">Smart Match</h4>
-                                <p className="font-label-mono font-bold text-sm mt-4 text-pure-white text-center">AI-driven sorting based on historical performance data.</p>
+                                <span className="material-symbols-outlined text-[48px] md:text-[56px] text-pure-white problem-icon">person_search</span>
+                                <h4 className="font-black text-2xl md:text-3xl text-pure-white mt-2 problem-title">Smart Match</h4>
+                                <p className="font-label-mono font-bold text-sm mt-4 text-pure-white text-center problem-desc">AI-driven sorting based on historical performance data.</p>
                             </div>
                         </div>
 
                         {/* Pipeline Health */}
-                        <div className="col-span-1 md:col-span-2 border-[5px] border-brutalist-black bg-brutalist-black text-pure-white p-8 md:p-10 relative overflow-hidden flex flex-col items-center" style={{ boxShadow: '12px 12px 0px 0px #060608' }}>
+                        <div className="col-span-1 md:col-span-2 border-[5px] border-brutalist-black bg-brutalist-black text-pure-white p-8 md:p-10 relative overflow-hidden flex flex-col items-center problem-box problem-pipeline-box" style={{ boxShadow: '12px 12px 0px 0px #060608' }}>
                             <div className="flex flex-col items-center text-center gap-4 mb-8">
                                 <div className="w-14 h-14 bg-vibrant-orange border-2 border-brutalist-black rounded-xl flex items-center justify-center shrink-0 shadow-[2px_2px_0px_0px_#FFFFFF]">
                                     <span className="material-symbols-outlined text-pure-white text-3xl">insights</span>
@@ -281,7 +334,7 @@ export default function NewLandingPage() {
                     <div className="flex flex-col md:flex-row justify-between items-start mb-12 gap-8">
                         <div>
                             <span className="font-label-mono font-black text-sm text-vibrant-orange mb-4 block uppercase">// Capabilities</span>
-                            <h2 className="font-black text-[48px] md:text-[64px] uppercase leading-[0.9] text-brutalist-black tracking-tighter max-w-2xl">
+                            <h2 className="font-black text-[36px] sm:text-[48px] md:text-[64px] uppercase leading-[0.9] text-brutalist-black tracking-tighter max-w-2xl">
                                 Everything you need to land faster.
                             </h2>
                         </div>
@@ -372,24 +425,24 @@ export default function NewLandingPage() {
                     <path d="M80,40 L90,50 L80,60" fill="none" stroke="black" strokeWidth="2"></path>
                 </svg>
                 <div className="max-w-7xl mx-auto w-full">
-                    <h2 className="font-headline-xl text-headline-xl uppercase mb-16">Process Section</h2>
+                    <h2 className="font-black text-[36px] sm:text-[48px] md:text-[64px] text-center md:text-left uppercase mb-12 md:mb-16">Process Section</h2>
                     <div className="mt-1 grid grid-cols-1 lg:grid-cols-3 gap-12 relative">
                         {/* Timeline Connectors for Desktop */}
                         <div className="hidden lg:block absolute top-12 left-0 w-full h-1 bg-vibrant-orange z-0"></div>
                         {/* Step 1 */}
-                        <div className="relative z-10 bg-surface">
+                        <div className="relative z-10 bg-surface process-step-block">
                             <div className="w-24 h-24 border-4 border-brutalist-black bg-pure-white text-display-lg flex items-center justify-center font-bold mb-8 brutalist-shadow">1.</div>
                             <h3 className="font-headline-md text-headline-md mb-4 uppercase">Get in 3 Minutes</h3>
                             <p className="font-body-lg text-body-lg text-secondary">No complex forms. Just drag and drop your data and let our parser handle the rest.</p>
                         </div>
                         {/* Step 2 */}
-                        <div className="relative z-10 bg-surface">
+                        <div className="relative z-10 bg-surface process-step-block">
                             <div className="w-24 h-24 border-4 border-brutalist-black bg-vibrant-orange text-pure-white text-display-lg flex items-center justify-center font-bold mb-8 brutalist-shadow sticker-rotate-pos">2.</div>
                             <h3 className="font-headline-md text-headline-md mb-4 uppercase">Auto-Apply</h3>
                             <p className="font-body-lg text-body-lg text-secondary">Our engine finds the best matching slots and queues your applications for approval.</p>
                         </div>
                         {/* Step 3 */}
-                        <div className="relative z-10 bg-surface">
+                        <div className="relative z-10 bg-surface process-step-block">
                             <div className="w-24 h-24 border-4 border-brutalist-black bg-brutalist-black text-pure-white text-display-lg flex items-center justify-center font-bold mb-8 brutalist-shadow-orange">3.</div>
                             <h3 className="font-headline-md text-headline-md mb-4 uppercase">Track Analytics</h3>
                             <h4 className="font-label-mono text-label-mono mb-4 text-vibrant-orange">BRUTALIST GRID PROCESS</h4>
@@ -454,26 +507,22 @@ export default function NewLandingPage() {
                     </div>
                     <div className="max-w-5xl mx-auto relative z-10 w-full flex flex-col items-center justify-center text-center">
                         <span className="font-label-mono text-label-mono uppercase mb-4 block text-center">// THE LAST STEP</span>
-                        <h2 className="font-headline-xl text-headline-xl md:text-[120px] uppercase leading-none mb-12 tracking-tighter text-center w-full">
+                        <h2 className="font-black text-[40px] sm:text-[60px] md:text-[90px] lg:text-[120px] uppercase leading-[0.9] mb-8 md:mb-12 tracking-tighter text-center w-full px-4">
                             MISS NOTHING.<br />APPLY SMARTER.
                         </h2>
-                        <div className="flex flex-col md:flex-row gap-8 justify-center items-center w-full">
+                        <div className="flex flex-col md:flex-row gap-4 md:gap-8 justify-center items-center w-full px-6">
                             <div className="relative w-full md:w-auto flex justify-center">
-                                <Link to="/login" className="w-full md:w-auto font-display-lg text-headline-md bg-vibrant-orange text-pure-white border-4 border-brutalist-black px-16 py-8 brutalist-shadow-lg active-btn block text-center">GET STARTED NOW</Link>
-                                {/* <svg className="absolute -left-12 top-0 w-16 h-16 hidden md:block" viewBox="0 0 100 100">
-                                    <path d="M90,50 Q50,90 10,50" fill="none" stroke="#FF6B00" strokeWidth="4"></path>
-                                    <path d="M20,60 L10,50 L20,40" fill="none" stroke="#FF6B00" strokeWidth="4"></path>
-                                    </svg> */}
+                                <Link to="/login" className="w-full md:w-auto font-black text-[20px] md:text-[32px] bg-vibrant-orange text-pure-white border-4 border-brutalist-black px-8 py-4 md:px-16 md:py-8 brutalist-shadow-lg active-btn block text-center">GET STARTED NOW</Link>
                             </div>
-                            <Link to="/meet-the-builder" className="w-full md:w-auto font-headline-md text-headline-md bg-pure-white text-brutalist-black border-4 border-brutalist-black px-16 py-8 brutalist-shadow active-btn block text-center">LEARN MORE</Link>
+                            <Link to="/meet-the-builder" className="w-full md:w-auto font-black text-[20px] md:text-[32px] bg-pure-white text-brutalist-black border-4 border-brutalist-black px-8 py-4 md:px-16 md:py-8 brutalist-shadow active-btn block text-center">LEARN MORE</Link>
                         </div>
                     </div>
                 </div>
             </section>
 
             {/* Footer */}
-            <footer className="w-full bg-brutalist-black text-pure-white border-t-4 border-brutalist-black min-h-[50vh] flex flex-col justify-center items-center">
-                <div className="max-w-7xl mx-auto py-block-gap px-grid-margin grid grid-cols-1 md:grid-cols-12 gap-12 w-full place-items-center text-center">
+            <footer className="w-full bg-brutalist-black text-pure-white border-t-4 border-brutalist-black py-16 flex flex-col justify-center items-center overflow-hidden">
+                <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16 grid grid-cols-1 md:grid-cols-12 gap-12 w-full place-items-center text-center">
                     <div className="md:col-span-5 flex flex-col items-center">
                         <div className="font-headline-xl text-headline-xl text-pure-white mb-6 text-center">TrackHire</div>
                         <p className="font-body-lg text-body-lg opacity-80 max-w-md mb-8 text-center">
@@ -489,7 +538,7 @@ export default function NewLandingPage() {
                             <a className="font-label-mono text-label-mono opacity-80 hover:opacity-100 hover:text-vibrant-orange transition-opacity" href="mailto:support@trackhire.com">Contact Us</a>
                         </nav>
                     </div>
-                    <div className="md:col-span-4 border-4 border-vibrant-orange p-8 sticker-rotate-pos flex flex-col items-center">
+                    <div className="md:col-span-4 border-4 border-vibrant-orange p-8 sticker-rotate-pos flex flex-col items-center footer-weekly-sprint">
                         <h4 className="font-headline-md text-headline-md mb-4 text-vibrant-orange text-center">Weekly Sprint</h4>
                         <p className="font-body-sm text-body-sm mb-6 opacity-80 text-center">Get the best job signals delivered every Monday morning. No spam, just high-quality leads.</p>
                         <div className="flex flex-col gap-4 w-full">
