@@ -192,27 +192,47 @@ function extractSkills(text) {
     return [...found];
 }
 
-// 🔗 Extract REAL apply URL from Adzuna redirect page
-async function getRealApplyUrl(redirectUrl) {
+// 🔗 Fetch Adzuna job page — extract real apply URL + full description
+async function getJobPageDetails(redirectUrl) {
     try {
         const res = await axios.get(redirectUrl, { timeout: 15000 });
         const $ = cheerio.load(res.data);
 
-        // Adzuna apply buttons vary — try multiple selectors
-        const link =
+        // Extract apply URL
+        const rawLink =
             $('a[data-qa="apply-button"]').attr("href") ||
             $('a.apply-button').attr("href") ||
             $('a:contains("Apply")').attr("href");
 
-        if (!link) return redirectUrl;
+        const applyUrl = !rawLink
+            ? redirectUrl
+            : rawLink.startsWith("http")
+                ? rawLink
+                : new URL(rawLink, redirectUrl).href;
 
-        if (link.startsWith("http")) return link;
+        // Extract full description — try known Adzuna selectors in order
+        const descSelectors = [
+            '[data-qa="job-description"]',
+            '.adp-body',
+            '[itemprop="description"]',
+            'section.job__description',
+            '.job__description',
+            'div.description',
+        ];
+        let fullDescription = null;
+        for (const sel of descSelectors) {
+            const el = $(sel);
+            if (el.length) {
+                fullDescription = el.text().trim().replace(/[ \t]+/g, ' ') || null;
+                if (fullDescription) break;
+            }
+        }
 
-        return new URL(link, redirectUrl).href;
+        return { applyUrl, fullDescription };
 
     } catch (err) {
-        console.error("Failed to extract apply URL:", redirectUrl);
-        return redirectUrl;
+        console.error("Failed to fetch job page:", redirectUrl);
+        return { applyUrl: redirectUrl, fullDescription: null };
     }
 }
 
@@ -285,8 +305,8 @@ async function run(cursorDate) {
 
                     console.log("➡️ Processing:", job.title);
 
-                    const applyUrl = await getRealApplyUrl(job.redirect_url);
-                    const description = job.description || "";
+                    const { applyUrl, fullDescription } = await getJobPageDetails(job.redirect_url);
+                    const description = fullDescription || job.description || "";
 
                     allJobs.push({
                         id: job.id,
