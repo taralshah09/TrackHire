@@ -1,153 +1,46 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import AppHeader from '../components/AppHeader';
 import JobCard from '../components/JobCard';
 import api from '../service/ApiService';
-import { FaBuilding, FaMapMarkerAlt, FaBriefcase, FaArrowRight, FaSearch, FaBolt } from 'react-icons/fa';
+import { FaBriefcase, FaArrowRight, FaSlidersH, FaSync } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 
-const JOB_TABS = [
-    { key: 'all', label: 'All' },
-    { key: 'intern', label: 'Intern' },
-    { key: 'fulltime', label: 'Full-Time' },
-];
-
 export default function PreferredJobsPage() {
-    const [jobs, setJobs] = useState([]);
+    const [feed, setFeed] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [isFetchingMore, setIsFetchingMore] = useState(false);
-    const [activeTab, setActiveTab] = useState('all');
-    const [page, setPage] = useState(0);
-    const [totalPages, setTotalPages] = useState(0);
-    const [totalElements, setTotalElements] = useState(0);
-    const [hasMore, setHasMore] = useState(false);
-    const [preferredCompanies, setPreferredCompanies] = useState([]);
+    const [error, setError] = useState(null);
 
-    // Search & Filter state
-    const [filters, setFilters] = useState({
-        position: '', company: '', skills: '', locations: '',
-    });
-    const [appliedFilters, setAppliedFilters] = useState({ ...filters });
-    const [inputFocus, setInputFocus] = useState('');
+    const loadFeed = async (signal) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const res = await api.getForYouFeed();
+            if (signal?.aborted) return;
+            const data = res.json ? await res.json() : res;
+            setFeed(Array.isArray(data) ? data : []);
+        } catch (e) {
+            if (e?.name === 'AbortError' || signal?.aborted) return;
+            console.error('Failed to fetch For You feed:', e);
+            setError('Failed to load your feed. Please try again.');
+        } finally {
+            if (!signal?.aborted) setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchPrefs = async () => {
-            try {
-                const res = await api.getPreferredCompanies();
-                const data = res.json ? await res.json() : res;
-                setPreferredCompanies(data || []);
-            } catch (e) {
-                console.error('Failed to fetch preferences:', e);
-            }
-        };
-        fetchPrefs();
+        const controller = new AbortController();
+        loadFeed(controller.signal);
+        return () => controller.abort();
     }, []);
 
-    const loadJobs = useCallback(async (pageToLoad, append = false) => {
-        if (append) setIsFetchingMore(true);
-        else setLoading(true);
-        try {
-            const params = {
-                type: activeTab,
-                page: pageToLoad,
-                size: 9,
-                ...appliedFilters
-            };
-
-            const response = await api.getPreferredJobs(params);
-            const data = response.json ? await response.json() : response;
-            const newJobs = data.content || [];
-
-            if (append) {
-                setJobs(prev => [...prev, ...newJobs]);
-            } else {
-                setJobs(newJobs);
-            }
-
-            setTotalPages(data.totalPages || 0);
-            setTotalElements(data.totalElements || 0);
-            setHasMore(pageToLoad < (data.totalPages || 0) - 1);
-            return data;
-        } catch (e) {
-            console.error('Failed to fetch preferred jobs:', e);
-        } finally {
-            setLoading(false);
-            setIsFetchingMore(false);
-        }
-    }, [activeTab, appliedFilters]);
-
-    useEffect(() => {
-        const fetchInitialSets = async () => {
-            const firstSet = await loadJobs(0, false);
-            if (firstSet && firstSet.totalPages > 1) {
-                await loadJobs(1, true);
-                setPage(1);
-            } else {
-                setPage(0);
-            }
-        };
-        fetchInitialSets();
-    }, [loadJobs]);
-
-    useEffect(() => {
-        if (page > 1) {
-            loadJobs(page, true);
-        }
-    }, [page, loadJobs]);
-
-    const observer = useRef();
-    const lastJobElementRef = useCallback(node => {
-        if (loading || isFetchingMore) return;
-        if (observer.current) observer.current.disconnect();
-        observer.current = new IntersectionObserver(entries => {
-            if (entries[0].isIntersecting && hasMore) {
-                setPage(prevPage => prevPage + 1);
-            }
-        });
-        if (node) observer.current.observe(node);
-    }, [loading, isFetchingMore, hasMore]);
-
-    const handleTabChange = (tabKey) => {
-        setActiveTab(tabKey);
-        setPage(0);
-    };
-
-    const handlePageChange = (newPage) => {
-        if (newPage >= 0 && newPage < totalPages) setPage(newPage);
-    };
-
-    const handleSearch = () => {
-        setAppliedFilters({ ...filters });
-        setPage(0);
-    };
-
-    const inputStyle = (name) => ({
-        width: '100%',
-        padding: '10px 14px 10px 36px',
-        background: 'var(--color-surface-3)',
-        border: `1px solid ${inputFocus === name ? 'var(--color-orange)' : 'var(--color-border)'}`,
-        borderRadius: '8px',
-        color: 'var(--color-white)',
-        fontFamily: 'var(--font-body)', fontSize: '14px',
-        outline: 'none',
-        boxShadow: inputFocus === name ? '0 0 0 3px rgba(249,115,22,0.15)' : 'none',
-        transition: 'border-color 0.2s, box-shadow 0.2s',
-        boxSizing: 'border-box',
-    });
-
-    const SEARCH_FIELDS = [
-        { key: 'position', icon: <FaSearch />, placeholder: 'Job title, skill, or company...' },
-        { key: 'company', icon: <FaBuilding />, placeholder: 'Company name...' },
-        { key: 'skills', icon: <FaBolt />, placeholder: 'Skills or keywords...' },
-        { key: 'locations', icon: <FaMapMarkerAlt />, placeholder: 'Location (e.g. Remote)' },
-    ];
+    const hasPreferences = feed.length > 0;
 
     return (
         <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
             <style>{`
                 @media (max-width: 768px) {
-                    .jobs-search-grid { grid-template-columns: 1fr !important; }
-                    .jobs-grid { grid-template-columns: 1fr !important; }
+                    .foryou-grid { grid-template-columns: 1fr !important; }
                 }
             `}</style>
             <Sidebar />
@@ -155,187 +48,204 @@ export default function PreferredJobsPage() {
             <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                 <AppHeader left={
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)' }}>
-                        <span>Preferred Jobs</span>
+                        <span>For You</span>
                     </div>
                 } />
 
                 <div style={{ flex: 1, overflowY: 'auto' }}>
-                    <div className="jobs-main-inner" style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px' }}>
+                    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px' }}>
 
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+                        {/* Page header */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
                             <div>
                                 <h1 style={{
                                     fontFamily: 'var(--font-display)', fontWeight: 800,
                                     fontSize: 'clamp(24px, 3vw, 36px)', letterSpacing: '-0.025em',
-                                    color: 'var(--color-white)', margin: 0,
-                                }}>Your Personalized Feed</h1>
-                                <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--color-white-40)', marginTop: '4px' }}>
-                                    Showing exclusive jobs from your preferred companies.
+                                    color: 'var(--color-white)', margin: '0 0 6px',
+                                }}>
+                                    For You
+                                </h1>
+                                <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--color-white-40)', margin: 0 }}>
+                                    {loading
+                                        ? 'Loading your personalised feed…'
+                                        : feed.length > 0
+                                            ? `${feed.length} jobs matched to your skills, titles & preferences — ranked by fit.`
+                                            : 'Jobs ranked by how well they match your profile.'}
                                 </p>
                             </div>
-                            <Link
-                                to="/company-preferences"
-                                style={{
-                                    display: 'flex', alignItems: 'center', gap: '8px',
-                                    padding: '10px 16px', borderRadius: '8px',
-                                    background: 'var(--color-surface-2)', border: '1px solid var(--color-border)',
-                                    color: 'var(--color-white-65)', textDecoration: 'none',
-                                    fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '13px',
-                                    transition: 'all 0.2s'
-                                }}
-                                onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-white-40)'}
-                                onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-border)'}
-                            >
-                                <FaBuilding /> Edit Preferences
-                            </Link>
+
+                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                <button
+                                    onClick={() => loadFeed()}
+                                    disabled={loading}
+                                    style={{
+                                        display: 'flex', alignItems: 'center', gap: '8px',
+                                        padding: '10px 16px', borderRadius: '8px',
+                                        background: 'var(--color-surface-2)', border: '1px solid var(--color-border)',
+                                        color: 'var(--color-white-65)', cursor: 'pointer',
+                                        fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '13px',
+                                        transition: 'all 0.2s', opacity: loading ? 0.5 : 1,
+                                    }}
+                                    onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-white-40)'}
+                                    onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-border)'}
+                                >
+                                    <FaSync style={{ fontSize: '11px' }} /> Refresh
+                                </button>
+                                <Link
+                                    to="/profile"
+                                    style={{
+                                        display: 'flex', alignItems: 'center', gap: '8px',
+                                        padding: '10px 16px', borderRadius: '8px',
+                                        background: 'var(--color-surface-2)', border: '1px solid var(--color-border)',
+                                        color: 'var(--color-white-65)', textDecoration: 'none',
+                                        fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '13px',
+                                        transition: 'all 0.2s',
+                                    }}
+                                    onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-white-40)'}
+                                    onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-border)'}
+                                >
+                                    <FaSlidersH style={{ fontSize: '11px' }} /> Edit Preferences
+                                </Link>
+                            </div>
                         </div>
 
-                        {/* Preferred Companies Chips */}
-                        {preferredCompanies.length > 0 && (
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '24px' }}>
-                                <span style={{ color: 'var(--color-white-40)', fontSize: '13px', alignSelf: 'center', marginRight: '8px' }}>Filtering by:</span>
-                                {preferredCompanies.map(company => (
-                                    <span key={company} style={{
-                                        padding: '4px 12px', borderRadius: '20px',
-                                        background: 'rgba(249, 115, 22, 0.1)', border: '1px solid rgba(249, 115, 22, 0.2)',
-                                        color: 'var(--color-orange)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase'
-                                    }}>
-                                        {company}
-                                    </span>
+                        {/* Loading skeleton */}
+                        {loading && (
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
+                                gap: '20px',
+                            }}>
+                                {Array.from({ length: 6 }).map((_, i) => (
+                                    <div key={i} style={{
+                                        height: '280px', borderRadius: '14px',
+                                        background: 'var(--color-surface-2)',
+                                        border: '1px solid var(--color-border)',
+                                        animation: 'pulse 1.5s ease-in-out infinite',
+                                    }} />
                                 ))}
                             </div>
                         )}
 
-                        {/* Segmented Tabs */}
-                        <div style={{
-                            display: 'flex', alignItems: 'center', gap: '6px',
-                            padding: '4px', background: 'var(--color-surface-2)',
-                            border: '1px solid var(--color-border)', borderRadius: '12px',
-                            marginBottom: '24px', width: 'fit-content',
-                        }}>
-                            {JOB_TABS.map(tab => {
-                                const isActive = activeTab === tab.key;
-                                return (
-                                    <button
-                                        key={tab.key}
-                                        onClick={() => handleTabChange(tab.key)}
-                                        style={{
-                                            padding: '9px 18px', border: 'none', borderRadius: '8px',
-                                            cursor: 'pointer', fontFamily: 'var(--font-display)',
-                                            fontWeight: isActive ? 700 : 500, fontSize: '13px',
-                                            color: isActive ? '#000' : 'var(--color-white-65)',
-                                            background: isActive ? 'var(--color-orange)' : 'transparent',
-                                            transition: 'all 0.25s'
-                                        }}
-                                    >
-                                        {tab.label}
-                                    </button>
-                                );
-                            })}
-                        </div>
-
-                        {/* Search bar */}
-                        <div style={{
-                            background: 'var(--color-surface-2)',
-                            border: '1px solid var(--color-border)',
-                            borderRadius: '14px',
-                            padding: '20px',
-                            marginBottom: '32px',
-                        }}>
-                            <div
-                                className="jobs-search-grid"
-                                style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: '1fr 1fr',
-                                    gap: '10px',
-                                    marginBottom: '12px',
-                                }}
-                            >
-                                {SEARCH_FIELDS.map(({ key, icon, placeholder }) => (
-                                    <div key={key} style={{ position: 'relative' }}>
-                                        <span style={{
-                                            position: 'absolute', left: '10px', top: '50%',
-                                            transform: 'translateY(-50%)',
-                                            fontSize: '14px', pointerEvents: 'none',
-                                            color: inputFocus === key ? 'var(--color-orange)' : 'var(--color-white-40)',
-                                            transition: 'color 0.2s',
-                                        }}>{icon}</span>
-                                        <input
-                                            type="text"
-                                            placeholder={placeholder}
-                                            value={filters[key]}
-                                            onChange={e => setFilters(prev => ({ ...prev, [key]: e.target.value }))}
-                                            onFocus={() => setInputFocus(key)}
-                                            onBlur={() => setInputFocus('')}
-                                            onKeyDown={e => e.key === 'Enter' && handleSearch()}
-                                            style={inputStyle(key)}
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-
-                            <button
-                                onClick={handleSearch}
-                                style={{
-                                    width: '100%',
-                                    background: 'var(--color-orange)',
-                                    border: 'none', borderRadius: '8px',
-                                    color: '#000',
-                                    fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '14px',
-                                    padding: '11px 24px', cursor: 'pointer',
-                                    transition: 'background 0.2s, transform 0.15s',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                                }}
-                                onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-orange-hover)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-                                onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-orange)'; e.currentTarget.style.transform = 'translateY(0)'; }}
-                            >
-                                <FaSearch style={{ fontSize: '13px' }} /> Search Preferred Jobs
-                            </button>
-                        </div>
-
-                        {/* Job grid */}
-                        {loading ? (
-                            <div style={{ textAlign: 'center', padding: '64px', color: 'var(--color-white-40)', fontFamily: 'var(--font-body)', fontSize: '15px' }}>
-                                Loading prioritized jobs…
-                            </div>
-                        ) : jobs.length === 0 ? (
+                        {/* Error state */}
+                        {!loading && error && (
                             <div style={{
                                 textAlign: 'center', padding: '80px 32px',
                                 background: 'var(--color-surface-1)', borderRadius: '24px',
-                                border: '1px dashed var(--color-border)'
+                                border: '1px dashed var(--color-border)',
                             }}>
-                                <FaBriefcase size={40} style={{ color: 'var(--color-white-10)', marginBottom: '16px' }} />
-                                <h3 style={{ fontFamily: 'var(--font-display)', color: 'var(--color-white)', marginBottom: '8px' }}>No jobs found</h3>
-                                <p style={{ fontFamily: 'var(--font-body)', fontSize: '15px', color: 'var(--color-white-40)', maxWidth: '400px', margin: '0 auto 24px' }}>
-                                    {preferredCompanies.length === 0
-                                        ? "You haven't selected any preferred companies yet."
-                                        : "We couldn't find any jobs matching your preferences and search filters."}
+                                <p style={{ fontFamily: 'var(--font-body)', color: 'var(--color-white-40)', marginBottom: '16px' }}>
+                                    {error}
                                 </p>
-                                <Link to="/company-preferences" style={{ color: 'var(--color-orange)', textDecoration: 'none', fontWeight: 600 }}>
-                                    Adjust Preferences <FaArrowRight size={10} />
-                                </Link>
-                            </div>
-                        ) : (
-                            <>
-                                <div
-                                    style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px', marginBottom: '32px' }}
+                                <button
+                                    onClick={loadFeed}
+                                    style={{
+                                        padding: '10px 24px', borderRadius: '8px',
+                                        background: 'var(--color-orange)', border: 'none',
+                                        color: '#000', fontFamily: 'var(--font-display)',
+                                        fontWeight: 700, fontSize: '13px', cursor: 'pointer',
+                                    }}
                                 >
-                                    {jobs.map((job, i) => {
-                                        if (jobs.length === i + 1) {
-                                            return <div ref={lastJobElementRef} key={job.id || i}><JobCard job={job} /></div>;
-                                        }
-                                        return <JobCard key={job.id || i} job={job} />;
-                                    })}
-                                </div>
-                                {isFetchingMore && (
-                                    <div style={{ textAlign: 'center', padding: '24px', color: 'var(--color-white-40)', fontFamily: 'var(--font-body)', fontSize: '14px' }}>
-                                        Loading more jobs…
-                                    </div>
-                                )}
-                            </>
+                                    Try Again
+                                </button>
+                            </div>
                         )}
 
-                        {/* Pagination removed */}
+                        {/* Empty state */}
+                        {!loading && !error && feed.length === 0 && (
+                            <div style={{
+                                textAlign: 'center', padding: '80px 32px',
+                                background: 'var(--color-surface-1)', borderRadius: '24px',
+                                border: '1px dashed var(--color-border)',
+                            }}>
+                                <FaBriefcase size={40} style={{ color: 'var(--color-white-20)', marginBottom: '16px' }} />
+                                <h3 style={{ fontFamily: 'var(--font-display)', color: 'var(--color-white)', marginBottom: '8px', fontSize: '20px' }}>
+                                    Your feed is being prepared
+                                </h3>
+                                <p style={{
+                                    fontFamily: 'var(--font-body)', fontSize: '15px',
+                                    color: 'var(--color-white-40)', maxWidth: '440px',
+                                    margin: '0 auto 24px', lineHeight: 1.6,
+                                }}>
+                                    Add your skills, preferred job titles, and preferred companies to your profile.
+                                    We'll rank matching jobs and show them here.
+                                </p>
+                                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                                    <Link
+                                        to="/profile"
+                                        style={{
+                                            display: 'inline-flex', alignItems: 'center', gap: '8px',
+                                            padding: '11px 22px', borderRadius: '8px',
+                                            background: 'var(--color-orange)', color: '#000',
+                                            textDecoration: 'none', fontFamily: 'var(--font-display)',
+                                            fontWeight: 700, fontSize: '13px',
+                                        }}
+                                    >
+                                        Set up preferences <FaArrowRight size={11} />
+                                    </Link>
+                                    <Link
+                                        to="/jobs"
+                                        style={{
+                                            display: 'inline-flex', alignItems: 'center', gap: '8px',
+                                            padding: '11px 22px', borderRadius: '8px',
+                                            background: 'var(--color-surface-2)', color: 'var(--color-white-65)',
+                                            textDecoration: 'none', fontFamily: 'var(--font-display)',
+                                            fontWeight: 700, fontSize: '13px',
+                                            border: '1px solid var(--color-border)',
+                                        }}
+                                    >
+                                        Browse all jobs
+                                    </Link>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Feed grid */}
+                        {!loading && !error && feed.length > 0 && (
+                            <div
+                                className="foryou-grid"
+                                style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
+                                    gap: '20px',
+                                }}
+                            >
+                                {feed.map((item) => (
+                                    <JobCard
+                                        key={item.job?.id}
+                                        job={item.job}
+                                        score={item.score}
+                                        reasons={item.reasons}
+                                    />
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Legend */}
+                        {!loading && feed.length > 0 && (
+                            <div style={{
+                                marginTop: '40px', padding: '16px 20px',
+                                background: 'var(--color-surface-1)',
+                                border: '1px solid var(--color-border)',
+                                borderRadius: '12px',
+                                display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center',
+                            }}>
+                                <span style={{ fontFamily: 'var(--font-display)', fontSize: '11px', fontWeight: 700, color: 'var(--color-white-40)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Match score</span>
+                                {[
+                                    { label: '70–100%', color: '#22c55e', desc: 'Strong match' },
+                                    { label: '50–69%', color: 'var(--color-orange)', desc: 'Good match' },
+                                    { label: '40–49%', color: '#94a3b8', desc: 'Partial match' },
+                                ].map(({ label, color, desc }) => (
+                                    <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: color }} />
+                                        <span style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--color-white-40)' }}>
+                                            <span style={{ color: 'var(--color-white-65)', fontWeight: 600 }}>{label}</span> — {desc}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
                     </div>
                 </div>
             </main>

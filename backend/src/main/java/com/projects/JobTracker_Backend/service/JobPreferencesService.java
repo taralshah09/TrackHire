@@ -8,17 +8,21 @@ import com.projects.JobTracker_Backend.model.UserJobPreferences;
 import com.projects.JobTracker_Backend.repository.UserJobPreferencesRepository;
 import com.projects.JobTracker_Backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class JobPreferencesService {
 
     private final UserJobPreferencesRepository preferencesRepository;
     private final UserRepository userRepository;
+    private final JdbcTemplate jdbcTemplate;
 
     /**
      * GET preferences for a user. Returns a default empty preferences object
@@ -64,7 +68,20 @@ public class JobPreferencesService {
         }
 
         UserJobPreferences saved = preferencesRepository.save(prefs);
+        triggerRelevanceRebuild(userId);
         return toDTO(saved);
+    }
+
+    private void triggerRelevanceRebuild(Long userId) {
+        try {
+            jdbcTemplate.queryForObject(
+                "SELECT pg_notify('user_relevance_rebuild', ?)",
+                String.class,
+                "{\"userId\":" + userId + "}"
+            );
+        } catch (Exception e) {
+            log.warn("Failed to notify relevance rebuild for user {}: {}", userId, e.getMessage());
+        }
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────

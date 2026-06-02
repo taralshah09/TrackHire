@@ -12,11 +12,11 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "fulltime_jobs", indexes = {
-        @Index(name = "idx_category_active_posted", columnList = "job_category, is_active, posted_at"),
-        @Index(name = "idx_active_posted", columnList = "is_active, posted_at"),
-        @Index(name = "idx_company", columnList = "company"),
-        @Index(name = "idx_location", columnList = "location"),
-        @Index(name = "idx_employment_type", columnList = "employment_type")
+        @Index(name = "idx_ft_category_active_posted", columnList = "job_category, is_active, posted_at"),
+        @Index(name = "idx_ft_active_posted", columnList = "is_active, posted_at"),
+        @Index(name = "idx_ft_company", columnList = "company"),
+        @Index(name = "idx_ft_location", columnList = "location"),
+        @Index(name = "idx_ft_employment_type", columnList = "employment_type")
 })
 @Data
 @NoArgsConstructor

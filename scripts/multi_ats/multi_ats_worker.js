@@ -7,6 +7,7 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const { REDIS_CONFIG, QUEUE_NAME } = require("./multi_ats_queue");
 const { upsertSingleJob, closeWorkerPool } = require("./multi_ats_load_to_db");
+const { enqueueSkillExtraction } = require("./skill_extraction_queue");
 
 // Source-specific CSS selectors for description content
 const SELECTORS = {
@@ -100,11 +101,15 @@ const worker = new Worker(
             description = await scrapeDescription(url, ats);
         }
 
-        await upsertSingleJob({
+        const jobId = await upsertSingleJob({
             ...job.data,
             apply_url: url,
             description,
         });
+
+        if (jobId) {
+            await enqueueSkillExtraction(jobId);
+        }
 
         return { scraped: description !== null };
     },

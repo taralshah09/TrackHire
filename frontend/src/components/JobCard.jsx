@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { FaMapMarkerAlt, FaBriefcase, FaBookmark, FaRegBookmark, FaCheck, FaChevronDown } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
 import api from '../service/ApiService';
+import MatchBadge from './MatchBadge';
 
 /* Brand-accurate status badge styles per guidelines */
 const STATUS_STYLES = {
@@ -32,7 +33,7 @@ function formatPostedDate(dateString) {
     return `${Math.floor(diff / 30)} months ago`;
 }
 
-export default function JobCard({ job, onAppliedChange, onBookmarkChange }) {
+export default function JobCard({ job, onAppliedChange, onBookmarkChange, score, reasons }) {
     const [hovered, setHovered] = useState(false);
 
     const {
@@ -227,6 +228,9 @@ export default function JobCard({ job, onAppliedChange, onBookmarkChange }) {
                     Prioritized
                 </div>
             )}
+            {/* Match badge — only rendered in the For You feed */}
+            {score != null && <MatchBadge score={score} reasons={reasons} />}
+
             {/* Top row: company initial + bookmark button */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                 <div style={{

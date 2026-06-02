@@ -4,40 +4,52 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "user_job_relevance", indexes = {
-        @Index(name = "idx_user_job_rel_user", columnList = "user_id"),
-        @Index(name = "idx_user_job_rel_job", columnList = "job_id")
-})
+@Table(
+    name = "user_job_relevance",
+    indexes = {
+        @Index(name = "idx_relevance_user_score", columnList = "user_id, score DESC"),
+        @Index(name = "idx_relevance_job",        columnList = "job_id")
+    }
+)
+@IdClass(UserJobRelevanceId.class)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserJobRelevance {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
+    @Id
+    @Column(name = "job_id", nullable = false)
+    private Long jobId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "job_id", nullable = false)
+    @JoinColumn(name = "job_id", insertable = false, updatable = false)
     private Job job;
 
-    @Column(name = "relevance_score", precision = 5, scale = 2)
-    private BigDecimal relevanceScore;
+    @Column(name = "score", nullable = false)
+    private Short score;
 
-    @Column(name = "match_details", columnDefinition = "jsonb")
-    private String matchDetails;
+    @Column(name = "reasons", columnDefinition = "jsonb")
+    private String reasons;
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
 
     @UpdateTimestamp
-    @Column(name = "last_calculated_at")
-    private LocalDateTime lastCalculatedAt;
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }

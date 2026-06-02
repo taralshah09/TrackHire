@@ -5,6 +5,7 @@ import com.projects.JobTracker_Backend.model.AppliedJob;
 import com.projects.JobTracker_Backend.model.FulltimeJobs;
 import com.projects.JobTracker_Backend.model.InternJobs;
 import com.projects.JobTracker_Backend.model.Job;
+import com.projects.JobTracker_Backend.service.ForYouService;
 import com.projects.JobTracker_Backend.service.FulltimeJobsService;
 import com.projects.JobTracker_Backend.service.InternJobsService;
 import com.projects.JobTracker_Backend.service.JobService;
@@ -31,6 +32,7 @@ public class JobController {
     private final JobService jobService;
     private final InternJobsService internJobsService;
     private final FulltimeJobsService fulltimeJobsService;
+    private final ForYouService forYouService;
     private final SecurityUtil securityUtil;
 
     // ================== JOB BROWSING ==================
@@ -278,6 +280,20 @@ public class JobController {
     @GetMapping("/filter/counts")
     public ResponseEntity<Map<String, Long>> getEmploymentTypeCounts() {
         return ResponseEntity.ok(jobService.getEmploymentTypeCounts());
+    }
+
+    // ================== FOR YOU FEED ==================
+
+    /**
+     * GET /api/jobs/for-you
+     * Returns up to 50 precomputed relevance-ranked jobs for the authenticated user.
+     * No scoring at request time — reads directly from user_job_relevance.
+     */
+    @GetMapping("/for-you")
+    public ResponseEntity<List<ForYouJobDTO>> getForYouFeed() {
+        Long userId = securityUtil.getCurrentUserId();
+        List<ForYouJobDTO> feed = forYouService.getForYouFeed(userId);
+        return ResponseEntity.ok(feed);
     }
 
     // ================== SAVED JOBS ==================

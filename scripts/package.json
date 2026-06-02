@@ -5,7 +5,12 @@
   "main": "script.js",
   "scripts": {
     "start": "node scheduler.js",
-    "worker": "node multi_ats/multi_ats_worker.js",
+    "worker": "node combined_worker.js",
+    "worker:description": "node multi_ats/multi_ats_worker.js",
+    "worker:skills": "node multi_ats/skill_extraction_worker.js",
+    "worker:relevance": "node multi_ats/job_relevance_worker.js",
+    "worker:rebuild": "node multi_ats/user_rebuild_worker.js",
+    "listener": "node preference_change_listener.js",
     "postinstall": "npx puppeteer browsers install chrome",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
