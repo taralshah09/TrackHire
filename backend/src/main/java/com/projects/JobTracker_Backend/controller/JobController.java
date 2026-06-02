@@ -263,6 +263,15 @@ public class JobController {
     }
 
     /**
+     * GET /api/jobs/{jobId}/skills
+     * Get skills required for a job
+     */
+    @GetMapping("/{jobId}/skills")
+    public ResponseEntity<List<JobSkillDTO>> getJobSkills(@PathVariable Long jobId) {
+        return ResponseEntity.ok(jobService.getJobSkills(jobId));
+    }
+
+    /**
      * GET /api/jobs/filter/counts
      * Get job counts by employment type (for tab badges)
      */

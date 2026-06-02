@@ -92,12 +92,14 @@ async function scrapeDescription(url, atsType) {
 const worker = new Worker(
     QUEUE_NAME,
     async (job) => {
-        const { url, ats, title, company } = job.data;
+        const { url, ats, title, company, description: existingDescription } = job.data;
         console.log(`🔍  [${ats}] ${title} @ ${company}`);
 
-        const description = await scrapeDescription(url, ats);
+        let description = existingDescription || null;
+        if (!description) {
+            description = await scrapeDescription(url, ats);
+        }
 
-        // Atomic: upsert only after description is resolved (null on definitive failure)
         await upsertSingleJob({
             ...job.data,
             apply_url: url,

@@ -18,7 +18,8 @@ const DB_CONFIG = {
     max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
-    ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false
+    ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
+    options: `-c search_path=${DB_SCHEMA}`,
 };
 
 const BATCH_SIZE = 500;

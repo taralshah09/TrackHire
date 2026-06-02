@@ -39,21 +39,12 @@ const CONFIG = {
 const COMPANIES = [
     // ── ASHBY ──────────────────────────────────────────────────────────────────
     { name: "Notion", ats: "ashby", slug: "notion" },
-    { name: "Loom", ats: "ashby", slug: "loom" },
-    { name: "Retool", ats: "ashby", slug: "retool" },
     { name: "Linear", ats: "ashby", slug: "linear" },
     { name: "Vercel", ats: "ashby", slug: "vercel" },
-    { name: "Rippling", ats: "ashby", slug: "rippling" },
-    { name: "Scale AI", ats: "ashby", slug: "scaleai" },
     { name: "Runway", ats: "ashby", slug: "runway" },
-    { name: "Perplexity", ats: "ashby", slug: "perplexityai" },
     { name: "ElevenLabs", ats: "ashby", slug: "elevenlabs" },
     { name: "Cohere", ats: "ashby", slug: "cohere" },
     { name: "Warp", ats: "ashby", slug: "warp" },
-    { name: "Cursor", ats: "ashby", slug: "anysphere" },
-    { name: "Glean", ats: "ashby", slug: "glean" },
-    { name: "Descript", ats: "ashby", slug: "descript" },
-    { name: "Weights & Biases", ats: "ashby", slug: "wandb" },
 
     // ── GREENHOUSE ─────────────────────────────────────────────────────────────
     { name: "Stripe", ats: "greenhouse", slug: "stripe" },
@@ -66,98 +57,27 @@ const COMPANIES = [
     { name: "Brex", ats: "greenhouse", slug: "brex" },
     { name: "Discord", ats: "greenhouse", slug: "discord" },
     { name: "Duolingo", ats: "greenhouse", slug: "duolingo" },
-    { name: "Canva", ats: "greenhouse", slug: "canva" },
-    { name: "Snap", ats: "greenhouse", slug: "snap" },
     { name: "Pinterest", ats: "greenhouse", slug: "pinterest" },
     { name: "Twilio", ats: "greenhouse", slug: "twilio" },
     { name: "Databricks", ats: "greenhouse", slug: "databricks" },
     { name: "dbt Labs", ats: "greenhouse", slug: "dbtlabsinc" },
-    { name: "Plaid", ats: "greenhouse", slug: "plaid" },
     { name: "Robinhood", ats: "greenhouse", slug: "robinhood" },
-    { name: "Segment", ats: "greenhouse", slug: "segment" },
-    { name: "Zendesk", ats: "greenhouse", slug: "zendesk" },
     { name: "LaunchDarkly", ats: "greenhouse", slug: "launchdarkly" },
-    { name: "Grammarly", ats: "greenhouse", slug: "grammarly" },
     { name: "Ramp", ats: "greenhouse", slug: "ramp" },
     { name: "Amplitude", ats: "greenhouse", slug: "amplitude" },
     { name: "Mixpanel", ats: "greenhouse", slug: "mixpanel" },
-    { name: "Heap", ats: "greenhouse", slug: "heap" },
     { name: "Contentful", ats: "greenhouse", slug: "contentful" },
-    { name: "Kong", ats: "greenhouse", slug: "kong" },
-    { name: "Stytch", ats: "greenhouse", slug: "stytch" },
-    { name: "Jerry", ats: "greenhouse", slug: "jerry" },
     { name: "Cockroach Labs", ats: "greenhouse", slug: "cockroachlabs" },
     { name: "Netlify", ats: "greenhouse", slug: "netlify" },
 
     // ── LEVER ──────────────────────────────────────────────────────────────────
     { name: "Netflix", ats: "lever", slug: "netflix" },
     { name: "Spotify", ats: "lever", slug: "spotify" },
-    { name: "Reddit", ats: "lever", slug: "reddit" },
-    { name: "Lyft", ats: "lever", slug: "lyft" },
-    { name: "Airtable", ats: "lever", slug: "airtable" },
-    { name: "Lark", ats: "lever", slug: "bytedance-lark" },
-    { name: "Cash App", ats: "lever", slug: "cashapp" },
-    { name: "Intercom", ats: "lever", slug: "intercom" },
-    { name: "Taskus", ats: "lever", slug: "taskus" },
-    { name: "Postman", ats: "lever", slug: "postman" },
-    { name: "BrowserStack", ats: "lever", slug: "browserstack" },
-    { name: "CleverTap", ats: "lever", slug: "clevertap" },
-    { name: "Hasura", ats: "lever", slug: "hasura" },
-    { name: "Testbook", ats: "lever", slug: "testbook" },
-    { name: "MoEngage", ats: "lever", slug: "moengage" },
-    { name: "Chargebee", ats: "lever", slug: "chargebee" },
     { name: "Freshworks", ats: "lever", slug: "freshworks" },
-    { name: "Razorpay", ats: "lever", slug: "razorpay" },
-    { name: "Slice", ats: "lever", slug: "sliceit" },
-    { name: "PhonePe", ats: "lever", slug: "phonepe" },
 
-    // ── WORKDAY ─────────────────────────────────────────────────────────────────
-    // Workday uses a different URL structure per tenant
-    {
-        name: "PayPal", ats: "workday", slug: "paypal",
-        url: "https://wd1.myworkdayjobs.com/wday/cxs/paypal/jobs/jobs"
-    },
-    {
-        name: "Adobe", ats: "workday", slug: "adobe",
-        url: "https://adobe.wd5.myworkdayjobs.com/wday/cxs/adobe/External/jobs/jobs"
-    },
-    {
-        name: "Salesforce", ats: "workday", slug: "salesforce",
-        url: "https://salesforce.wd12.myworkdayjobs.com/wday/cxs/Salesforce/External_Career_Site/jobs/jobs"
-    },
-    {
-        name: "Workday", ats: "workday", slug: "workday",
-        url: "https://workday.wd5.myworkdayjobs.com/wday/cxs/workday/Workday/jobs/jobs"
-    },
-    {
-        name: "ServiceNow", ats: "workday", slug: "servicenow",
-        url: "https://jobs.smartrecruiters.com/ni/ServiceNow1/jobs"
-    }, // actually SR
-    {
-        name: "Twitch", ats: "workday", slug: "twitch",
-        url: "https://amazon.jobs/cgi-bin/job-search-v2.cgi"
-    }, // falls through to custom
-    {
-        name: "Walmart", ats: "workday", slug: "walmart",
-        url: "https://walmart.wd5.myworkdayjobs.com/wday/cxs/WalmartExternal/All/jobs/jobs"
-    },
 
     // ── SMARTRECRUITERS ────────────────────────────────────────────────────────
-    { name: "CRED", ats: "smartrecruiters", slug: "CRED3" },
     { name: "Visa", ats: "smartrecruiters", slug: "Visa" },
-    { name: "Zalando", ats: "smartrecruiters", slug: "Zalando" },
-    { name: "Booking.com", ats: "smartrecruiters", slug: "BookingcomGroup" },
-    { name: "Careem", ats: "smartrecruiters", slug: "Careem" },
-    { name: "OYO", ats: "smartrecruiters", slug: "OYO" },
-    { name: "Swiggy", ats: "smartrecruiters", slug: "Swiggy" },
-    { name: "InMobi", ats: "smartrecruiters", slug: "InMobi" },
-    { name: "Meesho", ats: "smartrecruiters", slug: "Meesho" },
-    { name: "Nykaa", ats: "smartrecruiters", slug: "Nykaa" },
-    { name: "Urban Company", ats: "smartrecruiters", slug: "UrbanCompany" },
-    { name: "Sharechat", ats: "smartrecruiters", slug: "ShareChat" },
-    { name: "Dunzo", ats: "smartrecruiters", slug: "Dunzo" },
-    { name: "Licious", ats: "smartrecruiters", slug: "Licious" },
-    { name: "Darwinbox", ats: "smartrecruiters", slug: "Darwinbox" },
 
     // ── WORKABLE ───────────────────────────────────────────────────────────────
     { name: "Spenmo", ats: "workable", slug: "spenmo" },
@@ -165,45 +85,9 @@ const COMPANIES = [
     { name: "Kissflow", ats: "workable", slug: "kissflow" },
     { name: "Keka", ats: "workable", slug: "keka" },
 
-    // ── BAMBOOHR ───────────────────────────────────────────────────────────────
-    { name: "Zoho", ats: "bamboohr", slug: "zoho" },
-    { name: "Freshdesk", ats: "bamboohr", slug: "freshdesk" },
 
     // ── CUSTOM / DIRECT SCRAPE ─────────────────────────────────────────────────
     // These companies host jobs on their own site or a niche ATS
-    {
-        name: "Zepto",
-        ats: "custom",
-        url: "https://jobs.lever.co/zepto",   // lever but unlisted
-        parser: "lever",
-        slug: "zepto",
-    },
-    {
-        name: "Groww",
-        ats: "custom",
-        url: "https://groww.in/open-positions",
-        parser: "html",
-        slug: "groww",
-    },
-    {
-        name: "Zomato",
-        ats: "custom",
-        url: "https://www.zomato.com/jobs",
-        parser: "html",
-        slug: "zomato",
-    },
-    {
-        name: "Flipkart",
-        ats: "greenhouse",    // Flipkart uses Greenhouse
-        slug: "flipkart",
-    },
-    {
-        name: "Paytm",
-        ats: "custom",
-        url: "https://jobs.lever.co/paytm",
-        parser: "lever",
-        slug: "paytm",
-    },
     {
         name: "Dream11",
         ats: "lever",
@@ -274,27 +158,49 @@ function isIndia(location = "") {
     return indiaRegex.test(loc);
 }
 
+function htmlToPlain(html = "") {
+    if (!html) return "";
+    return html
+        .replace(/&nbsp;/g, " ")
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/<br\s*\/?>/gi, "\n")
+        .replace(/<\/p>/gi, "\n")
+        .replace(/<\/li>/gi, "\n")
+        .replace(/<[^>]+>/g, "")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim();
+}
+
 // ── Ashby ─────────────────────────────────────────────────────────────────────
 // Docs: https://api.ashbyhq.com/posting-api/job-board/:company
 async function fetchAshby(company) {
     const url = `https://api.ashbyhq.com/posting-api/job-board/${company.slug}`;
     const data = await fetchJSON(url);
     // data.jobPostings[]
-    return (data.jobPostings || [])
-        .filter((j) => isIndia(j.location) || j.isRemote)
-        .map((j) =>
-            normalize({
-                title: j.title,
-                location: j.location,
-                url: j.applyUrl || j.jobUrl,
-                department: j.department,
-                remote: j.isRemote,
-                company: company.name,
-                ats: "ashby",
-                postedAt: j.publishedAt,
-                jobId: j.id,
-            })
-        );
+            return (data.jobPostings || [])
+            .filter((j) => isIndia(j.location) || j.isRemote)
+            .map((j) => {
+                const baseJob = normalize({
+                    title: j.title,
+                    location: j.location,
+                    url: j.applyUrl || j.jobUrl,
+                    department: j.department,
+                    remote: j.isRemote,
+                    company: company.name,
+                    ats: "ashby",
+                    postedAt: j.publishedAt,
+                    jobId: j.id,
+                });
+                // Add plain description if available
+                return {
+                    ...baseJob,
+                    description: j.descriptionPlain?.trim() || "",
+                };
+            });
 }
 
 // ── Greenhouse ────────────────────────────────────────────────────────────────
@@ -303,36 +209,41 @@ async function fetchGreenhouse(company) {
     const url = `https://boards-api.greenhouse.io/v1/boards/${company.slug}/jobs?content=true`;
     const data = await fetchJSON(url);
     // data.jobs[]  — each job has offices[] and departments[]
-    return (data.jobs || [])
-        .filter((j) => {
-            const locs = [
-                ...(j.offices || []).map((o) => o.name),
-                ...(j.location ? [j.location.name] : []),
-            ].join(" ");
-            return isIndia(locs);
-        })
-        .map((j) => {
-            const loc = (j.offices || []).map((o) => o.name).join(", ") || j.location?.name;
-            const dept = (j.departments || []).map((d) => d.name).join(", ");
-            return normalize({
-                title: j.title,
-                location: loc,
-                url: j.absolute_url,
-                department: dept,
-                remote: false,
-                company: company.name,
-                ats: "greenhouse",
-                postedAt: j.updated_at,
-                jobId: j.id?.toString(),
+            return (data.jobs || [])
+            .filter((j) => {
+                const locs = [
+                    ...(j.offices || []).map((o) => o.name),
+                    ...(j.location ? [j.location.name] : []),
+                ].join(" ");
+                return isIndia(locs);
+            })
+            .map((j) => {
+                const loc = (j.offices || []).map((o) => o.name).join(", ") || j.location?.name;
+                const dept = (j.departments || []).map((d) => d.name).join(", ");
+                const description = j.content ? htmlToPlain(j.content) : "";
+                const baseJob = normalize({
+                    title: j.title,
+                    location: loc,
+                    url: j.absolute_url,
+                    department: dept,
+                    remote: false,
+                    company: company.name,
+                    ats: "greenhouse",
+                    postedAt: j.updated_at,
+                    jobId: j.id?.toString(),
+                });
+                return {
+                    ...baseJob,
+                    description,
+                };
             });
-        });
 }
 
 // ── Lever ─────────────────────────────────────────────────────────────────────
 // Public API: https://api.lever.co/v0/postings/:company?mode=json
 async function fetchLever(company) {
     const slug = company.slug;
-    const url = `https://api.lever.co/v0/postings/${slug}?mode=json&limit=500`;
+    const url = `https://api.lever.co/v0/postings/${slug}?mode=json`;
     const data = await fetchJSON(url);
     // data[] — array directly
     const jobs = Array.isArray(data) ? data : data.data || [];
@@ -341,19 +252,34 @@ async function fetchLever(company) {
             const loc = (j.categories?.location || j.workplaceType || "").toLowerCase();
             return isIndia(loc) || loc === "remote";
         })
-        .map((j) =>
-            normalize({
-                title: j.text,
-                location: j.categories?.location,
-                url: j.applyUrl || `https://jobs.lever.co/${slug}/${j.id}/apply`,
-                department: j.categories?.team,
-                remote: j.workplaceType === "remote",
-                company: company.name,
-                ats: "lever",
-                postedAt: j.createdAt ? new Date(j.createdAt).toISOString() : null,
-                jobId: j.id,
-            })
-        );
+        .map((j) => {
+            const listParts = (j.lists || []).map(l => {
+                const heading = l.text || "";
+                const body = htmlToPlain(l.content || "");
+                return [heading, body].filter(Boolean).join("\n");
+            });
+            const description = [
+                j.descriptionPlain,
+                j.descriptionBodyPlain,
+                ...listParts,
+                j.additionalPlain,
+            ].filter(Boolean).join("\n\n");
+
+            return {
+                ...normalize({
+                    title: j.text,
+                    location: j.categories?.location,
+                    url: j.applyUrl || `https://jobs.lever.co/${slug}/${j.id}/apply`,
+                    department: j.categories?.team,
+                    remote: j.workplaceType === "remote",
+                    company: company.name,
+                    ats: "lever",
+                    postedAt: j.createdAt ? new Date(j.createdAt).toISOString() : null,
+                    jobId: j.id,
+                }),
+                description,
+            };
+        });
 }
 
 // ── Workday ───────────────────────────────────────────────────────────────────
@@ -404,7 +330,6 @@ async function fetchSmartRecruiters(company) {
     let allJobs = [];
     let offset = 0;
     const limit = 100;
-
     while (true) {
         const url = `https://api.smartrecruiters.com/v1/companies/${company.slug}/postings?limit=${limit}&offset=${offset}`;
         const data = await fetchJSON(url);
@@ -415,20 +340,17 @@ async function fetchSmartRecruiters(company) {
         await sleep(CONFIG.delayMs);
     }
 
-    return allJobs
+    // Filter and basic normalization
+    const basicJobs = allJobs
         .filter((j) => {
-            const loc = [
-                j.location?.city,
-                j.location?.region,
-                j.location?.country,
-            ]
+            const loc = [j.location?.city, j.location?.region, j.location?.country]
                 .filter(Boolean)
                 .join(" ")
                 .toLowerCase();
             return isIndia(loc) || j.location?.remote;
         })
-        .map((j) =>
-            normalize({
+        .map((j) => ({
+            base: normalize({
                 title: j.name,
                 location: [j.location?.city, j.location?.region, j.location?.country]
                     .filter(Boolean)
@@ -440,8 +362,35 @@ async function fetchSmartRecruiters(company) {
                 ats: "smartrecruiters",
                 postedAt: j.releasedDate,
                 jobId: j.id,
-            })
-        );
+            }),
+            detailUrl: j.ref,
+        }));
+
+    // Fetch detailed sections for each job (concurrently respecting a modest limit)
+    const detailedJobs = await Promise.all(
+        basicJobs.map(async ({ base, detailUrl }) => {
+            try {
+                const detail = await fetchJSON(detailUrl);
+                const sections = detail.sections || {};
+                const sectionKeys = ["companyDescription", "jobDescription", "qualifications", "additionalInformation"];
+                const parts = sectionKeys
+                    .map(key => sections[key])
+                    .filter(Boolean)
+                    .map(sec => {
+                        const title = sec.title || "";
+                        const text = htmlToPlain(sec.text || "");
+                        return [title, text].filter(Boolean).join("\n");
+                    });
+                const description = parts.filter(Boolean).join("\n\n");
+                return { ...base, description };
+            } catch (e) {
+                console.warn(`Failed to fetch details for job ${base.jobId}: ${e.message}`);
+                return base;
+            }
+        })
+    );
+
+    return detailedJobs;
 }
 
 // ── Workable ──────────────────────────────────────────────────────────────────
