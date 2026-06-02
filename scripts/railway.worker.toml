@@ -1,0 +1,20 @@
+# ── Worker service ─────────────────────────────────────────────────────────
+# Railway service: "worker"
+# Type: Always-on (not a cron job)
+# Root directory: scripts/
+# Config file: railway.worker.toml  (this file)
+#
+# Runs all BullMQ workers + PG preference listener as child processes:
+#   - multi_ats/multi_ats_worker.js        (description scraper)
+#   - multi_ats/skill_extraction_worker.js (skill extraction)
+#   - multi_ats/job_relevance_worker.js    (relevance scoring)
+#   - multi_ats/user_rebuild_worker.js     (user feed rebuild)
+#   - preference_change_listener.js        (PG NOTIFY → rebuild queue)
+
+[build]
+builder = "NIXPACKS"
+buildCommand = "npm install"
+
+[deploy]
+startCommand = "node combined_worker.js"
+restartPolicyType = "ALWAYS"
