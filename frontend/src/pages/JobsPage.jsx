@@ -178,7 +178,7 @@ export default function JobsPage() {
 
     const inputStyle = (name) => ({
         width: '100%',
-        padding: '10px 14px 10px 36px',
+        padding: '20px 20px 20px 20px',
         background: 'var(--color-surface-3)',
         border: `1px solid ${inputFocus === name ? 'var(--color-orange)' : 'var(--color-border)'}`,
         borderRadius: '8px',
@@ -198,103 +198,36 @@ export default function JobsPage() {
     ];
 
     return (
-        <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
-            <style>{`
-                @media (max-width: 768px) {
-                    .jobs-search-grid { grid-template-columns: 1fr !important; }
-                    .jobs-grid { grid-template-columns: 1fr !important; }
-                    .jobs-main-inner { padding: 80px 16px 24px !important; }
-                    .job-type-tabs { 
-                        overflow-x: auto; 
-                        width: 100% !important; 
-                        justify-content: flex-start !important;
-                        -webkit-overflow-scrolling: touch;
-                        scrollbar-width: none;
-                    }
-                    .job-type-tabs::-webkit-scrollbar { display: none; }
-                    .job-type-tab { padding: 8px 12px !important; font-size: 12px !important; }
-                }
-                @media (min-width: 769px) and (max-width: 1024px) {
-                    .jobs-grid { grid-template-columns: 1fr 1fr !important; }
-                    .jobs-search-grid { grid-template-columns: 1fr 1fr !important; }
-                }
-                @media (max-width: 480px) {
-                    .jobs-main-inner { padding-top: 72px !important; }
-                }
-                .job-type-tab {
-                    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-                }
-                .job-type-tab:hover {
-                    background: var(--color-surface-3) !important;
-                }
-                .job-type-tab-active {
-                    background: var(--color-orange) !important;
-                    color: #000 !important;
-                    box-shadow: 0 2px 8px rgba(249,115,22,0.3);
-                }
-                .job-type-tab-active:hover {
-                    background: var(--color-orange-hover) !important;
-                }
-            `}</style>
+        <div className="flex min-h-screen bg-[#F4F4F5] relative">
+            <div className="fixed inset-0 pointer-events-none opacity-20 z-0" style={{ backgroundImage: 'linear-gradient(to right, #060608 1px, transparent 1px), linear-gradient(to bottom, #060608 1px, transparent 1px)', backgroundSize: '64px 64px' }} />
 
             <Sidebar />
 
-            <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <main className="flex-1 flex flex-col overflow-hidden relative z-10">
                 {/* Header */}
                 <AppHeader left={
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)' }}>
-                        <span>Browse Jobs</span>
+                    <div className="font-label-mono font-bold uppercase text-sm text-brutalist-black bg-pure-white border-[3px] border-brutalist-black px-8 py-4 shadow-[4px_4px_0px_0px_#060608] inline-block" style={{ "paddingLeft": "32px", "paddingRight": "32px", "paddingTop": "16px", "paddingBottom": "16px" }}>
+                        Browse Jobs
                     </div>
                 } />
 
-                <div style={{ flex: 1, overflowY: 'auto' }}>
-                    <div className="jobs-main-inner" style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px' }}>
+                <div className="flex-1 overflow-y-auto p-8 md:p-14 lg:p-20 dashboard-main-content">
+                    <div className="max-w-7xl mx-auto" style={{ padding: "40px 10px" }}>
 
                         {/* Page title */}
-                        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+                        <div className="flex items-end justify-between flex-wrap gap-6 mb-16 bg-pure-white border-[4px] border-brutalist-black p-12 shadow-[4px_4px_0px_0px_#060608] dashboard-header-block" style={{ "padding": "48px" }}>
                             <div>
-                                <h1 style={{
-                                    fontFamily: 'var(--font-display)', fontWeight: 800,
-                                    fontSize: 'clamp(24px, 3vw, 36px)', letterSpacing: '-0.025em',
-                                    color: 'var(--color-white)', margin: 0,
-                                }}>Browse Jobs</h1>
-                                <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--color-white-40)', marginTop: '4px' }}>
+                                <h1 className="font-headline-md font-black uppercase tracking-tighter text-3xl md:text-5xl text-brutalist-black m-0 dashboard-greeting">
+                                    Browse Jobs
+                                </h1>
+                                <p className="font-label-mono text-sm text-brutalist-black font-bold mt-2">
                                     {loading ? 'Searching…' : `${totalElements} jobs found`}
                                 </p>
-                            </div>
-                            {/* Sort */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)' }}>Sort by</span>
-                                <select
-                                    value={filters.sort}
-                                    onChange={e => handleFilterChange('sort', e.target.value)}
-                                    style={{
-                                        background: 'var(--color-surface-2)',
-                                        border: '1px solid var(--color-border)',
-                                        borderRadius: '8px',
-                                        color: 'var(--color-white)',
-                                        fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '13px',
-                                        padding: '8px 12px', outline: 'none', cursor: 'pointer',
-                                    }}
-                                >
-                                    <option value="postedAt">Newest First</option>
-                                    <option value="relevance">Relevant</option>
-                                </select>
                             </div>
                         </div>
 
                         {/* ===== Segmented Tabs ===== */}
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            padding: '4px',
-                            background: 'var(--color-surface-2)',
-                            border: '1px solid var(--color-border)',
-                            borderRadius: '12px',
-                            marginBottom: '24px',
-                            width: 'fit-content',
-                        }} className="job-type-tabs">
+                        <div className="flex items-center gap-4 mb-16 p-4 bg-pure-white border-[4px] border-brutalist-black shadow-[4px_4px_0px_0px_#060608] w-max max-w-full overflow-x-auto" style={{ "padding": "16px" }}>
                             {JOB_TABS.map(tab => {
                                 const isActive = activeTab === tab.key;
                                 const count = tabCounts[tab.key];
@@ -302,34 +235,15 @@ export default function JobsPage() {
                                     <button
                                         key={tab.key}
                                         onClick={() => handleTabChange(tab.key)}
-                                        className={`job-type-tab ${isActive ? 'job-type-tab-active' : ''}`}
-                                        style={{
-                                            padding: '9px 18px',
-                                            border: 'none',
-                                            borderRadius: '8px',
-                                            cursor: 'pointer',
-                                            fontFamily: 'var(--font-display)',
-                                            fontWeight: isActive ? 700 : 500,
-                                            fontSize: '13px',
-                                            color: isActive ? '#000' : 'var(--color-white-65)',
-                                            background: isActive ? 'var(--color-orange)' : 'transparent',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '6px',
-                                            whiteSpace: 'nowrap',
-                                        }}
+                                        className={`px-8 py-3 font-label-mono font-bold uppercase text-sm border-[3px] transition-all duration-200 cursor-pointer flex items-center gap-3 whitespace-nowrap
+                                            ${isActive
+                                                ? 'bg-vibrant-orange text-pure-white border-brutalist-black shadow-[4px_4px_0px_0px_#060608]'
+                                                : 'bg-pure-white text-brutalist-black border-transparent hover:border-brutalist-black'
+                                            }`}
                                     >
                                         {tab.label}
                                         {count !== undefined && (
-                                            <span style={{
-                                                fontSize: '11px',
-                                                fontWeight: 600,
-                                                fontFamily: 'var(--font-mono)',
-                                                padding: '1px 6px',
-                                                borderRadius: '6px',
-                                                background: isActive ? 'rgba(0,0,0,0.15)' : 'var(--color-surface-3)',
-                                                color: isActive ? '#000' : 'var(--color-white-40)',
-                                            }}>
+                                            <span className={`px-3 py-1 text-xs border-[2px] ${isActive ? 'bg-pure-white text-brutalist-black border-brutalist-black' : 'bg-[#F4F4F5] border-transparent'}`} style={{ "paddingLeft": "12px", "paddingRight": "12px", "paddingTop": "4px", "paddingBottom": "4px" }}>
                                                 {count.toLocaleString()}
                                             </span>
                                         )}
@@ -339,33 +253,16 @@ export default function JobsPage() {
                         </div>
 
                         {/* Search bar */}
-                        <div style={{
-                            background: 'var(--color-surface-2)',
-                            border: '1px solid var(--color-border)',
-                            borderRadius: '14px',
-                            padding: '20px',
-                            marginBottom: '32px',
-                        }}>
+                        <div className="bg-pure-white border-[4px] border-brutalist-black p-12 shadow-[4px_4px_0px_0px_#060608] mb-20" style={{ "padding": "48px" }}>
                             {/* 2-column grid — all inputs equal width */}
-                            <div
-                                className="jobs-search-grid"
-                                style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: '1fr 1fr',
-                                    gap: '10px',
-                                    marginBottom: '12px',
-                                }}
-                            >
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                                 {SEARCH_FIELDS.map(({ key, icon, placeholder }) => (
-                                    <div key={key} style={{ position: 'relative' }}>
-                                        <span style={{
-                                            position: 'absolute', left: '10px', top: '50%',
-                                            transform: 'translateY(-50%)',
-                                            fontSize: '14px', pointerEvents: 'none',
-                                            color: inputFocus === key ? 'var(--color-orange)' : 'var(--color-white-40)',
-                                            transition: 'color 0.2s',
-                                        }}>{icon}</span>
+                                    <div key={key} className="relative">
+                                        <span className={`absolute left-5 top-1/2 -translate-y-1/2 text-lg pointer-events-none transition-colors ${inputFocus === key ? 'text-vibrant-orange' : 'text-brutalist-black'}`}>
+                                            {icon}
+                                        </span>
                                         <input
+                                            style={{ "padding": "10px 15px 10px 40px" }}
                                             type="text"
                                             placeholder={placeholder}
                                             value={filters[key]}
@@ -373,7 +270,7 @@ export default function JobsPage() {
                                             onFocus={() => setInputFocus(key)}
                                             onBlur={() => setInputFocus('')}
                                             onKeyDown={e => e.key === 'Enter' && handleSearch()}
-                                            style={inputStyle(key)}
+                                            className="w-full py-5 pl-14 pr-5 bg-[#F4F4F5] border-[3px] border-brutalist-black font-label-mono font-bold text-sm outline-none text-brutalist-black transition-all focus:border-vibrant-orange focus:shadow-[4px_4px_0px_0px_#FF6B00]"
                                         />
                                     </div>
                                 ))}
@@ -382,55 +279,39 @@ export default function JobsPage() {
                             {/* Full-width search button */}
                             <button
                                 onClick={handleSearch}
-                                style={{
-                                    width: '100%',
-                                    background: 'var(--color-orange)',
-                                    border: 'none', borderRadius: '8px',
-                                    color: '#000',
-                                    fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '14px',
-                                    padding: '11px 24px', cursor: 'pointer',
-                                    transition: 'background 0.2s, transform 0.15s',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                                }}
-                                onMouseEnter={e => { e.currentTarget.style.background = 'var(--color-orange-hover)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-                                onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-orange)'; e.currentTarget.style.transform = 'translateY(0)'; }}
-                            >
-                                <FaSearch style={{ fontSize: '13px' }} /> Search Jobs
+                                className="w-full bg-vibrant-orange border-[3px] border-brutalist-black py-5 font-headline-md font-bold uppercase tracking-tighter text-xl text-pure-white shadow-[4px_4px_0px_0px_#060608] transition-all hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-[0px_0px_0px_0px_#060608] flex items-center justify-center gap-3 cursor-pointer"
+                                style={{ "marginTop": "15px", "paddingTop": "20px", "paddingBottom": "20px" }}>
+                                <FaSearch /> Search Jobs
                             </button>
                         </div>
 
                         {/* Job grid */}
                         {loading ? (
-                            <div style={{ textAlign: 'center', padding: '64px', color: 'var(--color-white-40)', fontFamily: 'var(--font-body)', fontSize: '15px' }}>
+                            <div className="text-center p-16 font-label-mono font-bold uppercase text-lg text-brutalist-black border-[4px] border-dashed border-brutalist-black bg-pure-white" style={{ "padding": "64px" }}>
                                 Searching…
                             </div>
                         ) : jobs.length === 0 ? (
-                            <div style={{ textAlign: 'center', padding: '64px' }}>
-                                <p style={{ fontFamily: 'var(--font-body)', fontSize: '15px', color: 'var(--color-white-65)', margin: '0 0 4px' }}>No jobs match your filters.</p>
-                                <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)', margin: 0 }}>Try adjusting your search.</p>
+                            <div className="text-center p-16 border-[4px] border-dashed border-brutalist-black bg-pure-white shadow-[4px_4px_0px_0px_#060608]" style={{ "padding": "64px" }}>
+                                <p className="font-headline-md font-bold text-3xl text-brutalist-black mb-4 uppercase">No jobs match your filters.</p>
+                                <p className="font-label-mono font-bold uppercase text-sm text-gray-500 m-0">Try adjusting your search.</p>
                             </div>
                         ) : (
                             <>
-                                <div
-                                    className="jobs-grid"
-                                    style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '32px' }}
-                                >
+                                <div style={{ marginTop: "20px" }} className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-10 mb-16">
                                     {jobs.map((job, i) => {
                                         if (jobs.length === i + 1) {
-                                            return <div ref={lastJobElementRef} key={job.id || i}><JobCard job={job} onAppliedChange={handleJobAppliedChange} /></div>;
+                                            return <div ref={lastJobElementRef} key={job.id || i} className="flex"><JobCard job={job} onAppliedChange={handleJobAppliedChange} /></div>;
                                         }
                                         return <JobCard key={job.id || i} job={job} onAppliedChange={handleJobAppliedChange} />;
                                     })}
                                 </div>
                                 {isFetchingMore && (
-                                    <div style={{ textAlign: 'center', padding: '24px', color: 'var(--color-white-40)', fontFamily: 'var(--font-body)', fontSize: '14px' }}>
+                                    <div className="text-center p-8 font-label-mono font-bold uppercase text-sm text-brutalist-black border-[3px] border-dashed border-brutalist-black bg-[#F4F4F5]" style={{ "padding": "32px" }}>
                                         Loading more jobs…
                                     </div>
                                 )}
                             </>
                         )}
-
-                        {/* Pagination removed */}
                     </div>
                 </div>
             </main>

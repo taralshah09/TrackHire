@@ -37,35 +37,27 @@ export default function PreferredJobsPage() {
     const hasPreferences = feed.length > 0;
 
     return (
-        <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
-            <style>{`
-                @media (max-width: 768px) {
-                    .foryou-grid { grid-template-columns: 1fr !important; }
-                }
-            `}</style>
+        <div className="flex min-h-screen bg-background-light">
             <Sidebar />
 
-            <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <main className="flex-1 flex flex-col overflow-hidden relative z-10">
+                {/* Header */}
                 <AppHeader left={
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)' }}>
-                        <span>For You</span>
+                    <div className="font-label-mono font-bold uppercase text-sm text-brutalist-black bg-pure-white border-[3px] border-brutalist-black shadow-[4px_4px_0px_0px_#060608] inline-block" style={{ padding: "16px 32px" }}>
+                        For You
                     </div>
                 } />
 
-                <div style={{ flex: 1, overflowY: 'auto' }}>
-                    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px' }}>
+                <div className="flex-1 overflow-y-auto dashboard-main-content p-8 md:p-14 lg:p-20">
+                    <div className="max-w-7xl mx-auto" style={{ padding: "40px 10px" }}>
 
                         {/* Page header */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
+                        <div className="flex items-end justify-between flex-wrap gap-6 mb-16 bg-pure-white border-[4px] border-brutalist-black shadow-[4px_4px_0px_0px_#060608] dashboard-header-block" style={{ padding: "48px" }}>
                             <div>
-                                <h1 style={{
-                                    fontFamily: 'var(--font-display)', fontWeight: 800,
-                                    fontSize: 'clamp(24px, 3vw, 36px)', letterSpacing: '-0.025em',
-                                    color: 'var(--color-white)', margin: '0 0 6px',
-                                }}>
+                                <h1 className="font-headline-md font-black uppercase tracking-tighter text-3xl md:text-5xl text-brutalist-black m-0 mb-2 dashboard-greeting">
                                     For You
                                 </h1>
-                                <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--color-white-40)', margin: 0 }}>
+                                <p className="font-label-mono font-bold uppercase text-sm text-gray-500 m-0">
                                     {loading
                                         ? 'Loading your personalised feed…'
                                         : feed.length > 0
@@ -74,77 +66,42 @@ export default function PreferredJobsPage() {
                                 </p>
                             </div>
 
-                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                            <div className="flex gap-4 flex-wrap">
                                 <button
                                     onClick={() => loadFeed()}
                                     disabled={loading}
-                                    style={{
-                                        display: 'flex', alignItems: 'center', gap: '8px',
-                                        padding: '10px 16px', borderRadius: '8px',
-                                        background: 'var(--color-surface-2)', border: '1px solid var(--color-border)',
-                                        color: 'var(--color-white-65)', cursor: 'pointer',
-                                        fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '13px',
-                                        transition: 'all 0.2s', opacity: loading ? 0.5 : 1,
-                                    }}
-                                    onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-white-40)'}
-                                    onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-border)'}
+                                    className="flex items-center gap-2 bg-pure-white border-[3px] border-brutalist-black text-brutalist-black font-label-mono font-bold text-sm uppercase transition-all shadow-[2px_2px_0px_0px_#060608] hover:bg-vibrant-orange hover:text-pure-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none cursor-pointer disabled:opacity-50"
+                                    style={{ padding: "12px 20px" }}
                                 >
-                                    <FaSync style={{ fontSize: '11px' }} /> Refresh
+                                    <FaSync /> Refresh
                                 </button>
                                 <Link
                                     to="/profile"
-                                    style={{
-                                        display: 'flex', alignItems: 'center', gap: '8px',
-                                        padding: '10px 16px', borderRadius: '8px',
-                                        background: 'var(--color-surface-2)', border: '1px solid var(--color-border)',
-                                        color: 'var(--color-white-65)', textDecoration: 'none',
-                                        fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '13px',
-                                        transition: 'all 0.2s',
-                                    }}
-                                    onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-white-40)'}
-                                    onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-border)'}
+                                    className="flex items-center gap-2 bg-pure-white border-[3px] border-brutalist-black text-brutalist-black font-label-mono font-bold text-sm uppercase transition-all shadow-[2px_2px_0px_0px_#060608] hover:bg-brutalist-black hover:text-pure-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none no-underline"
+                                    style={{ padding: "12px 20px" }}
                                 >
-                                    <FaSlidersH style={{ fontSize: '11px' }} /> Edit Preferences
+                                    <FaSlidersH /> Edit Preferences
                                 </Link>
                             </div>
                         </div>
 
                         {/* Loading skeleton */}
                         {loading && (
-                            <div style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
-                                gap: '20px',
-                            }}>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-10">
                                 {Array.from({ length: 6 }).map((_, i) => (
-                                    <div key={i} style={{
-                                        height: '280px', borderRadius: '14px',
-                                        background: 'var(--color-surface-2)',
-                                        border: '1px solid var(--color-border)',
-                                        animation: 'pulse 1.5s ease-in-out infinite',
-                                    }} />
+                                    <div key={i} className="h-72 border-[4px] border-brutalist-black bg-[#F4F4F5] animate-pulse shadow-[4px_4px_0px_0px_#060608]" />
                                 ))}
                             </div>
                         )}
 
                         {/* Error state */}
                         {!loading && error && (
-                            <div style={{
-                                textAlign: 'center', padding: '80px 32px',
-                                background: 'var(--color-surface-1)', borderRadius: '24px',
-                                border: '1px dashed var(--color-border)',
-                            }}>
-                                <p style={{ fontFamily: 'var(--font-body)', color: 'var(--color-white-40)', marginBottom: '16px' }}>
-                                    {error}
-                                </p>
+                            <div className="flex flex-col items-center justify-center min-h-[320px] bg-pure-white border-[4px] border-dashed border-brutalist-black text-center shadow-[4px_4px_0px_0px_#060608]" style={{ padding: "48px" }}>
+                                <p className="font-headline-md font-bold text-xl text-[#f87171] uppercase mb-6">{error}</p>
                                 <button
                                     onClick={loadFeed}
-                                    style={{
-                                        padding: '10px 24px', borderRadius: '8px',
-                                        background: 'var(--color-orange)', border: 'none',
-                                        color: '#000', fontFamily: 'var(--font-display)',
-                                        fontWeight: 700, fontSize: '13px', cursor: 'pointer',
-                                    }}
+                                    className="bg-vibrant-orange border-[3px] border-brutalist-black text-pure-white font-label-mono font-bold text-sm uppercase transition-all shadow-[2px_2px_0px_0px_#060608] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none cursor-pointer"
+                                    style={{ padding: "12px 24px" }}
                                 >
                                     Try Again
                                 </button>
@@ -153,46 +110,27 @@ export default function PreferredJobsPage() {
 
                         {/* Empty state */}
                         {!loading && !error && feed.length === 0 && (
-                            <div style={{
-                                textAlign: 'center', padding: '80px 32px',
-                                background: 'var(--color-surface-1)', borderRadius: '24px',
-                                border: '1px dashed var(--color-border)',
-                            }}>
-                                <FaBriefcase size={40} style={{ color: 'var(--color-white-20)', marginBottom: '16px' }} />
-                                <h3 style={{ fontFamily: 'var(--font-display)', color: 'var(--color-white)', marginBottom: '8px', fontSize: '20px' }}>
+                            <div className="flex flex-col items-center justify-center min-h-[320px] bg-pure-white border-[4px] border-dashed border-brutalist-black text-center shadow-[4px_4px_0px_0px_#060608]" style={{ padding: "48px" }}>
+                                <div className="text-5xl text-brutalist-black mb-6"><FaBriefcase /></div>
+                                <h3 className="font-headline-md font-black uppercase text-2xl text-brutalist-black m-0 mb-4">
                                     Your feed is being prepared
                                 </h3>
-                                <p style={{
-                                    fontFamily: 'var(--font-body)', fontSize: '15px',
-                                    color: 'var(--color-white-40)', maxWidth: '440px',
-                                    margin: '0 auto 24px', lineHeight: 1.6,
-                                }}>
+                                <p className="font-label-mono font-bold uppercase text-sm text-gray-500 m-0 mb-8 max-w-lg mx-auto leading-relaxed">
                                     Add your skills, preferred job titles, and preferred companies to your profile.
                                     We'll rank matching jobs and show them here.
                                 </p>
-                                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                                <div className="flex gap-4 justify-center flex-wrap">
                                     <Link
                                         to="/profile"
-                                        style={{
-                                            display: 'inline-flex', alignItems: 'center', gap: '8px',
-                                            padding: '11px 22px', borderRadius: '8px',
-                                            background: 'var(--color-orange)', color: '#000',
-                                            textDecoration: 'none', fontFamily: 'var(--font-display)',
-                                            fontWeight: 700, fontSize: '13px',
-                                        }}
+                                        className="flex items-center gap-2 bg-vibrant-orange border-[3px] border-brutalist-black text-pure-white font-label-mono font-bold text-sm uppercase transition-all shadow-[4px_4px_0px_0px_#060608] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none no-underline"
+                                        style={{ padding: "16px 24px" }}
                                     >
-                                        Set up preferences <FaArrowRight size={11} />
+                                        Set up preferences <FaArrowRight />
                                     </Link>
                                     <Link
                                         to="/jobs"
-                                        style={{
-                                            display: 'inline-flex', alignItems: 'center', gap: '8px',
-                                            padding: '11px 22px', borderRadius: '8px',
-                                            background: 'var(--color-surface-2)', color: 'var(--color-white-65)',
-                                            textDecoration: 'none', fontFamily: 'var(--font-display)',
-                                            fontWeight: 700, fontSize: '13px',
-                                            border: '1px solid var(--color-border)',
-                                        }}
+                                        className="flex items-center gap-2 bg-pure-white border-[3px] border-brutalist-black text-brutalist-black font-label-mono font-bold text-sm uppercase transition-all shadow-[4px_4px_0px_0px_#060608] hover:bg-brutalist-black hover:text-pure-white hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none no-underline"
+                                        style={{ padding: "16px 24px" }}
                                     >
                                         Browse all jobs
                                     </Link>
@@ -202,14 +140,7 @@ export default function PreferredJobsPage() {
 
                         {/* Feed grid */}
                         {!loading && !error && feed.length > 0 && (
-                            <div
-                                className="foryou-grid"
-                                style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
-                                    gap: '20px',
-                                }}
-                            >
+                            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-10">
                                 {feed.map((item) => (
                                     <JobCard
                                         key={item.job?.id}
@@ -223,23 +154,17 @@ export default function PreferredJobsPage() {
 
                         {/* Legend */}
                         {!loading && feed.length > 0 && (
-                            <div style={{
-                                marginTop: '40px', padding: '16px 20px',
-                                background: 'var(--color-surface-1)',
-                                border: '1px solid var(--color-border)',
-                                borderRadius: '12px',
-                                display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center',
-                            }}>
-                                <span style={{ fontFamily: 'var(--font-display)', fontSize: '11px', fontWeight: 700, color: 'var(--color-white-40)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Match score</span>
+                            <div className="mt-16 bg-pure-white border-[4px] border-brutalist-black flex flex-wrap items-center gap-8 shadow-[4px_4px_0px_0px_#060608]" style={{ padding: "24px 32px" }}>
+                                <span className="font-headline-md font-bold text-lg uppercase tracking-tight text-brutalist-black">Match score</span>
                                 {[
-                                    { label: '70–100%', color: '#22c55e', desc: 'Strong match' },
-                                    { label: '50–69%', color: 'var(--color-orange)', desc: 'Good match' },
-                                    { label: '40–49%', color: '#94a3b8', desc: 'Partial match' },
+                                    { label: '70–100%', color: 'bg-[#22c55e]', desc: 'Strong match' },
+                                    { label: '50–69%', color: 'bg-vibrant-orange', desc: 'Good match' },
+                                    { label: '40–49%', color: 'bg-gray-400', desc: 'Partial match' },
                                 ].map(({ label, color, desc }) => (
-                                    <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: color }} />
-                                        <span style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--color-white-40)' }}>
-                                            <span style={{ color: 'var(--color-white-65)', fontWeight: 600 }}>{label}</span> — {desc}
+                                    <div key={label} className="flex items-center gap-3">
+                                        <div className={`w-4 h-4 border-[2px] border-brutalist-black ${color}`} />
+                                        <span className="font-label-mono font-bold uppercase text-xs text-gray-500">
+                                            <span className="text-brutalist-black">{label}</span> — {desc}
                                         </span>
                                     </div>
                                 ))}

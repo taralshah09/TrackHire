@@ -1,54 +1,19 @@
 import React from 'react';
 
-export default function StatCard({ title, value, icon, accentColor = 'var(--color-orange)' }) {
+export default function StatCard({ title, value, icon }) {
     return (
-        <div style={{
-            background: 'var(--color-surface-2)',
-            border: '1px solid var(--color-border)',
-            borderRadius: '14px',
-            padding: '24px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '12px',
-        }}>
-            <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-            }}>
-                <p style={{
-                    fontFamily: 'var(--font-display)',
-                    fontWeight: 700,
-                    fontSize: '11px',
-                    letterSpacing: '0.12em',
-                    textTransform: 'uppercase',
-                    color: 'var(--color-white-40)',
-                    margin: 0,
-                }}>
+        <div className="bg-pure-white border-[4px] border-brutalist-black p-8 shadow-[4px_4px_0px_0px_#060608] flex flex-col gap-4 transition-all duration-200 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_#060608] stat-card" style={{"padding":"32px"}}>
+            <div className="flex items-center justify-between">
+                <p className="font-label-mono font-bold uppercase text-sm text-brutalist-black m-0 stat-card-title">
                     {title}
                 </p>
                 {icon && (
-                    <div style={{
-                        width: '32px', height: '32px',
-                        background: `rgba(${accentColor === 'var(--color-orange)' ? '249,115,22' : '96,165,250'}, 0.10)`,
-                        border: `1px solid rgba(${accentColor === 'var(--color-orange)' ? '249,115,22' : '96,165,250'}, 0.18)`,
-                        borderRadius: '8px',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '16px',
-                    }}>
+                    <div className="w-12 h-12 bg-[#F4F4F5] border-[3px] border-brutalist-black flex items-center justify-center text-2xl text-brutalist-black shadow-[2px_2px_0px_0px_#060608] stat-card-icon">
                         {icon}
                     </div>
                 )}
             </div>
-            <p style={{
-                fontFamily: 'var(--font-mono)',
-                fontWeight: 700,
-                fontSize: '32px',
-                letterSpacing: '-0.02em',
-                lineHeight: 1,
-                color: 'var(--color-white)',
-                margin: 0,
-            }}>
+            <p className="font-headline-md font-black uppercase tracking-tighter text-5xl text-brutalist-black m-0 mt-2 stat-card-value">
                 {value ?? 0}
             </p>
         </div>

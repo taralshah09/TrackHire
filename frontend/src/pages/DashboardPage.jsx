@@ -6,17 +6,16 @@ import api from '../service/ApiService';
 import { Link } from 'react-router-dom';
 import { formatDate } from '../utils/dateUtils';
 import Cookies from 'js-cookie';
-import { FaPaperPlane, FaCalendarAlt, FaTrophy, FaBookmark, FaHandPaper } from 'react-icons/fa';
+import { FiSend, FiCalendar, FiAward, FiBookmark, FiSmile } from 'react-icons/fi';
 
-/* Brand status badge styles */
 const STATUS_STYLES = {
-    SAVED: { bg: 'rgba(168,85,247,0.12)', color: '#c084fc', border: 'rgba(168,85,247,0.20)' },
-    APPLIED: { bg: 'rgba(59,130,246,0.12)', color: '#60a5fa', border: 'rgba(59,130,246,0.20)' },
-    PHONE_SCREEN: { bg: 'rgba(20,184,166,0.12)', color: '#2dd4bf', border: 'rgba(20,184,166,0.20)' },
-    INTERVIEW: { bg: 'rgba(249,115,22,0.12)', color: '#f97316', border: 'rgba(249,115,22,0.22)' },
-    OFFER: { bg: 'rgba(34,197,94,0.12)', color: '#4ade80', border: 'rgba(34,197,94,0.20)' },
-    REJECTED: { bg: 'rgba(239,68,68,0.10)', color: '#f87171', border: 'rgba(239,68,68,0.18)' },
-    WITHDRAWN: { bg: 'rgba(100,116,139,0.12)', color: '#94a3b8', border: 'rgba(100,116,139,0.20)' },
+    SAVED: { bg: 'bg-purple-100', text: 'text-purple-700', border: 'border-purple-700' },
+    APPLIED: { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-700' },
+    PHONE_SCREEN: { bg: 'bg-teal-100', text: 'text-teal-700', border: 'border-teal-700' },
+    INTERVIEW: { bg: 'bg-orange-100', text: 'text-orange-700', border: 'border-orange-700' },
+    OFFER: { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-700' },
+    REJECTED: { bg: 'bg-red-100', text: 'text-red-700', border: 'border-red-700' },
+    WITHDRAWN: { bg: 'bg-gray-100', text: 'text-gray-700', border: 'border-gray-700' },
 };
 
 function getStatus(status) {
@@ -51,10 +50,8 @@ export default function DashboardPage() {
                 setStats(sr.json ? await sr.json() : sr);
                 const ad = ar.json ? await ar.json() : ar;
                 const sd = svr.json ? await svr.json() : svr;
-                const appliedArr = ad.content || (Array.isArray(ad) ? ad : []);
-                const savedArr = sd.content || (Array.isArray(sd) ? sd : []);
-                setAppliedJobs(appliedArr);
-                setSavedJobs(savedArr);
+                setAppliedJobs(ad.content || (Array.isArray(ad) ? ad : []));
+                setSavedJobs(sd.content || (Array.isArray(sd) ? sd : []));
             } catch (e) {
                 console.error(e);
             } finally {
@@ -67,155 +64,98 @@ export default function DashboardPage() {
     const breakdown = stats.applicationStatusBreakdown || {};
 
     return (
-        <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
-            <style>{`
-                @media (max-width: 1024px) {
-                    .dash-grid-4 { grid-template-columns: repeat(2, 1fr) !important; }
-                }
-                @media (max-width: 768px) {
-                    .dash-main { padding-left: 0 !important; }
-                    .dash-main-inner { padding: 80px 16px 24px !important; }
-                    .dash-grid-4 { grid-template-columns: 1fr 1fr !important; }
-                    .dash-bottom { flex-direction: column !important; }
-                    .dash-saved-panel { width: 100% !important; }
-                    
-                    /* Table responsiveness */
-                    .activity-table th:nth-child(2), .activity-table td:nth-child(2),
-                    .activity-table th:nth-child(4), .activity-table td:nth-child(4) {
-                        display: none !important;
-                    }
-                }
-                @media (max-width: 480px) {
-                    .dash-grid-4 { grid-template-columns: 1fr !important; }
-                    .dash-main-inner { padding-top: 72px !important; }
-                }
-            `}</style>
+        <div className="flex min-h-screen bg-[#F4F4F5] relative">
+            <div className="fixed inset-0 pointer-events-none opacity-20 z-0" style={{ backgroundImage: 'linear-gradient(to right, #060608 1px, transparent 1px), linear-gradient(to bottom, #060608 1px, transparent 1px)', backgroundSize: '64px 64px' }} />
 
             <Sidebar />
 
-            <main className="dash-main" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                {/* Top header */}
+            <main className="flex-1 flex flex-col overflow-hidden relative z-10">
                 <AppHeader left={
-                    <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px', color: 'var(--color-white-40)' }}>
+                    <div className="font-label-mono font-bold uppercase text-sm text-brutalist-black bg-pure-white border-[3px] border-brutalist-black px-8 py-4 shadow-[4px_4px_0px_0px_#060608] inline-block" style={{"paddingLeft":"32px","paddingRight":"32px","paddingTop":"16px","paddingBottom":"16px"}}>
                         {today}
                     </div>
                 } />
 
-                {/* Content */}
-                <div style={{ flex: 1, overflowY: 'auto' }}>
-                    <div className="dash-main-inner" style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px' }}>
+                {/* ↑ px-8 py-4 (was px-6 py-3) */}
+                <div style={{ "padding": "00px 10px" , "padding":"80px"}} className="flex-1 overflow-y-auto p-8 md:p-14 lg:p-20 dashboard-main-content">
+                    {/* ↑ p-8 / p-14 / p-20 (was p-6 / p-12 / p-16) */}
+                    <div className="max-w-7xl mx-auto">
 
                         {/* Greeting */}
-                        <div style={{ marginBottom: '32px' }}>
-                            <h1 style={{
-                                fontFamily: 'var(--font-display)', fontWeight: 800,
-                                fontSize: 'clamp(22px, 3vw, 32px)', letterSpacing: '-0.025em',
-                                color: 'var(--color-white)', margin: 0,
-                            }}>
-                                {getGreeting()}, {username} <FaHandPaper style={{ display: 'inline', marginLeft: '6px', color: 'var(--color-orange)' }} />
+                        <div className="bg-pure-white border-[4px] border-brutalist-black p-12 md:p-16 shadow-[4px_4px_0px_0px_#060608] dashboard-header-block" style={{ margin: "20px 0", padding: "0 10px" , "padding":"64px"}}>
+                            {/* ↑ mb-14, p-12 / p-16 (was mb-12, p-10 / p-14) */}
+                            <h1 className="font-headline-md font-black uppercase tracking-tighter text-3xl md:text-5xl text-brutalist-black m-0 flex items-center flex-wrap gap-4 dashboard-greeting">
+                                {getGreeting()}, {username}
+                                <FiSmile className="text-vibrant-orange w-10 h-10 inline-block" />
                             </h1>
-                            <p style={{
-                                fontFamily: 'var(--font-body)', fontSize: '14px',
-                                color: 'var(--color-white-40)', marginTop: '6px',
-                            }}>
-                                {today}
+                            <p className="font-label-mono font-bold uppercase text-sm mt-8 text-brutalist-black bg-vibrant-orange text-pure-white inline-block px-6 py-3 border-[3px] border-brutalist-black shadow-[4px_4px_0px_0px_#060608]" style={{"paddingLeft":"24px","paddingRight":"24px","paddingTop":"12px","paddingBottom":"12px"}}>
+                                {/* ↑ mt-8, px-6 py-3 (was mt-6, px-5 py-2) */}
+                                Let's get to work
                             </p>
                         </div>
 
                         {/* Stat cards */}
-                        <div
-                            className="dash-grid-4"
-                            style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(4, 1fr)',
-                                gap: '16px', marginBottom: '32px',
-                            }}
-                        >
-                            <StatCard title="Total Applied" value={stats.totalApplied || 0} icon={<FaPaperPlane />} />
-                            <StatCard title="Interviews Scheduled" value={breakdown.INTERVIEW || 0} icon={<FaCalendarAlt />} />
-                            <StatCard title="Offers Received" value={breakdown.OFFER || 0} icon={<FaTrophy />} accentColor="green" />
-                            <StatCard title="Saved Jobs" value={stats.totalSaved || 0} icon={<FaBookmark />} />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8" style={{ margin: "20px 0", padding: "0 10px" }}>
+                            {/* ↑ gap-8 (was gap-6 mb-14) */}
+                            <StatCard title="Total Applied" value={stats.totalApplied || 0} icon={<FiSend />} />
+                            <StatCard title="Interviews Scheduled" value={breakdown.INTERVIEW || 0} icon={<FiCalendar />} />
+                            <StatCard title="Offers Received" value={breakdown.OFFER || 0} icon={<FiAward />} accentColor="green" />
+                            <StatCard title="Saved Jobs" value={stats.totalSaved || 0} icon={<FiBookmark />} />
                         </div>
 
                         {/* Bottom row */}
-                        <div className="dash-bottom" style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
+                        <div style={{ "padding": "00px 10px" }} className="flex flex-col lg:flex-row gap-12 items-stretch tables-container">
+                            {/* ↑ items-stretch (was items-start) */}
 
                             {/* Applied jobs table */}
-                            <div style={{
-                                flex: 1,
-                                background: 'var(--color-surface-2)',
-                                border: '1px solid var(--color-border)',
-                                borderRadius: '14px', overflow: 'hidden',
-                            }}>
-                                <div style={{
-                                    padding: '20px 24px',
-                                    borderBottom: '1px solid var(--color-border)',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                }}>
-                                    <h2 style={{
-                                        fontFamily: 'var(--font-display)', fontWeight: 700,
-                                        fontSize: '16px', color: 'var(--color-white)', margin: 0,
-                                    }}>Recent Activity</h2>
-                                    <Link to="/applied-all" style={{
-                                        fontFamily: 'var(--font-display)', fontWeight: 700,
-                                        fontSize: '12px', color: 'var(--color-orange)',
-                                        textDecoration: 'none', letterSpacing: '0.04em',
-                                    }}>View All →</Link>
+                            <div className="flex-1 w-full bg-pure-white border-[4px] border-brutalist-black shadow-[4px_4px_0px_0px_#060608] overflow-hidden flex flex-col">
+                                <div className="p-10 border-b-[4px] border-brutalist-black flex items-center justify-between bg-vibrant-orange table-header-block" style={{"padding":"40px"}}>
+                                    {/* ↑ p-10 (was p-8) */}
+                                    <h2 className="font-headline-md font-black uppercase tracking-tighter text-2xl text-pure-white m-0">Recent Activity</h2>
                                 </div>
-                                <div style={{ overflowX: 'auto' }}>
-                                    <table className="activity-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                <div className="overflow-x-auto flex-1">
+                                    <table className="w-full border-collapse min-w-[600px]">
                                         <thead>
-                                            <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
+                                            <tr className="border-b-[4px] border-brutalist-black bg-[#F4F4F5]">
                                                 {['Job Title', 'Company', 'Status', 'Date Applied'].map(h => (
-                                                    <th key={h} style={{
-                                                        padding: '12px 20px',
-                                                        fontFamily: 'var(--font-display)', fontWeight: 700,
-                                                        fontSize: '10px', letterSpacing: '0.12em',
-                                                        textTransform: 'uppercase',
-                                                        color: 'var(--color-white-40)',
-                                                        textAlign: 'left', whiteSpace: 'nowrap',
-                                                    }}>{h}</th>
+                                                    <th key={h} className="px-8 py-7 font-label-mono font-bold uppercase text-sm text-brutalist-black text-left whitespace-nowrap border-r-[4px] border-brutalist-black last:border-r-0 table-header" style={{"paddingLeft":"32px","paddingRight":"32px","paddingTop":"28px","paddingBottom":"28px"}}>
+                                                        {/* ↑ px-8 py-7 (was p-6) */}
+                                                        {h}
+                                                    </th>
                                                 ))}
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {loading ? (
-                                                <tr><td colSpan="4" style={{ padding: '32px', textAlign: 'center', color: 'var(--color-white-40)', fontFamily: 'var(--font-body)', fontSize: '14px' }}>Loading…</td></tr>
+                                                <tr><td colSpan="4" className="px-8 py-14 text-center font-label-mono font-bold uppercase text-sm text-brutalist-black" style={{"paddingLeft":"32px","paddingRight":"32px","paddingTop":"56px","paddingBottom":"56px"}}>Loading…</td></tr>
                                             ) : appliedJobs.length === 0 ? (
-                                                <tr><td colSpan="4" style={{ padding: '40px', textAlign: 'center' }}>
-                                                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--color-white-40)', margin: '0 0 4px' }}>No activity yet.</p>
-                                                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-20)', margin: 0 }}>Add your first application to get started.</p>
-                                                </td></tr>
-                                            ) : appliedJobs.map((job) => {
+                                                <tr>
+                                                    <td colSpan="4" className="px-8 py-16 text-center" style={{"paddingLeft":"32px","paddingRight":"32px","paddingTop":"64px","paddingBottom":"64px"}}>
+                                                        {/* ↑ py-16 (was p-12) */}
+                                                        <p className="font-label-mono font-bold uppercase text-sm text-brutalist-black mb-2">No activity yet.</p>
+                                                        <p className="font-label-mono text-sm text-gray-500 m-0">Add your first application to get started.</p>
+                                                    </td>
+                                                </tr>
+                                            ) : appliedJobs.map((job, index) => {
                                                 const s = getStatus(job.applicationStatus);
                                                 return (
-                                                    <tr key={job.id} style={{ borderBottom: '1px solid rgba(46,46,46,0.5)' }}>
-                                                        <td style={{ padding: '14px 20px' }}>
-                                                            <Link to={`/jobs/${job.id}`} style={{
-                                                                fontFamily: 'var(--font-display)', fontWeight: 700,
-                                                                fontSize: '14px', color: 'var(--color-white)',
-                                                                textDecoration: 'none',
-                                                            }}
-                                                                onMouseEnter={e => e.target.style.color = 'var(--color-orange)'}
-                                                                onMouseLeave={e => e.target.style.color = 'var(--color-white)'}
-                                                            >
+                                                    <tr key={job.id} className={`${index !== appliedJobs.length - 1 ? 'border-b-[4px] border-brutalist-black' : ''} transition-colors hover:bg-gray-100`}>
+                                                        <td className="px-8 py-7 border-r-[4px] border-brutalist-black table-cell" style={{"paddingLeft":"32px","paddingRight":"32px","paddingTop":"28px","paddingBottom":"28px"}}>
+                                                            {/* ↑ px-8 py-7 (was p-6) */}
+                                                            <Link to={`/jobs/${job.id}`} className="font-headline-md font-bold text-lg text-brutalist-black no-underline hover:text-vibrant-orange hover:underline decoration-4 underline-offset-4 transition-colors">
                                                                 {job.title || job.role}
                                                             </Link>
                                                         </td>
-                                                        <td style={{ padding: '14px 20px', fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--color-white-65)' }}>
+                                                        <td className="px-8 py-7 border-r-[4px] border-brutalist-black font-label-mono text-sm text-brutalist-black font-bold table-cell" style={{"paddingLeft":"32px","paddingRight":"32px","paddingTop":"28px","paddingBottom":"28px"}}>
                                                             {job.companyName || job.company}
                                                         </td>
-                                                        <td style={{ padding: '14px 20px' }}>
-                                                            <span style={{
-                                                                fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '11px',
-                                                                letterSpacing: '0.06em',
-                                                                background: s.bg, color: s.color, border: `1px solid ${s.border}`,
-                                                                padding: '3px 10px', borderRadius: '999px',
-                                                            }}>
+                                                        <td className="px-8 py-7 border-r-[4px] border-brutalist-black table-cell" style={{"paddingLeft":"32px","paddingRight":"32px","paddingTop":"28px","paddingBottom":"28px"}}>
+                                                            <span className={`font-label-mono font-bold uppercase text-xs tracking-wider px-5 py-3 border-[3px] shadow-[2px_2px_0px_0px_#060608] inline-block ${s.bg} ${s.text} ${s.border}`} style={{"paddingLeft":"20px","paddingRight":"20px","paddingTop":"12px","paddingBottom":"12px"}}>
+                                                                {/* ↑ px-5 py-3 (was px-4 py-2) */}
                                                                 {job.applicationStatus || 'Applied'}
                                                             </span>
                                                         </td>
-                                                        <td style={{ padding: '14px 20px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-white-40)' }}>
+                                                        <td className="px-8 py-7 font-label-mono text-sm text-brutalist-black font-bold table-cell" style={{"paddingLeft":"32px","paddingRight":"32px","paddingTop":"28px","paddingBottom":"28px"}}>
                                                             {formatDate(job.appliedAt)}
                                                         </td>
                                                     </tr>
@@ -224,66 +164,48 @@ export default function DashboardPage() {
                                         </tbody>
                                     </table>
                                 </div>
+                                <div className="px-8 py-7 border-t-[4px] border-brutalist-black bg-[#F4F4F5]" style={{"paddingLeft":"32px","paddingRight":"32px","paddingTop":"28px","paddingBottom":"28px"}}>
+                                    <Link to="/applied-all" className="block w-full text-center font-label-mono font-bold uppercase text-sm text-pure-white bg-brutalist-black border-[3px] border-brutalist-black py-6 shadow-[4px_4px_0px_0px_#FF6B00] transition-all duration-200 hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none no-underline" style={{"paddingTop":"24px","paddingBottom":"24px"}}>
+                                        View All Recent Activity →
+                                    </Link>
+                                </div>
                             </div>
 
                             {/* Saved jobs panel */}
-                            <div className="dash-saved-panel" style={{
-                                width: '280px', flexShrink: 0,
-                                background: 'var(--color-surface-2)',
-                                border: '1px solid var(--color-border)',
-                                borderRadius: '14px', overflow: 'hidden',
-                            }}>
-                                <div style={{
-                                    padding: '20px 20px',
-                                    borderBottom: '1px solid var(--color-border)',
-                                }}>
-                                    <h2 style={{
-                                        fontFamily: 'var(--font-display)', fontWeight: 700,
-                                        fontSize: '16px', color: 'var(--color-white)', margin: 0,
-                                    }}>Saved Jobs</h2>
+                            <div className="w-full lg:w-[380px] shrink-0 bg-pure-white border-[4px] border-brutalist-black shadow-[4px_4px_0px_0px_#060608] overflow-hidden flex flex-col saved-jobs-panel">
+                                {/* ↑ w-[380px] (was w-[360px]) */}
+                                <div className="p-10 border-b-[4px] border-brutalist-black bg-brutalist-black table-header-block" style={{"padding":"40px"}}>
+                                    {/* ↑ p-10 (was p-8) */}
+                                    <h2 className="font-headline-md font-black uppercase tracking-tighter text-xl text-pure-white m-0">Saved Jobs</h2>
                                 </div>
-                                <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <div className="p-8 flex flex-col gap-6 flex-1 overflow-y-auto" style={{"padding":"32px"}}>
+                                    {/* ↑ p-8 (was p-6) */}
                                     {loading ? (
-                                        <p style={{ padding: '16px', textAlign: 'center', color: 'var(--color-white-40)', fontFamily: 'var(--font-body)', fontSize: '13px' }}>Loading…</p>
+                                        <p className="py-8 text-center font-label-mono font-bold uppercase text-sm text-brutalist-black" style={{"paddingTop":"32px","paddingBottom":"32px"}}>Loading…</p>
                                     ) : savedJobs.length === 0 ? (
-                                        <div style={{ padding: '24px 16px', textAlign: 'center' }}>
-                                            <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)', margin: '0 0 4px' }}>No saved jobs yet.</p>
-                                            <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--color-white-20)', margin: 0 }}>Browse jobs to start saving opportunities.</p>
+                                        <div className="px-8 py-10 text-center border-[3px] border-dashed border-brutalist-black" style={{"paddingLeft":"32px","paddingRight":"32px","paddingTop":"40px","paddingBottom":"40px"}}>
+                                            {/* ↑ px-8 py-10 (was p-8) */}
+                                            <p className="font-label-mono font-bold uppercase text-sm text-brutalist-black mb-2">No saved jobs yet.</p>
+                                            <p className="font-label-mono text-xs text-gray-500 m-0">Browse jobs to start saving opportunities.</p>
                                         </div>
                                     ) : savedJobs.map((job) => (
-                                        <Link key={job.id} to={`/jobs/${job.id}`} style={{ textDecoration: 'none' }}>
-                                            <div style={{
-                                                padding: '12px',
-                                                background: 'var(--color-surface-3)',
-                                                border: '1px solid var(--color-border)',
-                                                borderRadius: '10px',
-                                                transition: 'border-color 0.2s',
-                                            }}
-                                                onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-orange-border)'}
-                                                onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-border)'}
-                                            >
-                                                <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px', color: 'var(--color-white)', margin: '0 0 3px' }}>
+                                        <Link key={job.id} to={`/jobs/${job.id}`} className="no-underline block">
+                                            <div className="px-8 py-7 bg-[#F4F4F5] border-[3px] border-brutalist-black shadow-[4px_4px_0px_0px_#060608] transition-all duration-200 hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none hover:bg-vibrant-orange group" style={{"paddingLeft":"32px","paddingRight":"32px","paddingTop":"28px","paddingBottom":"28px"}}>
+                                                {/* ↑ px-8 py-7 (was p-6) */}
+                                                <p className="font-headline-md font-bold text-base text-brutalist-black m-0 mb-2 group-hover:text-pure-white">
                                                     {job.title || job.role}
                                                 </p>
-                                                <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--color-white-40)', margin: 0 }}>
+                                                <p className="font-label-mono text-sm text-brutalist-black m-0 font-bold group-hover:text-pure-white">
                                                     {job.companyName || job.company}
                                                 </p>
                                             </div>
                                         </Link>
                                     ))}
                                 </div>
-                                <div style={{ padding: '12px', borderTop: '1px solid var(--color-border)' }}>
-                                    <Link to="/saved-all" style={{
-                                        display: 'block', textAlign: 'center',
-                                        fontFamily: 'var(--font-display)', fontWeight: 700,
-                                        fontSize: '12px', color: 'var(--color-white-65)',
-                                        textDecoration: 'none', padding: '8px',
-                                        borderRadius: '8px',
-                                        transition: 'color 0.2s, background 0.2s',
-                                    }}
-                                        onMouseEnter={e => { e.currentTarget.style.color = 'var(--color-white)'; e.currentTarget.style.background = 'var(--color-surface-3)'; }}
-                                        onMouseLeave={e => { e.currentTarget.style.color = 'var(--color-white-65)'; e.currentTarget.style.background = 'transparent'; }}
-                                    >
+                                <div className="px-8 py-7 border-t-[4px] border-brutalist-black bg-[#F4F4F5]" style={{"paddingLeft":"32px","paddingRight":"32px","paddingTop":"28px","paddingBottom":"28px"}}>
+                                    {/* ↑ px-8 py-7 (was p-6) */}
+                                    <Link to="/saved-all" className="block w-full text-center font-label-mono font-bold uppercase text-sm text-pure-white bg-brutalist-black border-[3px] border-brutalist-black py-6 shadow-[4px_4px_0px_0px_#FF6B00] transition-all duration-200 hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none no-underline" style={{"paddingTop":"24px","paddingBottom":"24px"}}>
+                                        {/* ↑ py-6 (was py-5) */}
                                         View All Saved Jobs →
                                     </Link>
                                 </div>

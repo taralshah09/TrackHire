@@ -2,29 +2,110 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import api from '../service/ApiService';
 import {
-    FaTh,
-    FaSearch,
-    FaPaperPlane,
-    FaBookmark,
-    FaUser,
-    FaPowerOff,
-    FaBars,
-    FaChevronLeft,
-    FaChevronRight,
-    FaBuilding,
-    FaCode,
-} from 'react-icons/fa';
+    FiGrid,
+    FiSearch,
+    FiSend,
+    FiBookmark,
+    FiUser,
+    FiPower,
+    FiMenu,
+    FiChevronLeft,
+    FiChevronRight,
+    FiBriefcase,
+    FiCode,
+} from 'react-icons/fi';
 
 const NAV_ITEMS = [
-    { label: 'Dashboard', path: '/dashboard', icon: <FaTh /> },
-    { label: 'Browse Jobs', path: '/jobs', icon: <FaSearch /> },
-    { label: 'For You', path: '/preferred-jobs', icon: <FaUser /> },
-    { label: 'Applied', path: '/applied-all', icon: <FaPaperPlane /> },
-    { label: 'Saved Jobs', path: '/saved-all', icon: <FaBookmark /> },
-    { label: 'Preferences', path: '/company-preferences', icon: <FaBuilding /> },
-    { label: 'Profile', path: '/profile', icon: <FaUser /> },
-    { label: 'Meet the Builder', path: '/meet-the-builder', icon: <FaCode /> },
+    { label: 'Dashboard', path: '/dashboard', icon: <FiGrid /> },
+    { label: 'Browse Jobs', path: '/jobs', icon: <FiSearch /> },
+    { label: 'For You', path: '/preferred-jobs', icon: <FiUser /> },
+    { label: 'Applied', path: '/applied-all', icon: <FiSend /> },
+    { label: 'Saved Jobs', path: '/saved-all', icon: <FiBookmark /> },
+    { label: 'Preferences', path: '/company-preferences', icon: <FiBriefcase /> },
+    { label: 'Profile', path: '/profile', icon: <FiUser /> },
+    { label: 'Meet the Builder', path: 'https://taralshah.xyz', icon: <FiCode /> },
 ];
+
+const DASHBOARD_CSS = `
+    @media (max-width: 768px) {
+        .dashboard-main-content {
+            padding: 20px 10px !important;
+        }
+        .dashboard-header-block {
+            padding: 24px !important;
+        }
+        .dashboard-greeting {
+            font-size: 24px !important;
+        }
+        .stat-card {
+            padding: 16px !important;
+        }
+        .stat-card-title {
+            font-size: 12px !important;
+        }
+        .stat-card-value {
+            font-size: 32px !important;
+        }
+        .stat-card-icon {
+            width: 36px !important;
+            height: 36px !important;
+            font-size: 16px !important;
+        }
+        .tables-container {
+            display: flex !important;
+            flex-direction: column !important;
+        }
+        .table-header, .table-cell {
+            padding: 12px 16px !important;
+            font-size: 12px !important;
+        }
+        .table-header-block {
+            padding: 20px !important;
+        }
+        .saved-jobs-panel {
+            width: 100% !important;
+        }
+        .mobile-hamburger {
+            display: flex !important;
+        }
+        .sidebar-container {
+            position: fixed !important;
+            top: 0;
+            bottom: 0;
+            left: -100% !important;
+            transition: left 0.3s ease;
+        }
+        .sidebar-container.open {
+            left: 0 !important;
+        }
+    }
+    @media (min-width: 769px) {
+        .mobile-hamburger {
+            display: none !important;
+        }
+        .sidebar-container {
+            position: sticky !important;
+            left: 0 !important;
+        }
+        .tables-container {
+            display: flex !important;
+            flex-direction: row !important;
+        }
+    }
+`;
+
+function GlobalSidebarStyles() {
+    React.useEffect(() => {
+        const id = 'trackhire-dashboard-styles';
+        if (!document.getElementById(id)) {
+            const el = document.createElement('style');
+            el.id = id;
+            el.textContent = DASHBOARD_CSS;
+            document.head.insertBefore(el, document.head.firstChild);
+        }
+    }, []);
+    return null;
+}
 
 export default function Sidebar() {
     const location = useLocation();
@@ -33,80 +114,32 @@ export default function Sidebar() {
 
     const isActive = (path) => location.pathname === path;
 
-    const sidebarWidth = collapsed ? '64px' : '240px';
+    const sidebarWidth = collapsed ? 'w-[80px]' : 'w-[240px]';
 
     return (
         <>
+            <GlobalSidebarStyles />
             {/* Mobile hamburger */}
             <button
                 onClick={() => setMobileOpen(true)}
                 aria-label="Open menu"
-                style={{
-                    display: 'none',
-                    position: 'fixed', top: '12px', left: '12px', zIndex: 200,
-                    background: 'var(--color-surface-2)',
-                    border: '1px solid var(--color-border)',
-                    borderRadius: '8px',
-                    width: '40px', height: '40px',
-                    alignItems: 'center', justifyContent: 'center',
-                    cursor: 'pointer', color: 'var(--color-white-65)',
-                    fontSize: '20px',
-                }}
-                className="sidebar-mobile-btn"
+                className="fixed top-3 left-3 z-[200] bg-pure-white border-[3px] border-brutalist-black w-10 h-10 items-center justify-center cursor-pointer text-brutalist-black text-xl shadow-[4px_4px_0px_0px_#060608] transition-all duration-200 active:translate-x-[4px] active:translate-y-[4px] active:shadow-none mobile-hamburger"
             >
-                <FaBars />
+                <FiMenu />
             </button>
 
-            {/* Mobile overlay */}
-            {mobileOpen && (
-                <div
-                    onClick={() => setMobileOpen(false)}
-                    style={{
-                        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
-                        zIndex: 199, backdropFilter: 'blur(4px)',
-                    }}
-                />
-            )}
+            {/* Mobile overlay (removed) */}
 
             {/* Sidebar */}
             <aside
-                className="trackhire-sidebar"
-                style={{
-                    width: sidebarWidth,
-                    minHeight: '100vh',
-                    background: 'var(--color-surface-1)',
-                    borderRight: '1px solid var(--color-border)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    flexShrink: 0,
-                    position: 'sticky',
-                    top: 0,
-                    height: '100vh',
-                    overflow: 'hidden',
-                    transition: 'width 0.25s ease',
-                    zIndex: 100,
-                }}
+                className={`h-screen bg-pure-white border-r-[4px] border-brutalist-black flex flex-col shrink-0 z-[100] transition-all duration-300 ease-in-out sidebar-container ${mobileOpen ? 'open' : ''} ${sidebarWidth}`}
+                style={mobileOpen ? { width: '260px' } : {}}
             >
                 {/* Logo + collapse toggle */}
-                <div style={{
-                    padding: collapsed ? '20px 0' : '20px 16px',
-                    borderBottom: '1px solid var(--color-border)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: collapsed ? 'center' : 'space-between',
-                    gap: '8px',
-                    height: '64px',
-                }}>
+                <div className={`p-8 border-b-[4px] border-brutalist-black flex items-center ${collapsed ? 'justify-center' : 'justify-between'} gap-4 h-[100px]`} style={{"padding":"32px"}}>
                     {!collapsed && (
-                        <Link to="/" style={{
-                            fontFamily: 'var(--font-display)',
-                            fontWeight: 800,
-                            fontSize: '20px',
-                            color: 'var(--color-white)',
-                            textDecoration: 'none',
-                            letterSpacing: '-0.02em',
-                        }}>
-                            Track<span style={{ color: 'var(--color-orange)' }}>H</span>ire
+                        <Link to="/" className="font-headline-md font-black uppercase tracking-tighter text-3xl text-brutalist-black no-underline">
+                            Track<span className="text-vibrant-orange">H</span>ire
                         </Link>
                     )}
                     <button
@@ -118,67 +151,49 @@ export default function Sidebar() {
                             }
                         }}
                         aria-label="Toggle sidebar"
-                        style={{
-                            background: 'transparent',
-                            border: 'none',
-                            cursor: 'pointer',
-                            color: 'var(--color-white-40)',
-                            fontSize: '16px',
-                            padding: '4px',
-                            borderRadius: '6px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            transition: 'color 0.2s',
-                        }}
-                        onMouseEnter={e => e.currentTarget.style.color = 'var(--color-white)'}
-                        onMouseLeave={e => e.currentTarget.style.color = 'var(--color-white-40)'}
+                        className="bg-pure-white border-[3px] border-brutalist-black cursor-pointer text-brutalist-black text-xl p-2.5 flex items-center justify-center transition-all duration-200 shadow-[4px_4px_0px_0px_#060608] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"
                     >
-                        {collapsed ? <FaChevronRight /> : <FaChevronLeft />}
+                        {collapsed ? <FiChevronRight /> : <FiChevronLeft />}
                     </button>
                 </div>
 
                 {/* Nav items */}
-                <nav style={{ flex: 1, padding: '12px 8px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <nav className="flex-1 p-6 flex flex-col gap-4 overflow-y-auto" style={{"padding":"24px"}}>
                     {NAV_ITEMS.map(({ label, path, icon }) => {
                         const active = isActive(path);
+                        const isExternal = path.startsWith('http');
+                        const linkClasses = `flex items-center gap-4 p-4 rounded-none border-[3px] font-label-mono font-bold uppercase text-sm no-underline transition-all duration-200 ${collapsed ? 'justify-center' : 'justify-start'
+                            } ${active
+                                ? 'bg-vibrant-orange text-pure-white border-brutalist-black shadow-[4px_4px_0px_0px_#060608] translate-x-[-2px] translate-y-[-2px]'
+                                : 'bg-pure-white text-brutalist-black border-transparent hover:border-brutalist-black hover:shadow-[4px_4px_0px_0px_#060608] hover:translate-x-[-2px] hover:translate-y-[-2px]'
+                            }`;
+
+                        if (isExternal) {
+                            return (
+                                <a
+                                    key={path}
+                                    href={path}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    onClick={() => setMobileOpen(false)}
+                                    title={collapsed ? label : undefined}
+                                    className={linkClasses}
+                                >
+                                    <span className="text-xl shrink-0">{icon}</span>
+                                    {!collapsed && <span>{label}</span>}
+                                </a>
+                            );
+                        }
+
                         return (
                             <Link
                                 key={path}
                                 to={path}
                                 onClick={() => setMobileOpen(false)}
                                 title={collapsed ? label : undefined}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '12px',
-                                    padding: collapsed ? '10px 0' : '10px 12px',
-                                    justifyContent: collapsed ? 'center' : 'flex-start',
-                                    borderRadius: '8px',
-                                    textDecoration: 'none',
-                                    fontFamily: 'var(--font-display)',
-                                    fontWeight: 600,
-                                    fontSize: '14px',
-                                    color: active ? 'var(--color-orange)' : 'var(--color-white-65)',
-                                    background: active ? 'var(--color-orange-dim)' : 'transparent',
-                                    border: active ? '1px solid var(--color-orange-border)' : '1px solid transparent',
-                                    transition: 'all 0.2s ease',
-                                    whiteSpace: 'nowrap',
-                                }}
-                                onMouseEnter={e => {
-                                    if (!active) {
-                                        e.currentTarget.style.background = 'var(--color-surface-2)';
-                                        e.currentTarget.style.color = 'var(--color-white)';
-                                    }
-                                }}
-                                onMouseLeave={e => {
-                                    if (!active) {
-                                        e.currentTarget.style.background = 'transparent';
-                                        e.currentTarget.style.color = 'var(--color-white-65)';
-                                    }
-                                }}
+                                className={linkClasses}
                             >
-                                <span style={{ fontSize: '16px', flexShrink: 0 }}>{icon}</span>
+                                <span className="text-xl shrink-0">{icon}</span>
                                 {!collapsed && <span>{label}</span>}
                             </Link>
                         );
@@ -186,64 +201,17 @@ export default function Sidebar() {
                 </nav>
 
                 {/* Logout */}
-                <div style={{ padding: '8px', borderTop: '1px solid var(--color-border)' }}>
+                <div className="p-6 border-t-[4px] border-brutalist-black" style={{"padding":"24px"}}>
                     <button
                         onClick={() => api.logout()}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                            padding: collapsed ? '10px 0' : '10px 12px',
-                            justifyContent: collapsed ? 'center' : 'flex-start',
-                            width: '100%',
-                            borderRadius: '8px',
-                            background: 'transparent',
-                            border: '1px solid transparent',
-                            cursor: 'pointer',
-                            fontFamily: 'var(--font-display)',
-                            fontWeight: 600,
-                            fontSize: '14px',
-                            color: 'rgba(248,113,113,0.8)',
-                            transition: 'all 0.2s',
-                        }}
-                        onMouseEnter={e => {
-                            e.currentTarget.style.background = 'rgba(239,68,68,0.08)';
-                            e.currentTarget.style.borderColor = 'rgba(239,68,68,0.15)';
-                            e.currentTarget.style.color = '#f87171';
-                        }}
-                        onMouseLeave={e => {
-                            e.currentTarget.style.background = 'transparent';
-                            e.currentTarget.style.borderColor = 'transparent';
-                            e.currentTarget.style.color = 'rgba(248,113,113,0.8)';
-                        }}
+                        className={`flex items-center gap-4 p-4 w-full border-[3px] font-label-mono font-bold uppercase text-sm cursor-pointer transition-all duration-200 ${collapsed ? 'justify-center' : 'justify-start'
+                            } bg-pure-white text-brutalist-black border-brutalist-black hover:bg-red-500 hover:text-pure-white shadow-[4px_4px_0px_0px_#060608] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none`}
                     >
-                        <span style={{ fontSize: '16px', flexShrink: 0 }}><FaPowerOff /></span>
+                        <span className="text-xl shrink-0"><FiPower /></span>
                         {!collapsed && <span>Sign Out</span>}
                     </button>
                 </div>
             </aside>
-
-            {/* Responsive styles injected once */}
-            <style>{`
-                @media (max-width: 768px) {
-                    .trackhire-sidebar {
-                        position: fixed !important;
-                        top: 0; 
-                        left: ${mobileOpen ? '0' : '-260px'} !important;
-                        width: 260px !important; /* Slightly wider for better reach */
-                        z-index: 1000 !important;
-                        transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-                        box-shadow: ${mobileOpen ? '4px 0 40px rgba(0,0,0,0.8)' : 'none'};
-                    }
-                    .sidebar-mobile-btn {
-                        display: flex !important;
-                        position: fixed !important;
-                        top: 12px !important;
-                        left: 12px !important;
-                        z-index: 100 !important; /* Below header if possible, but actually header is sticky 50 */
-                    }
-                }
-            `}</style>
         </>
     );
 }
