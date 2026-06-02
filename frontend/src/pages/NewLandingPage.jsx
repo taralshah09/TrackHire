@@ -1,188 +1,48 @@
-import React, { Suspense, lazy, useState, useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaBolt, FaBullseye, FaClipboardList, FaChartBar, FaGithub, FaStar, FaProductHunt } from 'react-icons/fa';
 import Cookies from 'js-cookie';
+import { ScribbleArrow, ScribbleLine } from "../components/scribble-ui";
 
-const GITHUB_REPO = 'https://github.com/taralshah09/TrackHire';
-const AUTHOR_URL = '/meet-the-builder';
-const SCENE_URL = 'https://prod.spline.design/xNV9ygjcVERzejEQ/scene.splinecode';
-const Spline = lazy(() => import('@splinetool/react-spline'));
-
-/* ─── TOKENS ────────────────────────────────────────────────────────────── */
-const T = {
-    bg: '#060608',
-    s1: '#0d0d10',
-    s2: '#141418',
-    s3: '#1c1c22',
-    border: 'rgba(255,255,255,0.07)',
-    border2: 'rgba(249,115,22,0.20)',
-    orange: '#f97316',
-    orangeD: '#ea580c',
-    orangeDim: 'rgba(249,115,22,0.08)',
-    orangeGlow: 'rgba(249,115,22,0.32)',
-    white: '#ffffff',
-    w65: 'rgba(255,255,255,0.65)',
-    w40: 'rgba(255,255,255,0.38)',
-    w15: 'rgba(255,255,255,0.08)',
-};
-
-/* ─── GLOBAL STYLES ─────────────────────────────────────────────────────── */
 const GLOBAL_CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=Space+Mono&display=swap');
-
-  :root {
-    --color-bg:            #060608;
-    --color-surface-1:     #0d0d10;
-    --color-surface-2:     #141418;
-    --color-surface-3:     #1c1c22;
-    --color-border:        rgba(255,255,255,0.07);
-    --color-orange:        #f97316;
-    --color-orange-hover:  #ea580c;
-    --color-orange-dim:    rgba(249,115,22,0.08);
-    --color-orange-border: rgba(249,115,22,0.20);
-    --color-white:         #ffffff;
-    --color-white-65:      rgba(255,255,255,0.65);
-    --color-white-40:      rgba(255,255,255,0.38);
-    --color-white-20:      rgba(255,255,255,0.12);
-    --font-display:        'Syne', sans-serif;
-    --font-body:           'DM Sans', sans-serif;
-    --font-mono:           'Space Mono', monospace;
-  }
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; }
-  body { margin: 0; padding: 0; background: #060608; }
-  a    { text-decoration: none; }
-  ul   { list-style: none; padding: 0; margin: 0; }
-
-  /* Hide Spline watermark */
-  canvas ~ div[style*="position: fixed"],
-  canvas ~ a[style*="position: fixed"],
-  [class*="logo"][style*="position: fixed"],
-  div[style*="z-index: 2147483647"] { display: none !important; }
-
-  /* ── Marquee ── */
-  .lp-marquee-inner {
-    display: flex;
-    width: max-content;
-    animation: lpMarquee 28s linear infinite;
-  }
-  @keyframes lpMarquee {
-    from { transform: translateX(0); }
-    to   { transform: translateX(-50%); }
-  }
-
-  /* ── Glitch ── */
-  .lp-glitch-wrap { position: relative; display: inline-block; cursor: default; }
-  .lp-glitch-clone {
-    position: absolute; top: 0; left: 0;
-    width: 100%; pointer-events: none; opacity: 0;
-  }
-  .lp-glitch-wrap:hover .lp-gc1 {
-    animation: lpG1 0.42s steps(2) both;
-    color: #f97316; opacity: 0.8;
-    clip-path: polygon(0 18%, 100% 18%, 100% 38%, 0 38%);
-  }
-  .lp-glitch-wrap:hover .lp-gc2 {
-    animation: lpG2 0.42s steps(2) 0.06s both;
-    color: #67e8f9; opacity: 0.7;
-    clip-path: polygon(0 58%, 100% 58%, 100% 78%, 0 78%);
-  }
-  @keyframes lpG1 {
-    0%   { transform: translate(-4px,0); opacity:.8 }
-    25%  { transform: translate(4px,0) }
-    50%  { transform: translate(-2px,1px) }
-    75%  { transform: translate(2px,-1px) }
-    100% { transform: translate(0,0); opacity:0 }
-  }
-  @keyframes lpG2 {
-    0%   { transform: translate(4px,0); opacity:.7 }
-    25%  { transform: translate(-4px,0) }
-    50%  { transform: translate(2px,-1px) }
-    75%  { transform: translate(-2px,1px) }
-    100% { transform: translate(0,0); opacity:0 }
-  }
-
-  /* ── Heatmap pop ── */
-  .lp-hm {
-    width: 9px; height: 9px; border-radius: 2px;
-    animation: lpHmPop 0.3s ease both;
-  }
-  @keyframes lpHmPop {
-    from { opacity:0; transform: scale(0.4); }
-    to   { opacity:1; transform: scale(1); }
-  }
-
-  /* ── Fade animations ── */
-  @keyframes lpFadeDown {
-    from { opacity:0; transform:translateY(-18px); }
-    to   { opacity:1; transform:translateY(0); }
-  }
-  @keyframes lpFadeUp {
-    from { opacity:0; transform:translateY(18px); }
-    to   { opacity:1; transform:translateY(0); }
-  }
-  @keyframes lpPulse {
-    0%,100% { opacity:1; transform:scale(1); }
-    50%     { opacity:.45; transform:scale(.65); }
-  }
-  @keyframes lpSpinePulse {
-    from { opacity:.6; }
-    to   { opacity:1; }
-  }
-
-  /* ── Nav links hidden on mobile ── */
-  @media (max-width: 785px) {
-    .lp-nav-links { display: none !important; }
-  }
-  @media (max-width: 600px) {
-    .lp-hero-actions { flex-direction: column; align-items: center; width: 100%; gap: 12px !important; }
-    .lp-hero-actions > * { width: 100% !important; justify-content: center; }
-    .lp-strip-divider { display: none !important; }
-    .lp-github-text { display: none !important; }
-    .lp-nav-right-btn { padding: 8px !important; }
-  }
-
-  /* ── Grid Responsiveness ── */
-  @media (max-width: 900px) {
-    .lp-bento-grid { grid-template-columns: 1fr !important; }
-    .lp-pain-card-span-2 { grid-column: span 1 !important; }
-  }
-  
-  @media (max-width: 600px) {
-    .lp-nav-right-btn { display: none !important; }
-    .lp-hero-stats { 
-      display: grid !important;
-      grid-template-columns: repeat(2, 1fr) !important; 
-      padding: 16px !important;
-      gap: 16px !important;
+    .brutalist-shadow {
+        box-shadow: 4px 4px 0px 0px #060608;
     }
-    .lp-hero-stats-item { padding: 0 !important; }
-    .lp-hero-content { margin-top: 80px !important; }
-    
-    .lp-testimonials-slider {
-      display: flex !important;
-      overflow-x: auto !important;
-      scroll-snap-type: x mandatory !important;
-      gap: 16px !important;
-      padding: 0 0 24px !important;
-      -webkit-overflow-scrolling: touch;
+    .brutalist-shadow-lg {
+        box-shadow: 8px 8px 0px 0px #060608;
     }
-    .lp-testimonials-slider::-webkit-scrollbar { display: none; }
-    .lp-testimonial-card {
-      min-width: 85% !important;
-      scroll-snap-align: center !important;
+    .brutalist-shadow-orange {
+        box-shadow: 4px 4px 0px 0px #FF6B00;
     }
-  }
-
-  @media (max-width: 480px) {
-    .lp-nav-right-btn { display: none !important; }
-  }
+    .active-btn:active {
+        transform: translate(2px, 2px);
+        box-shadow: 0px 0px 0px 0px #060608;
+    }
+    .sticker-rotate-pos { transform: rotate(3deg); }
+    .sticker-rotate-neg { transform: rotate(-3deg); }
+    .grid-line-overlay {
+        background-image: linear-gradient(to right, #060608 1px, transparent 1px);
+        background-size: calc(100% / 12) 100%;
+        pointer-events: none;
+    }
+    .marker-font { font-family: 'Space Mono', monospace; }
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .hero-headline {
+        -webkit-text-stroke: 2.5px #060608;
+        text-stroke: 2.5px #060608;
+    }
+    .hero-grid-bg {
+        background-image:
+            linear-gradient(to right, rgba(6,6,8,0.2) 2px, transparent 2px),
+            linear-gradient(to bottom, rgba(6,6,8,0.2) 2px, transparent 2px);
+        background-size: 64px 64px;
+    }
 `;
 
 function GlobalStyles() {
     useEffect(() => {
-        const id = 'trackhire-genz-styles';
+        const id = 'trackhire-brutalist-styles';
         if (!document.getElementById(id)) {
             const el = document.createElement('style');
             el.id = id;
@@ -193,850 +53,451 @@ function GlobalStyles() {
     return null;
 }
 
-/* ─── CURSOR BLOB ────────────────────────────────────────────────────────── */
-function CursorBlob() {
-    const ref = useRef(null);
-    useEffect(() => {
-        const move = (e) => {
-            if (ref.current) {
-                ref.current.style.transform = `translate(${e.clientX - 200}px,${e.clientY - 200}px)`;
-            }
-        };
-        window.addEventListener('mousemove', move);
-        return () => window.removeEventListener('mousemove', move);
-    }, []);
-    return (
-        <div ref={ref} aria-hidden="true" style={{
-            position: 'fixed', top: 0, left: 0,
-            width: '400px', height: '400px',
-            borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(249,115,22,0.11) 0%, transparent 70%)',
-            pointerEvents: 'none', zIndex: 0,
-            transition: 'transform 0.12s ease-out',
-            willChange: 'transform',
-        }} />
-    );
-}
-
-/* ─── ANIMATED COUNTER ───────────────────────────────────────────────────── */
-function Counter({ to, suffix = '', duration = 1300 }) {
-    const [val, setVal] = useState(0);
-    const ref = useRef(null);
-    const done = useRef(false);
-    useEffect(() => {
-        const obs = new IntersectionObserver(([e]) => {
-            if (e.isIntersecting && !done.current) {
-                done.current = true;
-                const start = performance.now();
-                const tick = (now) => {
-                    const t = Math.min((now - start) / duration, 1);
-                    const ease = 1 - Math.pow(1 - t, 3);
-                    setVal(Math.round(ease * to));
-                    if (t < 1) requestAnimationFrame(tick);
-                };
-                requestAnimationFrame(tick);
-            }
-        }, { threshold: 0.3 });
-        if (ref.current) obs.observe(ref.current);
-        return () => obs.disconnect();
-    }, [to, duration]);
-    return <span ref={ref}>{val}{suffix}</span>;
-}
-
-/* ─── MARQUEE STRIP ──────────────────────────────────────────────────────── */
-const MARQUEE_ITEMS = [
-    'Job Aggregation', 'Smart Matching', 'Instant Alerts', 'Pipeline Tracking',
-    'Real Analytics', '500+ Companies', 'JWT Auth', 'Email Notifications',
-    'Cron Scraping', 'Daily Updates', 'React', 'Spring Boot', 'Node.js', 'PostgreSQL',
-];
-
-function MarqueeStrip() {
-    const items = [...MARQUEE_ITEMS, ...MARQUEE_ITEMS];
-    return (
-        <div style={{
-            overflow: 'hidden', padding: '14px 0',
-            background: T.s2,
-            borderTop: `1px solid ${T.border}`,
-            borderBottom: `1px solid ${T.border}`,
-            WebkitMaskImage: 'linear-gradient(90deg, transparent 0%, black 10%, black 90%, transparent 100%)',
-            maskImage: 'linear-gradient(90deg, transparent 0%, black 10%, black 90%, transparent 100%)',
-            position: 'relative', zIndex: 1,
-        }}>
-            <div className="lp-marquee-inner">
-                {items.map((t, i) => (
-                    <span key={i} style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '10px',
-                        fontFamily: 'var(--font-display)', fontWeight: 700,
-                        fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase',
-                        color: T.w40, padding: '0 22px', whiteSpace: 'nowrap',
-                    }}>
-                        <span style={{ width: '4px', height: '4px', borderRadius: '50%', background: T.orange, opacity: 0.5, flexShrink: 0 }} />
-                        {t}
-                    </span>
-                ))}
-            </div>
-        </div>
-    );
-}
-
-/* ─── SECTION LABEL ──────────────────────────────────────────────────────── */
-function SectionEye({ label }) {
-    return (
-        <p style={{
-            fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '0.16em',
-            textTransform: 'uppercase', color: T.orange, marginBottom: '12px',
-        }}>{label}</p>
-    );
-}
-
-function SectionH2({ children, center = false }) {
-    return (
-        <h2 style={{
-            fontFamily: 'var(--font-display)', fontWeight: 800,
-            fontSize: 'clamp(28px, 6vw, 52px)', letterSpacing: '-0.03em',
-            lineHeight: 1.1, color: T.white,
-            textAlign: center ? 'center' : 'left',
-            margin: center ? '0 auto 40px' : '0 0 40px',
-            maxWidth: center ? '640px' : 'unset',
-        }}>{children}</h2>
-    );
-}
-
-/* ─── NOISE OVERLAY + GRID BG ────────────────────────────────────────────── */
-function Atmosphere() {
-    return (
-        <>
-            <div aria-hidden="true" style={{
-                position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, opacity: 0.022,
-                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
-                backgroundSize: '200px 200px',
-            }} />
-        </>
-    );
-}
-
-/* ─── SPLINE HERO (RETAINED FROM ORIGINAL) ───────────────────────────────── */
-function SplineHero() {
-    const [loaded, setLoaded] = useState(false);
-    return (
-        <div style={{ position: 'absolute', inset: 0, zIndex: 0, overflow: 'hidden' }}>
-            {!loaded && (
-                <div style={{
-                    position: 'absolute', inset: 0,
-                    background: 'radial-gradient(ellipse 80% 60% at 60% 40%, rgba(249,115,22,0.12) 0%, #060608 70%)',
-                    animation: 'lpSpinePulse 2s ease-in-out infinite alternate',
-                }} />
-            )}
-            <Suspense fallback={null}>
-                <Spline
-                    scene={SCENE_URL}
-                    onLoad={() => setLoaded(true)}
-                    style={{
-                        width: '100%', height: '100%',
-                        opacity: loaded ? 1 : 0,
-                        transition: 'opacity 0.8s ease',
-                        pointerEvents: loaded ? 'auto' : 'none',
-                    }}
-                />
-            </Suspense>
-            <div style={{
-                position: 'absolute', inset: 0,
-                background: 'linear-gradient(135deg, rgba(6,6,8,0.72) 0%, rgba(6,6,8,0.28) 50%, rgba(6,6,8,0.55) 100%)',
-                zIndex: 1, pointerEvents: 'none',
-            }} />
-            <div style={{
-                position: 'absolute', bottom: 0, left: 0, right: 0, height: '220px',
-                background: `linear-gradient(to bottom, transparent, ${T.bg})`,
-                zIndex: 2, pointerEvents: 'none',
-            }} />
-            {/* Watermark cover */}
-            <div style={{
-                position: 'absolute', bottom: 0, right: 0,
-                width: '160px', height: '72px',
-                background: T.bg, zIndex: 20, pointerEvents: 'none',
-            }} />
-        </div>
-    );
-}
-
-/* ─── NAVBAR ─────────────────────────────────────────────────────────────── */
-function Navbar({ scrolled }) {
+export default function NewLandingPage() {
     const isLoggedIn = Boolean(Cookies.get('token') || Cookies.get('username') || Cookies.get('accessToken'));
 
-    const linkStyle = {
-        fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '12px',
-        color: T.w65, transition: 'all 0.2s',
-        padding: '8px 16px',
-        borderRadius: '8px',
-        background: '#000',
-        border: '1px solid transparent',
-        display: 'flex',
-        alignItems: 'center',
-    };
-
-    const linkHoverStyle = (e) => {
-        e.currentTarget.style.color = T.white;
-        e.currentTarget.style.background = '#333';
-        e.currentTarget.style.borderColor = '#fff';
-    };
-
-    const linkLeaveStyle = (e) => {
-        e.currentTarget.style.color = T.w65;
-        e.currentTarget.style.background = '#000';
-        e.currentTarget.style.borderColor = 'transparent';
-    };
-
     return (
-        <nav style={{
-            position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '0 clamp(16px, 4vw, 40px)', height: '64px',
-            background: scrolled ? 'rgba(6,6,8,0.88)' : 'transparent',
-            backdropFilter: scrolled ? 'blur(14px)' : 'none',
-            borderBottom: scrolled ? `1px solid ${T.border}` : '1px solid transparent',
-            transition: 'all 0.3s ease',
-        }}>
-            {/* Logo */}
-            <div style={{
-                fontFamily: 'var(--font-display)', fontWeight: 800,
-                fontSize: 'clamp(18px, 4.5vw, 22px)',
-                color: T.white, letterSpacing: '-0.02em',
-                display: 'flex', alignItems: 'center',
-                marginTop: '4px', flexShrink: 0,
-            }}>
-                Track<span style={{ color: T.orange }}>H</span>ire
-            </div>
-
-            {/* Links */}
-            <div className="lp-nav-links" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                <Link to="/meet-the-builder" style={linkStyle}
-                    onMouseEnter={linkHoverStyle}
-                    onMouseLeave={linkLeaveStyle}>Builder</Link>
-                <a href="https://www.producthunt.com/products/trackhire?utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-trackhire"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '8px',
-                        fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '12px',
-                        color: T.w65, background: T.s2, border: `1px solid ${T.border}`,
-                        borderRadius: '8px', padding: '8px 16px', transition: 'all 0.2s',
-                    }}
-                    onMouseEnter={e => {
-                        e.currentTarget.style.borderColor = T.orange;
-                        e.currentTarget.style.color = T.white;
-                        e.currentTarget.style.background = 'rgba(218, 85, 47, 0.1)';
-                    }}
-                    onMouseLeave={e => {
-                        e.currentTarget.style.borderColor = T.border;
-                        e.currentTarget.style.color = T.w65;
-                        e.currentTarget.style.background = T.s2;
-                    }}
-                >
-                    <FaProductHunt style={{ color: '#DA552F', fontSize: '16px' }} />
-                    <span>Product Hunt</span>
-                </a>
-            </div>
-
-            {/* Right */}
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                {isLoggedIn ? (
-                    <Link to="/dashboard" style={primaryBtn}
-                        onMouseEnter={e => { e.currentTarget.style.background = T.orangeD; e.currentTarget.style.transform = 'scale(1.02)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = T.orange; e.currentTarget.style.transform = 'scale(1)'; }}>
-                        Dashboard
+        <div className="bg-surface text-brutalist-black font-body-lg overflow-x-hidden selection:bg-vibrant-orange selection:text-pure-white">
+            <GlobalStyles />
+            {/* TopNavBar */}
+            <nav className="w-full sticky top-0 z-50 bg-surface border-b-4 border-brutalist-black px-8 md:px-12 lg:px-16">
+                <div className="w-full flex justify-between items-center py-6 gap-4">
+                    {/* Brand */}
+                    <Link to="/" className="font-headline-md text-headline-md uppercase tracking-tighter text-brutalist-black shrink-0">
+                        TRACK<span className="text-vibrant-orange">HIRE</span>
                     </Link>
-                ) : (
-                    <Link to="/login" style={primaryBtn}
-                        onMouseEnter={e => { e.currentTarget.style.background = T.orangeD; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = `0 8px 24px ${T.orangeGlow}`; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = T.orange; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
-                        Log in
-                    </Link>
-                )}
 
-                <a href={GITHUB_REPO} target="_blank" rel="noopener noreferrer" className="lp-nav-right-btn" style={{
-                    display: 'inline-flex', alignItems: 'center', gap: '6px',
-                    fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px',
-                    color: T.w65, background: T.s2, border: `1px solid ${T.border}`,
-                    borderRadius: '8px', padding: '7px 14px', transition: 'all 0.2s', whiteSpace: 'nowrap',
-                }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = T.border2; e.currentTarget.style.color = T.orange; e.currentTarget.style.background = T.orangeDim; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.w65; e.currentTarget.style.background = T.s2; }}
-                >
-                    <FaStar style={{ fontSize: '11px' }} /> <span className="lp-github-text">Star on GitHub</span>
-                </a>
-            </div>
-        </nav>
-    );
-}
-
-/* ─── SHARED BUTTON STYLES ───────────────────────────────────────────────── */
-const primaryBtn = {
-    fontFamily: 'var(--font-display)', fontWeight: 700,
-    fontSize: 'clamp(12px, 3vw, 14px)',
-    color: '#000', background: T.orange,
-    padding: 'clamp(8px, 2vw, 11px) clamp(16px, 4vw, 22px)',
-    borderRadius: '9px', border: 'none', cursor: 'pointer',
-    display: 'inline-flex', alignItems: 'center', gap: '6px',
-    transition: 'all 0.2s', letterSpacing: '0.01em',
-};
-
-const ghostBtn = {
-    fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '14px',
-    color: T.white, background: 'transparent', padding: '11px 22px',
-    borderRadius: '9px', border: `1px solid ${T.border}`, cursor: 'pointer',
-    display: 'inline-flex', alignItems: 'center', gap: '6px',
-    transition: 'all 0.2s',
-};
-
-/* ─── SECTION: HERO (RETAINED + GLITCH) ──────────────────────────────────── */
-function HeroSection() {
-    const STATS = [
-        { stat: '500', suffix: '+', label: 'Companies Tracked' },
-        { stat: 5, suffix: ' min', label: 'Alert Delivery' },
-        { stat: 9, suffix: ' min', label: 'Avg Daily Time' },
-        { stat: 67, suffix: '%', label: 'Miss By Being Late' },
-    ];
-
-    return (
-        <section style={{
-            position: 'relative', height: '100svh', minHeight: '640px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            overflow: 'hidden', background: '#000',
-        }}>
-            <SplineHero />
-
-            <div className="lp-hero-content" style={{
-                position: 'relative', zIndex: 10, textAlign: 'center',
-                padding: '0 24px', maxWidth: '880px',
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '26px',
-                marginTop: '64px',
-            }}>
-                {/* Pill */}
-                <div style={{
-                    display: 'inline-flex', alignItems: 'center', gap: '8px',
-                    fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '11px',
-                    letterSpacing: '0.12em', textTransform: 'uppercase', color: T.orange,
-                    background: T.orangeDim, border: `1px solid ${T.border2}`,
-                    padding: '7px 18px', borderRadius: '999px',
-                    animation: 'lpFadeDown 0.6s ease both',
-                }}>
-                    <span style={{
-                        width: '7px', height: '7px', borderRadius: '50%', background: T.orange,
-                        animation: 'lpPulse 2s ease-in-out infinite',
-                    }} />
-                    500+ companies monitored · live
-                </div>
-
-                {/* Glitch Headline */}
-                <div style={{ animation: 'lpFadeDown 0.6s 0.1s ease both' }}>
-                    <div className="lp-glitch-wrap" style={{
-                        fontFamily: 'var(--font-display)', fontWeight: 800,
-                        fontSize: 'clamp(34px, 8vw, 78px)', lineHeight: 1.05,
-                        letterSpacing: '-0.035em', color: T.white,
-                    }}>
-                        <span style={{ position: 'relative', zIndex: 2 }}>
-                            Stop Hunting.{' '}
-                            <span style={{ color: T.orange }}>Start Landing.</span>
-                        </span>
-                        <span className="lp-glitch-clone lp-gc1" aria-hidden="true">
-                            Stop Hunting. <span style={{ color: T.orange }}>Start Landing.</span>
-                        </span>
-                        <span className="lp-glitch-clone lp-gc2" aria-hidden="true">
-                            Stop Hunting. <span style={{ color: '#67e8f9' }}>Start Landing.</span>
-                        </span>
-                    </div>
-                </div>
-
-                {/* Sub-copy */}
-                <p style={{
-                    fontFamily: 'var(--font-body)', fontWeight: 400, fontSize: 'clamp(15px, 4vw, 18px)',
-                    lineHeight: 1.7, color: T.w65, maxWidth: '540px', margin: 0,
-                    animation: 'lpFadeDown 0.6s 0.2s ease both',
-                }}>
-                    We watch every career page you care about, 24/7 — so you apply first,
-                    every&nbsp;single&nbsp;time.
-                </p>
-
-                {/* CTAs */}
-                <div className="lp-hero-actions" style={{
-                    display: 'flex', gap: '14px', flexWrap: 'wrap', justifyContent: 'center',
-                    animation: 'lpFadeDown 0.6s 0.3s ease both',
-                }}>
-                    <Link to="/jobs" style={{ ...primaryBtn, padding: '15px 30px', fontSize: '15px' }}
-                        onMouseEnter={e => { e.currentTarget.style.background = T.orangeD; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = `0 10px 28px ${T.orangeGlow}`; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = T.orange; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
-                        Browse Jobs
-                    </Link>
-                    <a href="#how-it-works" style={{ ...ghostBtn, padding: '15px 30px', fontSize: '15px' }}
-                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'; e.currentTarget.style.background = T.w15; }}
-                        onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.background = 'transparent'; }}>
-                        See How It Works ↓
-                    </a>
-                </div>
-
-                {/* Stats strip */}
-                <div className="lp-hero-stats" style={{
-                    display: 'flex', alignItems: 'center', gap: '0',
-                    padding: '20px 32px',
-                    background: 'rgba(6,6,8,0.58)',
-                    backdropFilter: 'blur(18px)',
-                    border: `1px solid ${T.border}`,
-                    borderRadius: '16px',
-                    animation: 'lpFadeUp 0.6s 0.4s ease both',
-                }}>
-                    {STATS.map(({ stat, suffix, label }, i) => (
-                        <React.Fragment key={label}>
-                            <div className="lp-hero-stats-item" style={{ textAlign: 'center', padding: '0 28px', flex: 1 }}>
-                                <div style={{
-                                    fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 'clamp(18px, 4.5vw, 24px)',
-                                    color: T.orange, letterSpacing: '-0.02em', lineHeight: 1,
-                                }}>
-                                    <Counter to={parseInt(stat)} suffix={suffix} />
-                                </div>
-                                <div style={{
-                                    fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'clamp(8px, 2.5vw, 10px)',
-                                    letterSpacing: '0.12em', color: T.w40, textTransform: 'uppercase', marginTop: '6px',
-                                }}>{label}</div>
-                            </div>
-                            {i < STATS.length - 1 && (
-                                <div className="lp-strip-divider" style={{ width: '1px', background: T.border, alignSelf: 'stretch', margin: '4px 0' }} />
-                            )}
-                        </React.Fragment>
-                    ))}
-                </div>
-            </div>
-        </section>
-    );
-}
-
-/* ─── SECTION: PAIN (BENTO CARDS) ────────────────────────────────────────── */
-function PainSection() {
-    const [hovered, setHovered] = useState(null);
-
-    const lines = [
-        { number: 45, suffix: 'min', color: '#f87171', desc: 'wasted every day checking career pages manually', span: 1 },
-        { number: 23, suffix: 'hrs', color: '#fb923c', desc: 'lost every month to the same exhausting routine', span: 1 },
-        { number: 67, suffix: '%', color: '#f97316', desc: 'of job seekers miss roles by applying too late', span: 2 },
-    ];
-
-    return (
-        <section style={{ background: T.bg, padding: '96px 24px', position: 'relative', zIndex: 1 }}>
-            <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-                <div style={{ textAlign: 'center', marginBottom: '56px' }}>
-                    <SectionEye label="00 — The Real Cost" />
-                    <SectionH2 center>
-                        Every morning.<br /><span style={{ color: T.orange }}>The same routine.</span>
-                    </SectionH2>
-                </div>
-
-                <div className="lp-bento-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-                    {lines.map(({ number, suffix, color, desc, span }, i) => (
-                        <div key={i}
-                            onMouseEnter={() => setHovered(i)}
-                            onMouseLeave={() => setHovered(null)}
-                            className={span === 2 ? 'lp-pain-card-span-2' : ''}
-                            style={{
-                                gridColumn: `span ${span}`,
-                                background: T.s2,
-                                border: hovered === i ? `1px solid ${T.border2}` : `1px solid ${T.border}`,
-                                borderRadius: '18px', padding: '40px',
-                                transition: 'all 0.25s',
-                                transform: hovered === i ? 'translateY(-4px)' : 'translateY(0)',
-                                boxShadow: hovered === i ? `0 16px 48px rgba(249,115,22,0.1)` : 'none',
-                                position: 'relative', overflow: 'hidden',
-                            }}>
-                            <div style={{
-                                fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 'clamp(48px,6vw,72px)',
-                                color, letterSpacing: '-0.03em', lineHeight: 1, marginBottom: '16px',
-                            }}>
-                                <Counter to={number} suffix={suffix} />
-                            </div>
-                            <p style={{
-                                fontFamily: 'var(--font-body)', fontSize: '15px',
-                                color: T.w65, lineHeight: 1.7, margin: 0,
-                            }}>{desc}</p>
-                            {/* Corner glow */}
-                            <div style={{
-                                position: 'absolute', bottom: '-60px', right: '-40px',
-                                width: '160px', height: '160px', borderRadius: '50%',
-                                background: `radial-gradient(circle, ${color}33 0%, transparent 70%)`,
-                                opacity: hovered === i ? 0.7 : 0,
-                                transition: 'opacity 0.4s', pointerEvents: 'none',
-                            }} />
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </section>
-    );
-}
-
-/* ─── SECTION: FEATURES (BENTO GRID) ─────────────────────────────────────── */
-const FEATURES = [
-    { icon: <FaBolt />, title: 'Instant Alerts', desc: 'Get notified in < 5 min when a match goes live. Apply before the crowd.', span: 1 },
-    { icon: <FaBullseye />, title: 'Smart Matching', desc: 'Filter by role, skill, location. See only what actually matters to you.', span: 1 },
-    { icon: <FaClipboardList />, title: 'Track Pipeline', desc: 'One kanban board for every application — saved to offer, no spreadsheets.', span: 1 },
-    { icon: <FaChartBar />, title: 'Real Analytics', desc: 'Know your response rate, best companies, and exactly where to focus next.', span: 1 },
-];
-
-function FeaturesSection() {
-    const [hovered, setHovered] = useState(null);
-
-    return (
-        <section id="features" style={{ background: T.s1, padding: '96px 24px', position: 'relative', zIndex: 1 }}>
-            <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-                <SectionEye label="01 — Features" />
-                <SectionH2>Everything you need<br /><span style={{ color: T.orange }}>to land faster.</span></SectionH2>
-
-                <div className="lp-bento-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-                    {FEATURES.map(({ icon, title, desc, span }, i) => (
-                        <div key={i}
-                            onMouseEnter={() => setHovered(i)}
-                            onMouseLeave={() => setHovered(null)}
-                            style={{
-                                gridColumn: `span ${span}`,
-                                background: T.s2,
-                                border: hovered === i ? `1px solid ${T.border2}` : `1px solid ${T.border}`,
-                                borderRadius: '18px', padding: '36px 32px',
-                                transition: 'all 0.25s',
-                                transform: hovered === i ? 'translateY(-4px) rotate(-0.3deg)' : 'translateY(0) rotate(0)',
-                                boxShadow: hovered === i ? `0 20px 52px rgba(249,115,22,0.09)` : 'none',
-                                position: 'relative', overflow: 'hidden', cursor: 'default',
-                            }}>
-                            {/* Icon */}
-                            <div style={{
-                                width: '48px', height: '48px', borderRadius: '12px',
-                                background: hovered === i ? T.orange : T.orangeDim,
-                                border: `1px solid ${T.border2}`,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                fontSize: '20px', color: hovered === i ? '#000' : T.orange,
-                                marginBottom: '22px', transition: 'all 0.25s',
-                            }}>{icon}</div>
-
-                            <h3 style={{
-                                fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '19px',
-                                color: T.white, marginBottom: '10px', letterSpacing: '-0.01em',
-                            }}>{title}</h3>
-                            <p style={{
-                                fontFamily: 'var(--font-body)', fontSize: '14px',
-                                color: T.w65, lineHeight: 1.65,
-                            }}>{desc}</p>
-
-                            {/* Glow */}
-                            <div style={{
-                                position: 'absolute', bottom: '-50px', right: '-30px',
-                                width: '140px', height: '140px', borderRadius: '50%',
-                                background: `radial-gradient(circle, ${T.orangeGlow} 0%, transparent 70%)`,
-                                opacity: hovered === i ? 0.5 : 0, transition: 'opacity 0.4s', pointerEvents: 'none',
-                            }} />
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </section>
-    );
-}
-
-/* ─── SECTION: HOW IT WORKS (TIMELINE) ───────────────────────────────────── */
-const STEPS = [
-    { n: '01', title: 'Set Up in 3 Minutes', desc: "Create your account and tell us what roles, skills, and locations matter to you." },
-    { n: '02', title: 'We Watch 24/7', desc: "TrackHire monitors 500+ company career pages around the clock — so you don't have to." },
-    { n: '03', title: 'Apply First', desc: "Get an instant alert, review the match score, and apply before the rush even starts." },
-];
-
-function HowItWorksSection() {
-    const [hovered, setHovered] = useState(null);
-
-    return (
-        <section id="how-it-works" style={{ background: T.bg, padding: '96px 24px', position: 'relative', zIndex: 1 }}>
-            <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-                <SectionEye label="02 — Process" />
-                <SectionH2>Three steps to<br /><span style={{ color: T.orange }}>your next role.</span></SectionH2>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-                    {STEPS.map(({ n, title, desc }, i) => (
-                        <div key={n} style={{ display: 'flex', gap: 0 }}>
-                            {/* Timeline spine */}
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingRight: '28px', paddingBottom: '24px', flexShrink: 0 }}>
-                                <div style={{
-                                    width: '38px', height: '38px', borderRadius: '50%',
-                                    background: T.orangeDim, border: `1px solid ${T.border2}`,
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontFamily: 'var(--font-mono)', fontSize: '12px', color: T.orange,
-                                    flexShrink: 0, zIndex: 1,
-                                }}>{n}</div>
-                                {i < STEPS.length - 1 && (
-                                    <div style={{
-                                        width: '1px', flex: 1, marginTop: '8px',
-                                        background: `linear-gradient(to bottom, ${T.border2}, transparent)`,
-                                    }} />
-                                )}
-                            </div>
-
-                            {/* Card */}
-                            <div onMouseEnter={() => setHovered(i)} onMouseLeave={() => setHovered(null)}
-                                style={{
-                                    flex: 1, marginBottom: '20px',
-                                    background: T.s2, border: hovered === i ? `1px solid ${T.border2}` : `1px solid ${T.border}`,
-                                    borderRadius: '16px', padding: '28px 32px',
-                                    transition: 'all 0.25s',
-                                    transform: hovered === i ? 'translateX(6px)' : 'translateX(0)',
-                                    boxShadow: hovered === i ? `0 12px 36px rgba(249,115,22,0.08)` : 'none',
-                                }}>
-                                <h3 style={{
-                                    fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '19px',
-                                    color: T.white, marginBottom: '10px', letterSpacing: '-0.01em',
-                                }}>{title}</h3>
-                                <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: T.w65, lineHeight: 1.7 }}>
-                                    {desc}
-                                </p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </section>
-    );
-}
-
-/* ─── SECTION: TESTIMONIALS ──────────────────────────────────────────────── */
-const TESTIMONIALS = [
-    { quote: "I applied to my current role 11 minutes after it went live. TrackHire's alert was why I even knew it existed.", name: 'Priya S.', role: 'Product Designer @ Stripe', wide: false },
-    { quote: "I was spending 45 minutes every morning clicking through career pages. Now I spend 9. That's not an exaggeration.", name: 'Marcus T.', role: 'SWE @ Notion', wide: false },
-    { quote: "The pipeline view alone is worth it. I finally stopped tracking applications in a spreadsheet.", name: 'Aisha K.', role: 'Data Analyst @ Figma', wide: false },
-];
-
-function TestimonialsSection() {
-    const [hovered, setHovered] = useState(null);
-
-    return (
-        <section id="testimonials" style={{ background: T.s1, padding: '96px 24px', position: 'relative', zIndex: 1 }}>
-            <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-                <div style={{ textAlign: 'center', marginBottom: '56px' }}>
-                    <SectionEye label="03 — Social Proof" />
-                    <SectionH2 center>
-                        Real results.<br /><span style={{ color: T.orange }}>No fluff.</span>
-                    </SectionH2>
-                </div>
-
-                <div className="lp-testimonials-slider lp-bento-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-                    {TESTIMONIALS.map(({ quote, name, role }, i) => (
-                        <div key={i}
-                            onMouseEnter={() => setHovered(i)}
-                            onMouseLeave={() => setHovered(null)}
-                            className="lp-testimonial-card"
-                            style={{
-                                background: T.s2,
-                                border: hovered === i ? `1px solid ${T.border2}` : `1px solid ${T.border}`,
-                                borderRadius: '18px', padding: '32px',
-                                transition: 'all 0.25s',
-                                transform: hovered === i ? 'translateY(-4px) rotate(0.3deg)' : 'translateY(0)',
-                                boxShadow: hovered === i ? `0 16px 48px rgba(249,115,22,0.10)` : 'none',
-                                position: 'relative', overflow: 'hidden',
-                                display: 'flex', flexDirection: 'column',
-                            }}>
-                            {/* Quote mark */}
-                            <div style={{
-                                fontFamily: 'var(--font-display)', fontSize: '64px', lineHeight: 1,
-                                color: T.orangeDim, marginBottom: '-16px', marginTop: '-8px',
-                                flexShrink: 0,
-                            }}>"</div>
-                            <p style={{
-                                fontFamily: 'var(--font-body)', fontSize: '14px',
-                                color: T.w65, lineHeight: 1.7, margin: '0 0 24px',
-                                flex: 1,
-                            }}>{quote}</p>
-                            <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: '16px', marginTop: 'auto' }}>
-                                <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '14px', color: T.white, margin: '0 0 2px' }}>{name}</p>
-                                <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: T.orange, margin: 0 }}>{role}</p>
-                            </div>
-                            <div style={{
-                                position: 'absolute', bottom: '-40px', right: '-30px',
-                                width: '120px', height: '120px', borderRadius: '50%',
-                                background: `radial-gradient(circle, ${T.orangeGlow} 0%, transparent 70%)`,
-                                opacity: hovered === i ? 0.4 : 0, transition: 'opacity 0.4s', pointerEvents: 'none',
-                            }} />
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </section>
-    );
-}
-
-/* ─── SECTION: FINAL CTA ─────────────────────────────────────────────────── */
-function CTASection() {
-    return (
-        <section style={{ background: T.bg, padding: '96px 24px', position: 'relative', zIndex: 1, overflow: 'hidden' }}>
-            {/* Big bg text */}
-            <div aria-hidden="true" style={{
-                position: 'absolute', top: '50%', left: '50%',
-                transform: 'translate(-50%,-50%)',
-                fontFamily: 'var(--font-display)', fontWeight: 800,
-                fontSize: 'clamp(100px, 18vw, 220px)',
-                color: 'rgba(249,115,22,0.04)',
-                letterSpacing: '-0.06em', whiteSpace: 'nowrap',
-                pointerEvents: 'none', userSelect: 'none', zIndex: 0,
-            }}>APPLY</div>
-
-            <div style={{ maxWidth: '1100px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
-                <div style={{
-                    background: `linear-gradient(135deg, rgba(249,115,22,0.14) 0%, rgba(249,115,22,0.04) 100%)`,
-                    border: `1px solid ${T.border2}`,
-                    borderRadius: '24px', padding: '80px 40px', textAlign: 'center',
-                    position: 'relative', overflow: 'hidden',
-                }}>
-                    {/* Radial glow top */}
-                    <div style={{
-                        position: 'absolute', top: '-100px', left: '50%', transform: 'translateX(-50%)',
-                        width: '500px', height: '500px', borderRadius: '50%',
-                        background: `radial-gradient(circle, rgba(249,115,22,0.16) 0%, transparent 70%)`,
-                        pointerEvents: 'none',
-                    }} />
-
-                    <p style={{
-                        fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '0.16em',
-                        textTransform: 'uppercase', color: T.orange, marginBottom: '20px',
-                    }}>Ready to ship?</p>
-
-                    <h2 style={{
-                        fontFamily: 'var(--font-display)', fontWeight: 800,
-                        fontSize: 'clamp(32px, 5vw, 60px)', letterSpacing: '-0.04em', lineHeight: 1.08,
-                        color: T.white, maxWidth: '620px', margin: '0 auto 20px',
-                    }}>
-                        Miss nothing.<br /><span style={{ color: T.orange }}>Apply smarter.</span>
-                    </h2>
-
-                    <p style={{
-                        fontFamily: 'var(--font-body)', fontSize: '17px', color: T.w65,
-                        maxWidth: '420px', margin: '0 auto 40px', lineHeight: 1.7,
-                    }}>
-                        Set up in 3 minutes. Free forever. No credit card required.
-                    </p>
-
-                    <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                        <Link to="/register" style={{ ...primaryBtn, padding: '16px 34px', fontSize: '16px' }}
-                            onMouseEnter={e => { e.currentTarget.style.background = T.orangeD; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = `0 12px 32px ${T.orangeGlow}`; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = T.orange; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
-                            Create Free Account
-                        </Link>
-                        <Link to="/jobs" style={{ ...ghostBtn, padding: '16px 34px', fontSize: '16px' }}
-                            onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.28)'; e.currentTarget.style.background = T.w15; }}
-                            onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.background = 'transparent'; }}>
-                            Browse Jobs
-                        </Link>
-                    </div>
-                </div>
-            </div>
-        </section>
-    );
-}
-
-/* ─── SECTION: FOOTER ────────────────────────────────────────────────────── */
-function Footer() {
-    return (
-        <footer style={{
-            background: T.s1, borderTop: `1px solid ${T.border}`, padding: '64px 24px 40px',
-            position: 'relative', zIndex: 1,
-        }}>
-            <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '60px', flexWrap: 'wrap', marginBottom: '48px' }}>
-                    <div style={{ maxWidth: '400px' }}>
-                        <div style={{
-                            fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '20px',
-                            color: T.white, marginBottom: '12px',
-                        }}>Track<span style={{ color: T.orange }}>H</span>ire</div>
-                        <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: T.w40, lineHeight: 1.65, margin: '0 0 20px' }}>
-                            Track every opportunity.<br />Miss nothing. Apply smarter.
-                        </p>
-                        <a href={GITHUB_REPO} target="_blank" rel="noopener noreferrer" style={{
-                            display: 'inline-flex', alignItems: 'center', gap: '8px',
-                            fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px',
-                            color: T.w65, background: T.s3, border: `1px solid ${T.border}`,
-                            borderRadius: '8px', padding: '9px 16px', transition: 'all 0.2s',
-                        }}
-                            onMouseEnter={e => { e.currentTarget.style.borderColor = T.border2; e.currentTarget.style.color = T.orange; }}
-                            onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.w65; }}>
-                            <FaGithub style={{ fontSize: '15px' }} /> View on GitHub
+                    {/* Center: Builder + Product Hunt */}
+                    <div className="hidden md:flex gap-6 items-center">
+                        <Link className="font-body-lg text-body-lg text-brutalist-black hover:text-vibrant-orange transition-colors" to="/meet-the-builder">Builder</Link>
+                        <a
+                            className="font-body-lg text-body-lg text-brutalist-black hover:text-vibrant-orange transition-colors flex items-center gap-2"
+                            href="https://www.producthunt.com/products/trackhire"
+                            target="_blank"
+                            rel="noreferrer"
+                        >
+                            Product Hunt
                         </a>
                     </div>
 
-                    <div>
-                        <div style={{
-                            fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '12px',
-                            color: T.white, marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '0.12em',
-                        }}>Project</div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            <Link to="/meet-the-builder" style={{ color: T.w40, fontSize: '14px', transition: 'color 0.2s', fontFamily: 'var(--font-body)' }}
-                                onMouseEnter={e => e.currentTarget.style.color = T.white}
-                                onMouseLeave={e => e.currentTarget.style.color = T.w40}>Builder</Link>
-                            <a href="https://www.producthunt.com/products/trackhire?launch=trackhire" target="_blank" rel="noopener noreferrer"
-                                style={{ color: T.w40, fontSize: '14px', transition: 'color 0.2s', fontFamily: 'var(--font-body)' }}
-                                onMouseEnter={e => e.currentTarget.style.color = T.white}
-                                onMouseLeave={e => e.currentTarget.style.color = T.w40}>Product Hunt</a>
+                    {/* Right: Auth + Star on GitHub */}
+                    <div className="flex gap-3 items-center shrink-0">
+                        <a
+                            href="https://github.com/taralshah09/TrackHire"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="hidden sm:flex font-label-mono text-label-mono uppercase items-center justify-center gap-2 bg-pure-white text-brutalist-black border-2 border-brutalist-black w-36 h-12 brutalist-shadow active-btn"
+                        >
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58 0-.29-.01-1.05-.02-2.06-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.73.08-.73 1.21.09 1.84 1.24 1.84 1.24 1.07 1.84 2.81 1.31 3.5 1 .11-.78.42-1.31.76-1.61-2.67-.3-5.47-1.34-5.47-5.95 0-1.31.47-2.39 1.24-3.23-.13-.31-.54-1.53.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 3-.4c1.02 0 2.05.14 3 .4 2.29-1.55 3.3-1.23 3.3-1.23.66 1.65.25 2.87.12 3.18.77.84 1.24 1.92 1.24 3.23 0 4.62-2.81 5.64-5.49 5.94.43.37.81 1.1.81 2.22 0 1.6-.01 2.89-.01 3.28 0 .32.21.7.82.58A12.01 12.01 0 0 0 24 12.5C24 5.87 18.63.5 12 .5z" />
+                            </svg>
+                            Star
+                        </a>
+                        {isLoggedIn ? (
+                            <Link to="/dashboard" className="font-body-lg text-body-lg bg-vibrant-orange text-pure-white border-2 border-brutalist-black w-36 h-12 brutalist-shadow active-btn flex items-center justify-center">
+                                Dashboard
+                            </Link>
+                        ) : (
+                            <Link to="/login" className="font-body-lg text-body-lg bg-vibrant-orange text-pure-white border-2 border-brutalist-black w-36 h-12 brutalist-shadow active-btn flex items-center justify-center">
+                                Sign In
+                            </Link>
+                        )}
+                    </div>
+                </div>
+            </nav>
+
+            {/* Hero Section */}
+
+            <header className="relative min-h-[calc(100vh-84px)] flex flex-col justify-center items-center px-4 md:px-8 py-16 overflow-hidden bg-pure-white">
+                {/* Faint background grid */}
+                <div className="hero-grid-bg absolute inset-0 pointer-events-none"></div>
+                {/* Top fade so the grid melts into the surface */}
+                <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-pure-white/40 via-transparent to-pure-white/5"></div>
+
+                <div className="max-w-5xl mx-auto text-center relative z-10 w-full flex flex-col items-center mt-12">
+                    <h1 className="font-black text-[60px] md:text-[120px] uppercase leading-[0.85] mb-6 text-brutalist-black tracking-tighter text-center">
+                        Stop Hunting.<br />Start Landing.
+                    </h1>
+                    <p className="font-bold text-lg md:text-2xl mb-12 max-w-2xl mx-auto text-brutalist-black text-center">
+                        We watch every career page you care about, 24/7; so you apply first, every single time.
+                    </p>
+                    <div className="mb-10 md:mb-0 flex flex-col md:flex-row gap-6 justify-center items-center w-full">
+                        <Link
+                            to="/jobs"
+                            className="w-full md:w-auto font-label-mono bg-vibrant-orange text-brutalist-black border-4 border-brutalist-black rounded-full px-16 py-6 brutalist-shadow active-btn text-center block uppercase font-black text-xl md:text-2xl transition-transform"
+                        >
+                            Browse Jobs
+                        </Link>
+                        <a
+                            href="#features"
+                            className="w-full md:w-auto font-label-mono bg-brutalist-black text-pure-white border-4 border-brutalist-black rounded-full px-16 py-6 brutalist-shadow active-btn text-center block uppercase font-black text-xl md:text-2xl transition-transform"
+                        >
+                            Learn More
+                        </a>
+                    </div>
+                </div>
+
+                {/* KPI Cards Row — Stepped Brutalist Layout */}
+                <div className="relative z-10 mt-40 md:mt-56 w-full max-w-[1200px] mx-auto flex justify-center pb-16">
+
+                    {/* Left Orange Starburst */}
+                    <div className="absolute left-0 md:left-12 bottom-4 md:bottom-12 z-30 sticker-rotate-neg pointer-events-none hidden md:block">
+                        <svg width="64" height="64" viewBox="0 0 100 100" className="fill-vibrant-orange stroke-brutalist-black stroke-[4px]">
+                            <polygon points="50,5 60,35 95,35 65,55 75,90 50,70 25,90 35,55 5,35 40,35" strokeLinejoin="round" />
+                        </svg>
+                    </div>
+
+                    {/* Right White Starburst */}
+                    <div className="absolute right-4 md:right-16 top-0 md:-top-8 z-30 sticker-rotate-pos pointer-events-none hidden md:block">
+                        <svg width="48" height="48" viewBox="0 0 100 100" className="fill-pure-white stroke-brutalist-black stroke-[4px]">
+                            <polygon points="50,5 62,38 95,50 62,62 50,95 38,62 5,50 38,38" strokeLinejoin="round" />
+                        </svg>
+                    </div>
+
+                    {/* The Staggered Connected Row */}
+                    <div
+                        className="flex flex-col md:flex-row justify-center items-start w-full relative z-20 px-4"
+                        style={{ filter: 'drop-shadow(8px 8px 0px #060608)' }}
+                    >
+                        {/* Grouped box: 500+ and 1 min */}
+                        <div className="flex flex-row bg-pure-white border-4 border-brutalist-black w-full md:w-auto z-10">
+                            <div className="px-4 py-6 md:px-8 flex flex-col justify-center items-center text-center border-r-4 border-brutalist-black w-1/2 md:min-w-[150px]">
+                                <span className="font-display-lg text-[32px] md:text-[48px] font-black block leading-none">500+</span>
+                                <span className="font-label-mono text-[10px] md:text-[12px] font-bold uppercase mt-2">Profiles</span>
+                            </div>
+                            <div className="px-4 py-6 md:px-8 flex flex-col justify-center items-center text-center w-1/2 md:min-w-[150px]">
+                                <span className="font-display-lg text-[32px] md:text-[48px] font-black block leading-none">1 min</span>
+                                <span className="font-label-mono text-[10px] md:text-[12px] font-bold uppercase mt-2">To insight</span>
+                            </div>
+                        </div>
+
+                        {/* 0 Instant Alerts (Stepped Down) */}
+                        <div className="bg-pure-white border-4 border-brutalist-black md:-ml-1 md:mt-6 px-4 py-6 md:px-8 flex flex-col justify-center items-center text-center min-w-[140px] md:min-w-[150px] w-full md:w-auto z-20">
+                            <span className="font-display-lg text-[32px] md:text-[48px] font-black block leading-none">0</span>
+                            <span className="font-label-mono text-[10px] md:text-[12px] font-bold uppercase mt-2">Instant Alerts</span>
+                        </div>
+
+                        {/* 0% Downtime (Baseline) */}
+                        <div className="bg-pure-white border-4 border-brutalist-black md:-ml-1 px-4 py-6 md:px-8 flex flex-col justify-center items-center text-center min-w-[140px] md:min-w-[150px] w-full md:w-auto z-30">
+                            <span className="font-display-lg text-[32px] md:text-[48px] font-black block leading-none">0%</span>
+                            <span className="font-label-mono text-[10px] md:text-[12px] font-bold uppercase mt-2">Downtime</span>
+                        </div>
+
+                        {/* 9 min (Stepped Down) */}
+                        <div className="bg-pure-white border-4 border-brutalist-black md:-ml-1 md:mt-6 px-4 py-6 md:px-8 flex flex-col justify-center items-center text-center min-w-[140px] md:min-w-[150px] w-full md:w-auto z-40">
+                            <span className="font-display-lg text-[32px] md:text-[48px] font-black block leading-none">9 min</span>
+                            <span className="font-label-mono text-[10px] md:text-[12px] font-bold uppercase mt-2 text-center">Total Best Rice</span>
+                        </div>
+
+                        {/* 67% (Baseline) */}
+                        <div className="bg-pure-white border-4 border-brutalist-black md:-ml-1 px-4 py-6 md:px-8 flex flex-col justify-center items-center text-center min-w-[140px] md:min-w-[150px] w-full md:w-auto z-50">
+                            <span className="font-display-lg text-[32px] md:text-[48px] font-black block leading-none">67%</span>
+                            <span className="font-label-mono text-[10px] md:text-[12px] font-bold uppercase mt-2 text-center">Higher success rate</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            {/* Problem Section */}
+            <section className="py-24 px-4 md:px-8 bg-[#F4F4F4] border-t-[6px] border-brutalist-black overflow-hidden flex justify-center">
+                <div className="max-w-[1100px] w-full grid grid-cols-1 lg:grid-cols-2 gap-16 md:gap-24 items-center justify-items-center">
+
+                    {/* Left Column */}
+                    <div className="relative flex flex-col items-center text-center w-full">
+                        <div className="absolute -top-10 font-label-mono font-black text-sm bg-brutalist-black text-pure-white px-4 py-2 sticker-rotate-neg z-20 shadow-[4px_4px_0px_0px_#FF6B00]">PROBLEMS WE SOLVE</div>
+
+                        <h2 className="w-[100%] font-black text-[48px] md:text-[64px] uppercase mb-12 leading-[0.9] text-brutalist-black tracking-tighter text-center">
+                            Every Morning.<br />The Same Routine.
+                        </h2>
+
+                        <div className="space-y-10 w-full flex flex-col items-center">
+                            {/* Card 1 */}
+                            <div className="w-full p-8 md:p-10 border-[5px] border-brutalist-black bg-pure-white relative group cursor-pointer transition-transform hover:-translate-y-1 flex flex-col items-center text-center" style={{ boxShadow: '12px 12px 0px 0px #FF6B00' }}>
+                                <h3 className="font-black text-3xl md:text-4xl mb-4">Infinite Scrolling</h3>
+                                <p className="font-label-mono font-bold text-sm md:text-base leading-relaxed max-w-[85%]">
+                                    Stop wasting hours manually checking career pages. Our engine does it in 300ms.
+                                </p>
+                            </div>
+
+                            {/* Card 2 */}
+                            <div className="w-full p-8 md:p-10 border-[5px] border-brutalist-black bg-pure-white relative sticker-rotate-pos flex flex-col items-center text-center" style={{ boxShadow: '12px 12px 0px 0px #FF6B00' }}>
+                                <h3 className="font-black text-3xl md:text-4xl mb-4">Zero Updates</h3>
+                                <p className="font-label-mono font-bold text-sm md:text-base leading-relaxed max-w-[85%]">
+                                    Don't rely on random emails. Our automated alert loop keeps you in the know.
+                                </p>
+                            </div>
                         </div>
                     </div>
 
-                    <div style={{
-                        maxWidth: '400px', fontFamily: 'var(--font-body)', fontSize: '14px',
-                        lineHeight: 1.7, color: 'rgba(255,255,255,0.35)', fontStyle: 'italic',
-                    }}>
-                        "Change will not come if we wait for some other person or some other time.
-                        We are the ones we've been waiting for. We are the change that we seek."
-                        <div style={{ marginTop: '12px', fontStyle: 'normal', fontWeight: 600, color: T.w65 }}>— Barack Obama</div>
+                    {/* Right Column */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10 w-full">
+
+                        {/* Instant Alerts */}
+                        <div className="border-[5px] border-brutalist-black bg-pure-white p-8 md:p-10 flex flex-col aspect-square justify-center transition-transform hover:scale-[1.02]" style={{ boxShadow: '12px 12px 0px 0px #060608' }}>
+                            <div className="flex flex-col items-center text-center gap-4">
+                                <span className="material-symbols-outlined text-[48px] md:text-[56px] text-brutalist-black">notifications_active</span>
+                                <h4 className="font-black text-2xl md:text-3xl mt-2">Instant Alerts</h4>
+                                <p className="font-label-mono font-bold text-sm mt-4 text-center">14 new matches in the last hour. Efficiency is key.</p>
+                            </div>
+                        </div>
+
+                        {/* Smart Match */}
+                        <div className="border-[5px] border-brutalist-black bg-vibrant-orange p-8 md:p-10 flex flex-col aspect-square justify-center text-pure-white transition-transform hover:scale-[1.02]" style={{ boxShadow: '12px 12px 0px 0px #060608' }}>
+                            <div className="flex flex-col items-center text-center gap-4">
+                                <span className="material-symbols-outlined text-[48px] md:text-[56px] text-pure-white">person_search</span>
+                                <h4 className="font-black text-2xl md:text-3xl text-pure-white mt-2">Smart Match</h4>
+                                <p className="font-label-mono font-bold text-sm mt-4 text-pure-white text-center">AI-driven sorting based on historical performance data.</p>
+                            </div>
+                        </div>
+
+                        {/* Pipeline Health */}
+                        <div className="col-span-1 md:col-span-2 border-[5px] border-brutalist-black bg-brutalist-black text-pure-white p-8 md:p-10 relative overflow-hidden flex flex-col items-center" style={{ boxShadow: '12px 12px 0px 0px #060608' }}>
+                            <div className="flex flex-col items-center text-center gap-4 mb-8">
+                                <div className="w-14 h-14 bg-vibrant-orange border-2 border-brutalist-black rounded-xl flex items-center justify-center shrink-0 shadow-[2px_2px_0px_0px_#FFFFFF]">
+                                    <span className="material-symbols-outlined text-pure-white text-3xl">insights</span>
+                                </div>
+                                <h4 className="font-black text-3xl md:text-4xl text-pure-white">Pipeline Health</h4>
+                            </div>
+
+                            {/* Bar Chart Mockup */}
+                            <div className="h-32 md:h-40 w-full bg-[#E5E5E5] flex items-end gap-1 p-2 md:p-3 border-[4px] border-brutalist-black relative">
+                                <div className="h-[40%] flex-1 bg-vibrant-orange border-2 border-brutalist-black"></div>
+                                <div className="h-[60%] flex-1 bg-vibrant-orange border-2 border-brutalist-black"></div>
+                                <div className="h-[50%] flex-1 bg-vibrant-orange border-2 border-brutalist-black"></div>
+                                <div className="h-[90%] flex-1 bg-vibrant-orange border-2 border-brutalist-black"></div>
+                                <div className="h-[75%] flex-1 bg-vibrant-orange border-2 border-brutalist-black"></div>
+                            </div>
+
+                            {/* Sticker overlap */}
+                            <div className="absolute bottom-4 right-4 md:bottom-8 md:right-8 bg-pure-white text-brutalist-black font-label-mono font-black text-xs md:text-sm px-3 py-1 sticker-rotate-neg border-[3px] border-brutalist-black z-10 shadow-[3px_3px_0px_0px_#FF6B00]">v2.0 LIVE</div>
+                        </div>
                     </div>
                 </div>
+            </section>
 
-                <div style={{
-                    paddingTop: '24px', borderTop: `1px solid ${T.border}`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    flexWrap: 'wrap', gap: '12px',
-                }}>
-                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'rgba(255,255,255,0.18)', margin: 0 }}>
-                        © 2026 TrackHire. All rights reserved.
-                    </p>
-                    <Link to={AUTHOR_URL} style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '6px',
-                        fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '12px',
-                        color: T.w65, background: T.s3, border: `1px solid ${T.border}`,
-                        borderRadius: '7px', padding: '7px 14px', transition: 'all 0.2s',
-                    }}
-                        onMouseEnter={e => { e.currentTarget.style.borderColor = T.border2; e.currentTarget.style.color = T.orange; }}
-                        onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.w65; }}>
-                        Meet the Builder →
-                    </Link>
+            {/* Feature Bento Grid Section */}
+            <section id="features" className="py-24 px-4 md:px-8 bg-[#E5E5E5] border-t-[6px] border-brutalist-black overflow-hidden flex flex-col items-center justify-center min-h-[80vh]">
+                <div className="max-w-[1200px] w-full">
+                    <div className="flex flex-col md:flex-row justify-between items-start mb-12 gap-8">
+                        <div>
+                            <span className="font-label-mono font-black text-sm text-vibrant-orange mb-4 block uppercase">// Capabilities</span>
+                            <h2 className="font-black text-[48px] md:text-[64px] uppercase leading-[0.9] text-brutalist-black tracking-tighter max-w-2xl">
+                                Everything you need to land faster.
+                            </h2>
+                        </div>
+                        <div className="hidden md:flex flex-col items-center relative mt-4">
+                            <div className="bg-vibrant-orange text-pure-white font-label-mono font-black text-xs px-3 py-1 mb-1">v2</div>
+                            <svg width="48" height="32" viewBox="0 0 48 32" className="stroke-brutalist-black fill-none stroke-[3px] stroke-linejoin-round stroke-linecap-round">
+                                {/* Crosses */}
+                                <path d="M6,14 L12,14 M9,11 L9,17" />
+                                <path d="M16,22 L22,22 M19,19 L19,25" />
+                                {/* Zig Zag */}
+                                <path d="M24,24 L32,16 L40,24 L48,16" />
+                                {/* Arrowhead */}
+                                <path d="M40,16 L48,16 L48,24" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-12 gap-6">
+                        {/* Top Row */}
+                        {/* Feature 1 */}
+                        <div className="md:col-span-1 lg:col-span-4 border-[5px] border-brutalist-black bg-pure-white p-8 md:p-10 flex flex-col">
+                            <span className="material-symbols-outlined text-[40px] text-brutalist-black mb-8">dynamic_feed</span>
+                            <h3 className="font-black text-2xl md:text-3xl mb-4">Instant Alerts</h3>
+                            <p className="font-label-mono font-bold text-sm leading-relaxed text-brutalist-black">
+                                Customizable triggers for email, slack, or push notifications.
+                            </p>
+                        </div>
+                        {/* Feature 2 */}
+                        <div className="md:col-span-1 lg:col-span-4 border-[5px] border-brutalist-black bg-pure-white p-8 md:p-10 flex flex-col">
+                            <span className="material-symbols-outlined text-[40px] text-brutalist-black mb-8">groups</span>
+                            <h3 className="font-black text-2xl md:text-3xl mb-4">Smart Matching</h3>
+                            <p className="font-label-mono font-bold text-sm leading-relaxed text-brutalist-black">
+                                Tactile responses to your talent pool interactions.
+                            </p>
+                        </div>
+                        {/* Feature 3 */}
+                        <div className="md:col-span-1 lg:col-span-4 border-[5px] border-brutalist-black bg-pure-white p-8 md:p-10 flex flex-col relative">
+                            <div className="absolute -top-3 -right-3 bg-brutalist-black text-pure-white font-label-mono font-black text-xs px-3 py-1">NEW</div>
+                            <span className="material-symbols-outlined text-[40px] text-brutalist-black mb-8">timeline</span>
+                            <h3 className="font-black text-2xl md:text-3xl mb-4">Track Pipeline</h3>
+                            <p className="font-label-mono font-bold text-sm leading-relaxed text-brutalist-black">
+                                Real-time status updates for every single candidate in play.
+                            </p>
+                        </div>
+
+                        {/* Bottom Row */}
+                        {/* Feature 4 (Black) */}
+                        <div className="md:col-span-3 lg:col-span-6 border-[5px] border-brutalist-black bg-brutalist-black text-pure-white p-8 md:p-10 flex flex-col justify-center relative overflow-hidden">
+                            <div className="relative z-10 w-full md:w-[65%]">
+                                <h3 className="font-black text-2xl md:text-3xl mb-4 text-pure-white">Track Analytics</h3>
+                                <p className="font-label-mono font-bold text-sm leading-relaxed text-pure-white mb-8">
+                                    Data-driven feedback loops that help you refine your job descriptions and targeting parameters.
+                                </p>
+                                <Link to="/login" className="bg-vibrant-orange text-pure-white border-[3px] border-pure-white px-6 py-3 font-black text-lg uppercase inline-block text-center hover:scale-[1.02] transition-transform">
+                                    VIEW REPORTS
+                                </Link>
+                            </div>
+                            <div className="hidden md:flex absolute right-8 top-1/2 -translate-y-1/2 w-32 h-44 bg-vibrant-orange border-[4px] border-pure-white rounded-lg sticker-rotate-pos items-center justify-center">
+                                <span className="material-symbols-outlined text-[64px] text-pure-white">bar_chart</span>
+                            </div>
+                        </div>
+
+                        {/* Feature 5 */}
+                        <div className="md:col-span-1 lg:col-span-3 border-[5px] border-brutalist-black bg-pure-white p-8 md:p-10 flex flex-col">
+                            <span className="material-symbols-outlined text-[40px] text-brutalist-black mb-8">key</span>
+                            <h3 className="font-black text-2xl md:text-3xl mb-4">Secure Access</h3>
+                            <p className="font-label-mono font-bold text-sm leading-relaxed text-brutalist-black">
+                                Enterprise-grade encryption for all sensitive data.
+                            </p>
+                        </div>
+                        {/* Feature 6 */}
+                        <div className="md:col-span-1 lg:col-span-3 border-[5px] border-brutalist-black bg-pure-white p-8 md:p-10 flex flex-col">
+                            <span className="material-symbols-outlined text-[40px] text-brutalist-black mb-8">groups</span>
+                            <h3 className="font-black text-2xl md:text-3xl mb-4">Team Collab</h3>
+                            <p className="font-label-mono font-bold text-sm leading-relaxed text-brutalist-black">
+                                Shared notes and decision trees for faster hiring.
+                            </p>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </footer>
-    );
-}
+            </section>
 
-/* ─── ROOT ───────────────────────────────────────────────────────────────── */
-export default function NewLandingPage() {
-    const [scrolled, setScrolled] = useState(false);
+            {/* Process Section */}
+            <section className="py-block-gap px-grid-margin bg-surface border-t-4 border-brutalist-black border-b-4 relative overflow-hidden min-h-[60vh] flex items-center justify-center">
+                {/* SVG Doodle Arrow */}
+                <svg className="absolute hidden lg:block left-[15%] top-1/2 -translate-y-1/2 w-32 h-32 opacity-20" viewBox="0 0 100 100">
+                    <path d="M10,50 Q40,10 90,50" fill="none" stroke="black" strokeWidth="2"></path>
+                    <path d="M80,40 L90,50 L80,60" fill="none" stroke="black" strokeWidth="2"></path>
+                </svg>
+                <div className="max-w-7xl mx-auto w-full">
+                    <h2 className="font-headline-xl text-headline-xl uppercase mb-16">Process Section</h2>
+                    <div className="mt-1 grid grid-cols-1 lg:grid-cols-3 gap-12 relative">
+                        {/* Timeline Connectors for Desktop */}
+                        <div className="hidden lg:block absolute top-12 left-0 w-full h-1 bg-vibrant-orange z-0"></div>
+                        {/* Step 1 */}
+                        <div className="relative z-10 bg-surface">
+                            <div className="w-24 h-24 border-4 border-brutalist-black bg-pure-white text-display-lg flex items-center justify-center font-bold mb-8 brutalist-shadow">1.</div>
+                            <h3 className="font-headline-md text-headline-md mb-4 uppercase">Get in 3 Minutes</h3>
+                            <p className="font-body-lg text-body-lg text-secondary">No complex forms. Just drag and drop your data and let our parser handle the rest.</p>
+                        </div>
+                        {/* Step 2 */}
+                        <div className="relative z-10 bg-surface">
+                            <div className="w-24 h-24 border-4 border-brutalist-black bg-vibrant-orange text-pure-white text-display-lg flex items-center justify-center font-bold mb-8 brutalist-shadow sticker-rotate-pos">2.</div>
+                            <h3 className="font-headline-md text-headline-md mb-4 uppercase">Auto-Apply</h3>
+                            <p className="font-body-lg text-body-lg text-secondary">Our engine finds the best matching slots and queues your applications for approval.</p>
+                        </div>
+                        {/* Step 3 */}
+                        <div className="relative z-10 bg-surface">
+                            <div className="w-24 h-24 border-4 border-brutalist-black bg-brutalist-black text-pure-white text-display-lg flex items-center justify-center font-bold mb-8 brutalist-shadow-orange">3.</div>
+                            <h3 className="font-headline-md text-headline-md mb-4 uppercase">Track Analytics</h3>
+                            <h4 className="font-label-mono text-label-mono mb-4 text-vibrant-orange">BRUTALIST GRID PROCESS</h4>
+                            <p className="font-body-lg text-body-lg text-secondary">Watch your dashboard light up as responses come back in record time.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-    useEffect(() => {
-        const onScroll = () => setScrolled(window.scrollY > 20);
-        window.addEventListener('scroll', onScroll, { passive: true });
-        return () => window.removeEventListener('scroll', onScroll);
-    }, []);
+            {/* Testimonials Section */}
+            {/* <section className="py-block-gap px-grid-margin bg-surface-bright relative min-h-[60vh] flex flex-col justify-center">
+                <div className="max-w-7xl mx-auto w-full">
+                    <h2 className="font-headline-xl text-headline-xl uppercase mb-16 text-center">Testimonials</h2>
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                        <div className="lg:col-span-5 relative">
+                            <div className="absolute -top-8 left-4 bg-vibrant-orange text-pure-white px-4 py-2 font-label-mono sticker-rotate-neg z-20">STICKER AGENT</div>
+                            <div className="border-4 border-brutalist-black bg-pure-white p-12 brutalist-shadow-lg relative overflow-hidden">
+                                <span className="material-symbols-outlined text-8xl absolute top-4 left-4 opacity-10">format_quote</span>
+                                <p className="font-headline-md text-headline-md mb-8 relative z-10">
+                                    "Everything changed when we swapped our legacy system for TrackHire. The speed is absolutely ruthless."
+                                </p>
+                                <div className="flex items-center gap-4">
+                                    <div className="font-label-mono text-label-mono uppercase font-bold">— PTRA</div>
+                                    <div className="h-1 w-12 bg-brutalist-black"></div>
+                                </div>
+                            </div>
+                            <div className="absolute -bottom-16 -right-8 hidden md:block">
+                                <span className="font-label-mono text-vibrant-orange sticker-rotate-pos">HAND-DRAWN ARROW</span>
+                                <span className="material-symbols-outlined text-5xl">trending_flat</span>
+                            </div>
+                        </div>
+                        <div className="lg:col-span-4 flex justify-center relative py-12">
+                            <div className="relative w-64 h-80 bg-pure-white border-2 border-brutalist-black p-4 brutalist-shadow sticker-rotate-neg z-10">
+                                <img className="w-full h-56 object-cover border-2 border-brutalist-black mb-4 grayscale" data-alt="A striking black and white portrait of a modern professional in a minimalist city setting. The person has a determined, tech-forward look, wearing high-contrast editorial clothing. The lighting is harsh and direct, creating deep blacks and bright whites to match the brutalist aesthetic of the website." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdtmi0xLRgNatFpqCkz7ElOdMgzan-R2i039iH-1OR7X6xISoTx5OcJKfBb4WEQsW1uxnn2EBxAwOaQLijflb9QHCzjc_9feV1uy_fZFp5q0UQ0UGPrR4A5UITiTuN8thvER1WLawgTEiIMC22PQJJpPkOeq-P-RpawjvLJ-3TnMaGFVIphEK91E3X59aEUPMbJKxd_onfWWKKE8y4w8jfgrpb56rBSCDM6svWF4Vdmnlts1NlPIgCRYvPyc5OgIOqwCvlt4NQCL7b" alt="Sarah" />
+                                <span className="font-label-mono text-label-mono block text-center">— Sarah</span>
+                            </div>
+                            <div className="absolute w-64 h-80 bg-pure-white border-2 border-brutalist-black p-4 brutalist-shadow-orange sticker-rotate-pos -right-4 top-20">
+                                <img className="w-full h-56 object-cover border-2 border-brutalist-black mb-4 grayscale" data-alt="A portrait of a male tech leader with a raw, high-impact gaze. The photo is styled like a polaroid with a thick white border. The background is an industrial concrete space that reflects structural rawness and transparency. The image is high-contrast and sharp, fitting the neo-brutalist design movement." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpdqXmn6bbnIoNuU0sZn1_vuSfm9A2BYAfXvZ36FafvhYpvY8kpzsrbOnVSaZJR4imKvNQ4J-Kmidun4YtDJg-_d-orfPIr6M7UcqEpBpRSNvZbbTNrcv7SUutmEvW5-NVIEWXXVoMHVj04wSz5BFDh6HduB3CYeEF5x9JtH525tvhIhAGxQ_pXxynLPwzouzAqkoJqCbwxaYdfUflOeYt2VqHwDowJFL1vbWqPjSRvq7R9DKEsNBSH_uzoJ0ykg2uyGtX2EytJUDL" alt="James" />
+                                <span className="font-label-mono text-label-mono block text-center">— James</span>
+                            </div>
+                        </div>
+                        <div className="lg:col-span-3 space-y-4">
+                            <div className="bg-vibrant-orange text-pure-white p-6 border-4 border-brutalist-black brutalist-shadow sticker-rotate-neg">
+                                <p className="font-label-mono text-label-mono">"Too useful to ignore. Best tool in our stack."</p>
+                            </div>
+                            <div className="bg-pure-white text-brutalist-black p-6 border-4 border-brutalist-black brutalist-shadow-orange sticker-rotate-pos">
+                                <p className="font-label-mono text-label-mono">"The UI is a breath of fresh air. Bold and unapologetic."</p>
+                            </div>
+                            <div className="bg-brutalist-black text-pure-white p-6 border-4 border-brutalist-black brutalist-shadow sticker-rotate-neg">
+                                <p className="font-label-mono text-label-mono">"Finally, a tool that respects our time and intelligence."</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section> */}
 
-    return (
-        <div style={{ background: T.bg, minHeight: '100vh', fontFamily: 'var(--font-body)' }}>
-            <GlobalStyles />
-            <CursorBlob />
-            <Atmosphere />
+            {/* Final CTA */}
+            <section className="py-block-gap px-grid-margin bg-surface-container-highest border-t-4 border-brutalist-black relative overflow-hidden min-h-[60vh] flex flex-col justify-center">
+                <div className="flex flex-col md:flex-row gap-8 justify-center items-center w-full">
+                    <div className="absolute inset-0 flex items-center justify-center opacity-5 select-none pointer-events-none">
+                        <span className="font-display-lg text-[20vw] font-bold uppercase whitespace-nowrap">TRACKHIRE</span>
+                    </div>
+                    <div className="max-w-5xl mx-auto relative z-10 w-full flex flex-col items-center justify-center text-center">
+                        <span className="font-label-mono text-label-mono uppercase mb-4 block text-center">// THE LAST STEP</span>
+                        <h2 className="font-headline-xl text-headline-xl md:text-[120px] uppercase leading-none mb-12 tracking-tighter text-center w-full">
+                            MISS NOTHING.<br />APPLY SMARTER.
+                        </h2>
+                        <div className="flex flex-col md:flex-row gap-8 justify-center items-center w-full">
+                            <div className="relative w-full md:w-auto flex justify-center">
+                                <Link to="/login" className="w-full md:w-auto font-display-lg text-headline-md bg-vibrant-orange text-pure-white border-4 border-brutalist-black px-16 py-8 brutalist-shadow-lg active-btn block text-center">GET STARTED NOW</Link>
+                                {/* <svg className="absolute -left-12 top-0 w-16 h-16 hidden md:block" viewBox="0 0 100 100">
+                                    <path d="M90,50 Q50,90 10,50" fill="none" stroke="#FF6B00" strokeWidth="4"></path>
+                                    <path d="M20,60 L10,50 L20,40" fill="none" stroke="#FF6B00" strokeWidth="4"></path>
+                                    </svg> */}
+                            </div>
+                            <Link to="/meet-the-builder" className="w-full md:w-auto font-headline-md text-headline-md bg-pure-white text-brutalist-black border-4 border-brutalist-black px-16 py-8 brutalist-shadow active-btn block text-center">LEARN MORE</Link>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-            <Navbar scrolled={scrolled} />
-            <HeroSection />
-            <MarqueeStrip />
-            <PainSection />
-            <MarqueeStrip />
-            <FeaturesSection />
-            <HowItWorksSection />
-            <TestimonialsSection />
-            <CTASection />
-            <Footer />
+            {/* Footer */}
+            <footer className="w-full bg-brutalist-black text-pure-white border-t-4 border-brutalist-black min-h-[50vh] flex flex-col justify-center items-center">
+                <div className="max-w-7xl mx-auto py-block-gap px-grid-margin grid grid-cols-1 md:grid-cols-12 gap-12 w-full place-items-center text-center">
+                    <div className="md:col-span-5 flex flex-col items-center">
+                        <div className="font-headline-xl text-headline-xl text-pure-white mb-6 text-center">TrackHire</div>
+                        <p className="font-body-lg text-body-lg opacity-80 max-w-md mb-8 text-center">
+                            The job market is an 8h/day game. Play it strategically. TrackHire is built for those who value speed, honesty, and raw performance.
+                        </p>
+                    </div>
+                    <div className="md:col-span-3 flex flex-col items-center">
+                        <h4 className="font-label-mono text-label-mono uppercase mb-8 border-b-2 border-pure-white inline-block">START</h4>
+                        <nav className="flex flex-col gap-4 items-center">
+                            <Link className="font-label-mono text-label-mono opacity-80 hover:opacity-100 hover:text-vibrant-orange transition-opacity" to="/meet-the-builder">About</Link>
+                            <Link className="font-label-mono text-label-mono opacity-80 hover:opacity-100 hover:text-vibrant-orange transition-opacity" to="/meet-the-builder">Learn Next</Link>
+                            <Link className="font-label-mono text-label-mono opacity-80 hover:opacity-100 hover:text-vibrant-orange transition-opacity" to="/login">Sign In</Link>
+                            <a className="font-label-mono text-label-mono opacity-80 hover:opacity-100 hover:text-vibrant-orange transition-opacity" href="mailto:support@trackhire.com">Contact Us</a>
+                        </nav>
+                    </div>
+                    <div className="md:col-span-4 border-4 border-vibrant-orange p-8 sticker-rotate-pos flex flex-col items-center">
+                        <h4 className="font-headline-md text-headline-md mb-4 text-vibrant-orange text-center">Weekly Sprint</h4>
+                        <p className="font-body-sm text-body-sm mb-6 opacity-80 text-center">Get the best job signals delivered every Monday morning. No spam, just high-quality leads.</p>
+                        <div className="flex flex-col gap-4 w-full">
+                            <Link to="/login" className="bg-vibrant-orange text-pure-white font-bold py-3 active-btn block text-center w-full">JOIN NOW</Link>
+                        </div>
+                    </div>
+                </div>
+            </footer>
         </div>
     );
 }

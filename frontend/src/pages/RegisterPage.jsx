@@ -2,23 +2,10 @@ import React, { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-
-const inputBaseStyle = {
-    width: '100%',
-    padding: '12px 14px',
-    background: 'var(--color-surface-3)',
-    border: '1px solid var(--color-border)',
-    borderRadius: '8px',
-    color: 'var(--color-white)',
-    fontFamily: 'var(--font-body)',
-    fontSize: '14px',
-    outline: 'none',
-    transition: 'border-color 0.2s, box-shadow 0.2s',
-    boxSizing: 'border-box',
-};
+import { FiEye, FiEyeOff, FiZap, FiTarget, FiBarChart2 } from 'react-icons/fi';
 
 const STRENGTHS = ['', 'Weak', 'Fair', 'Good', 'Strong'];
-const STRENGTH_COLORS = ['', '#f87171', '#fbbf24', '#2dd4bf', '#4ade80'];
+const STRENGTH_COLORS = ['', '#060608', '#FF6B00', '#2dd4bf', '#4ade80'];
 
 function calcStrength(pw) {
     let s = 0;
@@ -38,12 +25,10 @@ export default function RegisterPage() {
     });
     const [loading, setLoading] = useState(false);
     const [agreedToTerms, setAgreedToTerms] = useState(false);
-    const [focused, setFocused] = useState('');
     const [strength, setStrength] = useState(0);
     const [errorMsg, setErrorMsg] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
 
-    // Manual guest redirection: if already logged in, go to dashboard.
-    // We use a local flag to avoid redirecting to dashboard during the registration flow itself.
     const [isRegistering, setIsRegistering] = useState(false);
 
     React.useEffect(() => {
@@ -84,7 +69,6 @@ export default function RegisterPage() {
             });
             const data = await res.json();
             if (res.ok) {
-                // Auto-login
                 const lr = await fetch(import.meta.env.VITE_API_BASE_URL + '/auth/login', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ loginIdentifier: formData.email, password: formData.password }),
@@ -92,10 +76,8 @@ export default function RegisterPage() {
                 const ld = await lr.json();
                 if (lr.ok && ld.token && ld.refreshToken) {
                     login(ld);
-                    // Keep isRegistering=true so the useEffect guard doesn't
-                    // redirect to /dashboard before this navigation happens.
                     navigate('/onboarding', { replace: true });
-                    return; // exit early — don't reset isRegistering
+                    return;
                 } else {
                     navigate('/login');
                     return;
@@ -107,348 +89,220 @@ export default function RegisterPage() {
         } catch {
             setErrorMsg('Something went wrong on our end. Refresh the page — your data is safe.');
         }
-        // Only reached on error — reset flags so the user can retry
         setLoading(false);
         setIsRegistering(false);
     };
 
-    const inputStyle = (name) => ({
-        ...inputBaseStyle,
-        borderColor: focused === name ? 'var(--color-orange)' : 'var(--color-border)',
-        boxShadow: focused === name ? '0 0 0 3px rgba(249,115,22,0.15)' : 'none',
-        background: focused === name ? '#1a1a1a' : 'var(--color-surface-3)',
-    });
-
-    const labelStyle = {
-        display: 'block',
-        fontFamily: 'var(--font-body)', fontWeight: 500,
-        fontSize: '13px', color: 'var(--color-white-65)',
-        marginBottom: '8px',
-    };
-
     return (
-        <div style={{
-            minHeight: '100vh',
-            background: 'var(--color-bg)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: '24px', fontFamily: 'var(--font-body)',
-        }}>
+        <div className="min-h-screen bg-surface flex items-center justify-center p-8 md:p-12 lg:p-16 font-body-lg text-brutalist-black selection:bg-vibrant-orange selection:text-pure-white overflow-hidden relative py-12">
             <style>{`
-                @media (max-width: 768px) {
-                    .register-left-panel { display: none !important; }
-                    .register-card { max-width: 480px !important; }
-                }
-                @media (min-width: 769px) {
-                    .register-form-grid { grid-template-columns: 1fr 1fr !important; }
-                }
-                @keyframes popupFadeIn {
-                    from { opacity: 0; transform: translate(-50%, -50%) scale(0.85); }
-                    to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-                }
-                @keyframes backdropFadeIn {
-                    from { opacity: 0; }
-                    to   { opacity: 1; }
+                .sticker-rotate-pos { transform: rotate(3deg); }
+                .sticker-rotate-neg { transform: rotate(-3deg); }
+                .active-btn:active {
+                    transform: translate(4px, 4px) !important;
+                    box-shadow: 0px 0px 0px 0px #060608 !important;
                 }
             `}</style>
 
-            <div
-                className="register-card"
-                style={{
-                    width: '100%', maxWidth: '960px',
-                    background: 'var(--color-surface-1)',
-                    border: '1px solid var(--color-border)',
-                    borderRadius: '20px', overflow: 'hidden',
-                    display: 'flex',
-                }}
-            >
-                {/* Left panel */}
-                <div
-                    className="register-left-panel"
-                    style={{
-                        width: '340px', flexShrink: 0,
-                        background: 'linear-gradient(145deg, rgba(249,115,22,0.14) 0%, rgba(8,8,8,0) 70%)',
-                        borderRight: '1px solid var(--color-border)',
-                        padding: '48px 36px',
-                        display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                        position: 'relative', overflow: 'hidden',
-                    }}
-                >
-                    <div style={{
-                        position: 'absolute', top: '-80px', right: '-80px',
-                        width: '280px', height: '280px',
-                        background: 'radial-gradient(circle, rgba(249,115,22,0.12) 0%, transparent 70%)',
-                        borderRadius: '50%', pointerEvents: 'none',
-                    }} />
-                    <div style={{ position: 'relative', zIndex: 1 }}>
-                        <div style={{
-                            fontFamily: 'var(--font-display)', fontWeight: 800,
-                            fontSize: '22px', color: 'var(--color-white)',
-                            letterSpacing: '-0.02em', marginBottom: '40px',
-                        }}>
-                            Track<span style={{ color: 'var(--color-orange)' }}>H</span>ire
-                        </div>
-                        <h1 style={{
-                            fontFamily: 'var(--font-display)', fontWeight: 800,
-                            fontSize: '28px', letterSpacing: '-0.025em',
-                            lineHeight: 1.2, color: 'var(--color-white)',
-                            margin: '0 0 16px',
-                        }}>
-                            Start tracking smarter.
+            {/* Background grid */}
+            <div className="absolute inset-0 pointer-events-none opacity-20" style={{
+                backgroundImage: 'linear-gradient(to right, #060608 1px, transparent 1px), linear-gradient(to bottom, #060608 1px, transparent 1px)',
+                backgroundSize: '64px 64px'
+            }}></div>
+
+            <div className="w-full max-w-5xl bg-pure-white border-[4px] border-brutalist-black rounded-none flex flex-col md:flex-row z-10" style={{ boxShadow: '12px 12px 0px 0px #060608' }}>
+
+                {/* Left Panel */}
+                <div style={{ "padding": "25px 25px" }} className="hidden md:flex flex-col flex-[0.8] border-r-[4px] border-brutalist-black bg-brutalist-black text-pure-white p-12 lg:p-16 justify-between relative overflow-hidden">
+                    <div className="relative z-10">
+                        <Link to="/" className="font-headline-md text-3xl uppercase tracking-tighter block mb-12 border-b-[3px] border-pure-white pb-2 inline-block">
+                            TRACK<span className="text-vibrant-orange">HIRE</span>
+                        </Link>
+                        <h1 className="font-black text-5xl uppercase leading-none mb-6">
+                            Start<br />Tracking<br />Smarter.
                         </h1>
-                        <p style={{
-                            fontFamily: 'var(--font-body)', fontSize: '14px',
-                            color: 'var(--color-white-65)', lineHeight: 1.7, margin: 0,
-                        }}>
+                        <p className="font-label-mono font-bold text-base max-w-[200px] mb-8">
                             Set up in 3 minutes. Free forever.
                         </p>
                     </div>
-                    <div style={{ position: 'relative', zIndex: 1 }}>
+
+                    <div className="relative z-10 flex flex-col gap-6 mt-8">
                         {[
-                            { icon: '⚡', text: 'Alerts in < 5 minutes' },
-                            { icon: '🎯', text: '500+ companies tracked' },
-                            { icon: '📊', text: 'Pipeline built for you' },
+                            { icon: <FiZap />, text: 'Alerts in < 5 minutes' },
+                            { icon: <FiTarget />, text: '500+ companies tracked' },
+                            { icon: <FiBarChart2 />, text: 'Pipeline built for you' },
                         ].map(({ icon, text }) => (
-                            <div key={text} style={{
-                                display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px',
-                            }}>
-                                <span style={{ fontSize: '18px' }}>{icon}</span>
-                                <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-65)' }}>{text}</span>
+                            <div key={text} className="flex items-center gap-4">
+                                <span className="text-2xl bg-pure-white w-10 h-10 flex items-center justify-center border-[2px] border-pure-white" style={{ boxShadow: '3px 3px 0px 0px #FF6B00' }}>{icon}</span>
+                                <span className="font-label-mono text-sm font-bold uppercase">{text}</span>
                             </div>
                         ))}
-                        <p style={{
-                            fontFamily: 'var(--font-body)', fontSize: '12px',
-                            color: 'var(--color-white-20)', marginTop: '16px', margin: '16px 0 0',
-                        }}>
-                            No credit card required. Free plan available.
-                        </p>
+                        <div className="bg-vibrant-orange border-[3px] border-pure-white p-4 sticker-rotate-neg w-max mt-8 shadow-[4px_4px_0px_0px_#FFFFFF]">
+                            <span className="font-label-mono text-xs font-black uppercase text-pure-white">NO CREDIT CARD REQUIRED</span>
+                        </div>
                     </div>
                 </div>
 
-                {/* Right panel — form */}
-                <div style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
-                    <h2 style={{
-                        fontFamily: 'var(--font-display)', fontWeight: 800,
-                        fontSize: '24px', letterSpacing: '-0.02em',
-                        color: 'var(--color-white)', margin: '0 0 6px',
-                    }}>
-                        Create Free Account
-                    </h2>
-                    <p style={{
-                        fontFamily: 'var(--font-body)', fontSize: '14px',
-                        color: 'var(--color-white-65)', margin: '0 0 28px',
-                    }}>
+                {/* Right Panel - Form */}
+                <div style={{ "padding": "25px 25px" }} className="flex-[1.2] p-10 md:p-12 lg:p-16 flex flex-col justify-center bg-pure-white relative">
+                    <div className="md:hidden font-headline-md text-2xl uppercase tracking-tighter block mb-8 border-b-[3px] border-brutalist-black pb-2 inline-block w-max">
+                        TRACK<span className="text-vibrant-orange">HIRE</span>
+                    </div>
+
+                    <h2 className="font-black text-4xl uppercase mb-2">Create Account</h2>
+                    <p className="font-label-mono font-bold text-sm mb-8 text-brutalist-black opacity-80">
                         Already have an account?{' '}
-                        <Link to="/login" style={{ color: 'var(--color-orange)', fontWeight: 500, textDecoration: 'none' }}>
+                        <Link to="/login" className="text-vibrant-orange hover:underline decoration-[2px] underline-offset-4 opacity-100">
                             Sign in →
                         </Link>
                     </p>
 
-                    <form onSubmit={handleSubmit}>
-                        <div
-                            className="register-form-grid"
-                            style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', marginBottom: '16px' }}
-                        >
-                            {/* Full name */}
-                            <div>
-                                <label style={labelStyle}>Full name</label>
+                    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                            <div className="flex flex-col gap-2">
+                                <label className="font-label-mono font-bold uppercase text-sm">Full Name</label>
                                 <input
                                     type="text" name="username" required
                                     placeholder="e.g. Alex Johnson"
                                     value={formData.username} onChange={handleChange}
-                                    onFocus={() => setFocused('username')} onBlur={() => setFocused('')}
-                                    style={inputStyle('username')}
+                                    className="w-full bg-pure-white border-[3px] border-brutalist-black px-4 py-3 font-body-lg text-base outline-none focus:border-vibrant-orange transition-colors"
                                 />
                             </div>
 
-                            {/* Email */}
-                            <div>
-                                <label style={labelStyle}>Email address</label>
+                            <div className="flex flex-col gap-2">
+                                <label className="font-label-mono font-bold uppercase text-sm">Email Address</label>
                                 <input
                                     type="email" name="email" required
                                     placeholder="name@company.com"
                                     value={formData.email} onChange={handleChange}
-                                    onFocus={() => setFocused('email')} onBlur={() => setFocused('')}
-                                    style={inputStyle('email')}
+                                    className="w-full bg-pure-white border-[3px] border-brutalist-black px-4 py-3 font-body-lg text-base outline-none focus:border-vibrant-orange transition-colors"
                                 />
                             </div>
+                        </div>
 
-                            {/* Password */}
-                            <div>
-                                <label style={labelStyle}>Password</label>
-                                <input
-                                    type="password" name="password" required
-                                    placeholder="••••••••"
-                                    value={formData.password} onChange={handleChange}
-                                    onFocus={() => setFocused('password')} onBlur={() => setFocused('')}
-                                    style={inputStyle('password')}
-                                />
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                            <div className="flex flex-col gap-2">
+                                <label className="font-label-mono font-bold uppercase text-sm">Password</label>
+                                <div className="relative">
+                                    <input
+                                        type={showPassword ? 'text' : 'password'}
+                                        name="password" required
+                                        placeholder="••••••••"
+                                        value={formData.password} onChange={handleChange}
+                                        className="w-full bg-pure-white border-[3px] border-brutalist-black px-4 py-3 pr-10 font-body-lg text-base outline-none focus:border-vibrant-orange transition-colors"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(p => !p)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 font-bold text-lg hover:text-vibrant-orange transition-colors"
+                                    >
+                                        {showPassword ? <FiEyeOff /> : <FiEye />}
+                                    </button>
+                                </div>
                                 {/* Strength bar */}
                                 {formData.password && (
-                                    <div style={{ marginTop: '8px' }}>
-                                        <div style={{ display: 'flex', gap: '4px', height: '3px' }}>
+                                    <div className="mt-1">
+                                        <div className="flex gap-1 h-2 mb-1">
                                             {[1, 2, 3, 4].map(i => (
-                                                <div key={i} style={{
-                                                    flex: 1, borderRadius: '4px',
-                                                    background: i <= strength ? STRENGTH_COLORS[strength] : 'var(--color-border)',
-                                                    transition: 'background 0.3s',
+                                                <div key={i} className="flex-1 border-[1px] border-brutalist-black" style={{
+                                                    background: i <= strength ? STRENGTH_COLORS[strength] : '#e5e5e5'
                                                 }} />
                                             ))}
                                         </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
-                                            <span style={{ fontFamily: 'var(--font-display)', fontSize: '11px', fontWeight: 700, color: STRENGTH_COLORS[strength] || 'var(--color-white-40)', letterSpacing: '0.06em' }}>
+                                        <div className="flex justify-between items-center">
+                                            <span className="font-label-mono text-[10px] font-black uppercase" style={{ color: STRENGTH_COLORS[strength] || '#060608' }}>
                                                 {STRENGTHS[strength] || 'Weak'}
-                                            </span>
-                                            <span style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--color-white-40)' }}>
-                                                At least 8 characters.
                                             </span>
                                         </div>
                                     </div>
                                 )}
                             </div>
 
-                            {/* Confirm password */}
-                            <div>
-                                <label style={labelStyle}>Confirm password</label>
-                                <input
-                                    type="password" name="confirmPassword" required
-                                    placeholder="••••••••"
-                                    value={formData.confirmPassword} onChange={handleChange}
-                                    onFocus={() => setFocused('confirm')} onBlur={() => setFocused('')}
-                                    style={{
-                                        ...inputStyle('confirm'),
-                                        borderColor: formData.confirmPassword && formData.confirmPassword !== formData.password
-                                            ? '#ef4444'
-                                            : focused === 'confirm' ? 'var(--color-orange)' : 'var(--color-border)',
-                                    }}
-                                />
+                            <div className="flex flex-col gap-2">
+                                <label className="font-label-mono font-bold uppercase text-sm">Confirm Password</label>
+                                <div className="relative">
+                                    <input
+                                        type={showPassword ? 'text' : 'password'}
+                                        name="confirmPassword" required
+                                        placeholder="••••••••"
+                                        value={formData.confirmPassword} onChange={handleChange}
+                                        className={`w-full bg-pure-white border-[3px] px-4 py-3 pr-10 font-body-lg text-base outline-none transition-colors ${formData.confirmPassword && formData.confirmPassword !== formData.password
+                                            ? 'border-red-500 focus:border-red-500'
+                                            : 'border-brutalist-black focus:border-vibrant-orange'
+                                            }`}
+                                    />
+                                </div>
                             </div>
                         </div>
 
-                        {/* Terms */}
-                        <label style={{
-                            display: 'flex', alignItems: 'flex-start', gap: '10px',
-                            cursor: 'pointer', marginBottom: '24px',
-                        }}>
-                            <input
-                                type="checkbox"
-                                checked={agreedToTerms}
-                                onChange={e => setAgreedToTerms(e.target.checked)}
-                                style={{ marginTop: '2px', accentColor: 'var(--color-orange)', width: '16px', height: '16px', flexShrink: 0 }}
-                            />
-                            <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-65)', lineHeight: 1.5 }}>
+                        <label className="flex items-start gap-3 mt-4 cursor-pointer group">
+                            <div className="relative flex items-center justify-center mt-0.5">
+                                <input
+                                    type="checkbox"
+                                    checked={agreedToTerms}
+                                    onChange={e => setAgreedToTerms(e.target.checked)}
+                                    className="appearance-none w-5 h-5 border-[3px] border-brutalist-black bg-pure-white checked:bg-vibrant-orange transition-colors cursor-pointer"
+                                />
+                                {agreedToTerms && (
+                                    <svg className="absolute w-3 h-3 text-pure-white pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                )}
+                            </div>
+                            <span className="font-label-mono font-bold text-xs uppercase leading-relaxed">
                                 I agree to the{' '}
-                                <a href="#" style={{ color: 'var(--color-orange)', textDecoration: 'none' }}>Terms of Service</a>
+                                <a href="#" className="text-vibrant-orange underline decoration-[2px] underline-offset-2">Terms of Service</a>
                                 {' '}and{' '}
-                                <a href="#" style={{ color: 'var(--color-orange)', textDecoration: 'none' }}>Privacy Policy</a>
+                                <a href="#" className="text-vibrant-orange underline decoration-[2px] underline-offset-2">Privacy Policy</a>
                             </span>
                         </label>
 
-                        {/* Submit — only enabled when passwords match + terms agreed */}
                         {(() => {
                             const passwordsMatch = formData.password && formData.confirmPassword && formData.password === formData.confirmPassword;
-                            const isFormValid = passwordsMatch && agreedToTerms && !loading;
+                            const isFormValid = passwordsMatch && agreedToTerms && !loading && formData.username && formData.email;
+
                             return (
-                                <button
-                                    type="submit"
-                                    disabled={!isFormValid}
-                                    style={{
-                                        width: '100%',
-                                        fontFamily: 'var(--font-display)', fontWeight: 700,
-                                        fontSize: '14px', color: '#000',
-                                        background: !isFormValid ? 'var(--color-white-20)' : 'var(--color-orange)',
-                                        padding: '13px 24px',
-                                        borderRadius: '8px', border: 'none',
-                                        cursor: !isFormValid ? 'not-allowed' : 'pointer',
-                                        opacity: !isFormValid ? 0.5 : 1,
-                                        transition: 'background 0.2s, opacity 0.2s',
-                                    }}
-                                    onMouseEnter={e => { if (isFormValid) e.currentTarget.style.background = 'var(--color-orange-hover)'; }}
-                                    onMouseLeave={e => { if (isFormValid) e.currentTarget.style.background = 'var(--color-orange)'; }}
-                                >
-                                    {loading ? 'Creating Account…' : 'Create Free Account'}
-                                </button>
+                                <div className="mt-4 flex flex-col gap-2">
+                                    <button
+                                        type="submit"
+                                        disabled={!isFormValid}
+                                        className={`w-full font-black uppercase text-xl border-[3px] border-brutalist-black px-6 py-4 transition-all flex items-center justify-center ${isFormValid
+                                            ? 'bg-vibrant-orange text-pure-white hover:bg-brutalist-black active-btn cursor-pointer'
+                                            : 'bg-[#e5e5e5] text-brutalist-black/50 cursor-not-allowed'
+                                            }`}
+                                        style={{ boxShadow: !isFormValid || loading ? '0px 0px 0px 0px #060608' : '6px 6px 0px 0px #060608' }}
+                                    >
+                                        {loading ? 'Creating...' : 'Create Account'}
+                                    </button>
+
+                                    {(!isFormValid) && (
+                                        <p className="font-label-mono font-bold text-[10px] uppercase text-brutalist-black/60 text-center mt-2">
+                                            {formData.confirmPassword && formData.password !== formData.confirmPassword
+                                                ? '⚠ Passwords do not match'
+                                                : !agreedToTerms
+                                                    ? '☑ Please agree to the terms'
+                                                    : 'Fill all fields to continue'}
+                                        </p>
+                                    )}
+                                </div>
                             );
                         })()}
-
-                        {/* Hint text when button is disabled */}
-                        {(!agreedToTerms || !formData.confirmPassword || formData.password !== formData.confirmPassword) && (
-                            <p style={{
-                                fontFamily: 'var(--font-body)', fontSize: '12px',
-                                color: 'var(--color-white-40)', textAlign: 'center',
-                                marginTop: '8px', marginBottom: 0,
-                            }}>
-                                {formData.confirmPassword && formData.password !== formData.confirmPassword
-                                    ? '⚠ Passwords do not match'
-                                    : !agreedToTerms
-                                        ? '☑ Please agree to the Terms of Service'
-                                        : 'Fill in all required fields to continue'}
-                            </p>
-                        )}
                     </form>
                 </div>
             </div>
 
-            {/* Error modal popup */}
+            {/* Error popup */}
             {errorMsg && (
-                <div
-                    onClick={() => setErrorMsg('')}
-                    style={{
-                        position: 'fixed', inset: 0,
-                        background: 'rgba(0,0,0,0.6)',
-                        backdropFilter: 'blur(4px)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        zIndex: 9999,
-                        animation: 'backdropFadeIn 0.25s ease-out',
-                    }}
-                >
-                    <div
-                        onClick={e => e.stopPropagation()}
-                        style={{
-                            position: 'fixed', top: '50%', left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            background: 'var(--color-surface-1)',
-                            border: '1px solid rgba(239, 68, 68, 0.3)',
-                            borderRadius: '16px',
-                            padding: '32px',
-                            maxWidth: '400px',
-                            width: '90%',
-                            textAlign: 'center',
-                            animation: 'popupFadeIn 0.3s ease-out',
-                            boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
-                        }}
-                    >
-                        <div style={{
-                            width: '56px', height: '56px', borderRadius: '50%',
-                            background: 'rgba(239, 68, 68, 0.12)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            margin: '0 auto 16px',
-                        }}>
-                            <span style={{ fontSize: '28px' }}>✕</span>
+                <div onClick={() => setErrorMsg('')} className="fixed inset-0 bg-brutalist-black/80 flex items-center justify-center z-[9999] p-4">
+                    <div onClick={e => e.stopPropagation()} className="bg-pure-white border-[4px] border-brutalist-black p-8 max-w-md w-full text-center sticker-rotate-neg" style={{ boxShadow: '12px 12px 0px 0px #FF6B00' }}>
+                        <div className="w-16 h-16 border-[3px] border-brutalist-black bg-vibrant-orange text-pure-white flex items-center justify-center mx-auto mb-6 rounded-full font-black text-4xl leading-none">
+                            <span style={{ marginTop: '-4px' }}>!</span>
                         </div>
-                        <h3 style={{
-                            fontFamily: 'var(--font-display)', fontWeight: 700,
-                            fontSize: '18px', color: '#fca5a5',
-                            margin: '0 0 8px',
-                        }}>Registration Failed</h3>
-                        <p style={{
-                            fontFamily: 'var(--font-body)', fontSize: '14px',
-                            color: 'var(--color-white-65)', lineHeight: 1.6,
-                            margin: '0 0 24px',
-                        }}>{errorMsg}</p>
-                        <button
-                            onClick={() => setErrorMsg('')}
-                            style={{
-                                fontFamily: 'var(--font-display)', fontWeight: 700,
-                                fontSize: '14px', color: '#000',
-                                background: 'var(--color-orange)',
-                                padding: '10px 32px',
-                                borderRadius: '8px', border: 'none',
-                                cursor: 'pointer',
-                                transition: 'background 0.2s',
-                            }}
-                            onMouseEnter={e => e.currentTarget.style.background = 'var(--color-orange-hover)'}
-                            onMouseLeave={e => e.currentTarget.style.background = 'var(--color-orange)'}
-                        >Try Again</button>
+                        <h3 className="font-black text-2xl uppercase mb-4">Registration Failed</h3>
+                        <p className="font-label-mono font-bold mb-8 text-sm">{errorMsg}</p>
+                        <button onClick={() => setErrorMsg('')} className="font-black uppercase text-lg bg-brutalist-black text-pure-white border-[3px] border-brutalist-black px-8 py-3 transition-transform hover:bg-vibrant-orange active-btn inline-block" style={{ boxShadow: '6px 6px 0px 0px #FF6B00' }}>
+                            Try Again
+                        </button>
                     </div>
                 </div>
             )}

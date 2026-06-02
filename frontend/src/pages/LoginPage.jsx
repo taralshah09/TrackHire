@@ -1,37 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-
-/* ── Shared brand button styles ── */
-const primaryBtn = {
-    fontFamily: 'var(--font-display)',
-    fontWeight: 700,
-    fontSize: '14px',
-    color: '#000',
-    background: 'var(--color-orange)',
-    padding: '12px 24px',
-    borderRadius: '8px',
-    border: 'none',
-    cursor: 'pointer',
-    width: '100%',
-    letterSpacing: '0.01em',
-    transition: 'background 0.2s, transform 0.15s',
-};
-
-const inputBaseStyle = {
-    width: '100%',
-    padding: '12px 14px',
-    background: 'var(--color-surface-3)',
-    border: '1px solid var(--color-border)',
-    borderRadius: '8px',
-    color: 'var(--color-white)',
-    fontFamily: 'var(--font-body)',
-    fontSize: '14px',
-    outline: 'none',
-    transition: 'border-color 0.2s, box-shadow 0.2s',
-    boxSizing: 'border-box',
-};
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 
 export default function LoginPage() {
     const location = useLocation();
@@ -41,7 +12,6 @@ export default function LoginPage() {
     const [formData, setFormData] = useState({ loginIdentifier: '', password: '' });
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    const [focused, setFocused] = useState('');
     const [errorMsg, setErrorMsg] = useState('');
 
     const handleChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -79,153 +49,75 @@ export default function LoginPage() {
         }
     };
 
-    const getInputStyle = (name) => ({
-        ...inputBaseStyle,
-        borderColor: focused === name ? 'var(--color-orange)' : 'var(--color-border)',
-        boxShadow: focused === name ? '0 0 0 3px rgba(249,115,22,0.15)' : 'none',
-        background: focused === name ? '#1a1a1a' : 'var(--color-surface-3)',
-    });
-
     return (
-        <div style={{
-            minHeight: '100vh',
-            background: 'var(--color-bg)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '24px',
-            fontFamily: 'var(--font-body)',
-        }}>
+        <div className="min-h-screen bg-surface flex items-center justify-center p-8 md:p-12 lg:p-16 font-body-lg text-brutalist-black selection:bg-vibrant-orange selection:text-pure-white overflow-hidden relative">
             <style>{`
-                @media (max-width: 768px) {
-                    .login-left-panel { display: none !important; }
-                    .login-card { max-width: 440px !important; }
-                }
-                @keyframes popupFadeIn {
-                    from { opacity: 0; transform: translate(-50%, -50%) scale(0.85); }
-                    to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-                }
-                @keyframes backdropFadeIn {
-                    from { opacity: 0; }
-                    to   { opacity: 1; }
+                .sticker-rotate-pos { transform: rotate(3deg); }
+                .sticker-rotate-neg { transform: rotate(-3deg); }
+                .active-btn:active {
+                    transform: translate(4px, 4px) !important;
+                    box-shadow: 0px 0px 0px 0px #060608 !important;
                 }
             `}</style>
 
-            <div
-                className="login-card"
-                style={{
-                    width: '100%',
-                    maxWidth: '900px',
-                    background: 'var(--color-surface-1)',
-                    border: '1px solid var(--color-border)',
-                    borderRadius: '20px',
-                    overflow: 'hidden',
-                    display: 'flex',
-                    minHeight: '560px',
-                }}
-            >
-                {/* Left panel — brand splash */}
-                <div
-                    className="login-left-panel"
-                    style={{
-                        flex: 1,
-                        background: 'linear-gradient(145deg, rgba(249,115,22,0.14) 0%, rgba(8,8,8,0) 60%)',
-                        borderRight: '1px solid var(--color-border)',
-                        padding: '48px 40px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'space-between',
-                        position: 'relative',
-                        overflow: 'hidden',
-                    }}
-                >
-                    {/* Glow orb */}
-                    <div style={{
-                        position: 'absolute', top: '-60px', left: '-60px',
-                        width: '300px', height: '300px',
-                        background: 'radial-gradient(circle, rgba(249,115,22,0.15) 0%, transparent 70%)',
-                        borderRadius: '50%', pointerEvents: 'none',
-                    }} />
+            {/* Background grid */}
+            <div className="absolute inset-0 pointer-events-none opacity-20" style={{
+                backgroundImage: 'linear-gradient(to right, #060608 1px, transparent 1px), linear-gradient(to bottom, #060608 1px, transparent 1px)',
+                backgroundSize: '64px 64px'
+            }}></div>
 
-                    <div style={{ position: 'relative', zIndex: 1 }}>
-                        <div style={{
-                            fontFamily: 'var(--font-display)', fontWeight: 800,
-                            fontSize: '24px', color: 'var(--color-white)',
-                            letterSpacing: '-0.02em', marginBottom: '48px',
-                        }}>
-                            Track<span style={{ color: 'var(--color-orange)' }}>H</span>ire
-                        </div>
-                        <h1 style={{
-                            fontFamily: 'var(--font-display)', fontWeight: 800,
-                            fontSize: '32px', letterSpacing: '-0.025em',
-                            lineHeight: 1.15, color: 'var(--color-white)',
-                            margin: '0 0 16px',
-                        }}>
-                            Welcome back.
+            <div className="w-full max-w-5xl bg-pure-white border-[4px] border-brutalist-black rounded-none flex flex-col md:flex-row min-h-[600px] z-10" style={{ boxShadow: '12px 12px 0px 0px #060608' }}>
+
+                {/* Left Panel */}
+                <div style={{ "padding": "25px 25px" }} className="hidden md:flex flex-col flex-1 border-r-[4px] border-brutalist-black bg-vibrant-orange text-brutalist-black p-12 lg:p-16 justify-between relative overflow-hidden">
+                    <div className="relative z-10">
+                        <Link to="/" className="font-headline-md text-3xl uppercase tracking-tighter block mb-12 border-b-[3px] border-brutalist-black pb-2 inline-block">
+                            TRACK<span className="text-pure-white">HIRE</span>
+                        </Link>
+                        <h1 className="font-black text-5xl uppercase leading-none mb-6">
+                            Welcome<br />Back.
                         </h1>
-                        <p style={{
-                            fontFamily: 'var(--font-body)', fontSize: '15px',
-                            color: 'var(--color-white-65)', lineHeight: 1.7, margin: 0,
-                        }}>
-                            Your pipeline is waiting.
+                        <p className="font-label-mono font-bold text-base max-w-sm">
+                            Your pipeline is waiting. <br />Stop hunting. <br />Start landing.
                         </p>
                     </div>
 
-                    {/* Stats strip */}
-                    <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div className="relative z-10 flex flex-col gap-4 mt-12">
                         {[
-                            { stat: '500+', label: 'Companies monitored' },
-                            { stat: '< 5 min', label: 'Alert delivery' },
-                            { stat: '9 min/day', label: 'Avg daily time' },
-                        ].map(({ stat, label }) => (
-                            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <span style={{
-                                    fontFamily: 'var(--font-mono)', fontWeight: 700,
-                                    fontSize: '16px', color: 'var(--color-orange)',
-                                    minWidth: '72px',
-                                }}>{stat}</span>
-                                <span style={{
-                                    fontFamily: 'var(--font-body)', fontSize: '13px',
-                                    color: 'var(--color-white-40)',
-                                }}>{label}</span>
+                            { stat: '500+', label: 'Companies' },
+                            { stat: '< 5 min', label: 'Alerts' },
+                            { stat: '9 min', label: 'Daily time' },
+                        ].map(({ stat, label }, i) => (
+                            <div key={label} className={`flex items-center gap-4 bg-pure-white border-[3px] border-brutalist-black px-4 py-2 w-max ${i % 2 === 0 ? 'sticker-rotate-neg' : 'sticker-rotate-pos'}`} style={{ boxShadow: '4px 4px 0px 0px #060608' }}>
+                                <span className="font-black text-xl text-vibrant-orange min-w-[72px]">{stat}</span>
+                                <span className="font-label-mono text-sm font-bold uppercase">{label}</span>
                             </div>
                         ))}
                     </div>
                 </div>
 
-                {/* Right panel — form */}
-                <div style={{
-                    flex: 1, padding: '48px 40px',
-                    display: 'flex', flexDirection: 'column', justifyContent: 'center',
-                }}>
-                    <h2 style={{
-                        fontFamily: 'var(--font-display)', fontWeight: 800,
-                        fontSize: '28px', letterSpacing: '-0.025em',
-                        color: 'var(--color-white)', margin: '0 0 8px',
-                    }}>
-                        Sign In
-                    </h2>
-                    <p style={{
-                        fontFamily: 'var(--font-body)', fontSize: '14px',
-                        color: 'var(--color-white-65)', margin: '0 0 32px',
-                    }}>
-                        New to TrackHire?{' '}
-                        <Link to="/register" style={{ color: 'var(--color-orange)', fontWeight: 500, textDecoration: 'none' }}>
+                {/* Right Panel - Form */}
+                <div style={{ "padding": "25px 25px" }} className="flex-1 p-10 md:p-12 lg:p-16 flex flex-col justify-center bg-pure-white relative">
+                    {/* decorative star */}
+                    <svg width="48" height="48" viewBox="0 0 100 100" className="absolute top-6 right-6 fill-pure-white stroke-brutalist-black stroke-[4px] hidden lg:block sticker-rotate-pos pointer-events-none">
+                        <polygon points="50,5 62,38 95,50 62,62 50,95 38,62 5,50 38,38" strokeLinejoin="round" />
+                    </svg>
+
+                    <div className="md:hidden font-headline-md text-2xl uppercase tracking-tighter block mb-8 border-b-[3px] border-brutalist-black pb-2 inline-block w-max">
+                        TRACK<span className="text-vibrant-orange">HIRE</span>
+                    </div>
+
+                    <h2 className="font-black text-4xl uppercase mb-2">Sign In</h2>
+                    <p className="font-label-mono font-bold text-sm mb-10 text-brutalist-black opacity-80">
+                        New here?{' '}
+                        <Link to="/register" className="text-vibrant-orange hover:underline decoration-[2px] underline-offset-4 opacity-100">
                             Create a free account →
                         </Link>
                     </p>
 
-                    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                        {/* Email */}
-                        <div>
-                            <label style={{
-                                display: 'block',
-                                fontFamily: 'var(--font-body)', fontWeight: 500,
-                                fontSize: '13px', color: 'var(--color-white-65)',
-                                marginBottom: '8px',
-                            }}>
-                                Email address
-                            </label>
+                    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+                        <div className="flex flex-col gap-2">
+                            <label className="font-label-mono font-bold uppercase text-sm">Email Address</label>
                             <input
                                 type="text"
                                 name="loginIdentifier"
@@ -233,33 +125,18 @@ export default function LoginPage() {
                                 required
                                 value={formData.loginIdentifier}
                                 onChange={handleChange}
-                                onFocus={() => setFocused('email')}
-                                onBlur={() => setFocused('')}
-                                style={getInputStyle('email')}
+                                className="w-full bg-pure-white border-[3px] border-brutalist-black px-4 py-3 font-body-lg text-base outline-none focus:border-vibrant-orange transition-colors"
                             />
                         </div>
 
-                        {/* Password */}
-                        <div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                <label style={{
-                                    fontFamily: 'var(--font-body)', fontWeight: 500,
-                                    fontSize: '13px', color: 'var(--color-white-65)',
-                                }}>
-                                    Password
-                                </label>
-                                <a href="#" style={{
-                                    fontFamily: 'var(--font-body)', fontSize: '13px',
-                                    color: 'var(--color-white-40)', textDecoration: 'none',
-                                    transition: 'color 0.2s',
-                                }}
-                                    onMouseEnter={e => e.target.style.color = 'var(--color-orange)'}
-                                    onMouseLeave={e => e.target.style.color = 'var(--color-white-40)'}
-                                >
-                                    Forgot password?
+                        <div className="flex flex-col gap-2">
+                            <div className="flex justify-between items-end">
+                                <label className="font-label-mono font-bold uppercase text-sm">Password</label>
+                                <a href="#" className="font-label-mono text-xs font-bold uppercase hover:text-vibrant-orange transition-colors">
+                                    Forgot?
                                 </a>
                             </div>
-                            <div style={{ position: 'relative' }}>
+                            <div className="relative">
                                 <input
                                     type={showPassword ? 'text' : 'password'}
                                     name="password"
@@ -267,120 +144,42 @@ export default function LoginPage() {
                                     required
                                     value={formData.password}
                                     onChange={handleChange}
-                                    onFocus={() => setFocused('password')}
-                                    onBlur={() => setFocused('')}
-                                    style={{ ...getInputStyle('password'), paddingRight: '44px' }}
+                                    className="w-full bg-pure-white border-[3px] border-brutalist-black px-4 py-3 pr-12 font-body-lg text-base outline-none focus:border-vibrant-orange transition-colors"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(p => !p)}
-                                    style={{
-                                        position: 'absolute', right: '12px', top: '50%',
-                                        transform: 'translateY(-50%)',
-                                        background: 'none', border: 'none',
-                                        cursor: 'pointer', color: 'var(--color-white-40)',
-                                        fontSize: '14px', padding: '4px',
-                                    }}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 font-bold text-xl hover:text-vibrant-orange transition-colors"
                                 >
-                                    {showPassword ? '🙈' : '👁'}
+                                    {showPassword ? <FiEyeOff /> : <FiEye />}
                                 </button>
                             </div>
                         </div>
 
-
-                        {/* Submit */}
                         <button
                             type="submit"
                             disabled={loading}
-                            style={{
-                                ...primaryBtn,
-                                opacity: loading ? 0.7 : 1,
-                                cursor: loading ? 'not-allowed' : 'pointer',
-                            }}
-                            onMouseEnter={e => { if (!loading) e.currentTarget.style.background = 'var(--color-orange-hover)'; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-orange)'; }}
+                            className="w-full mt-4 font-black uppercase text-xl bg-vibrant-orange text-pure-white border-[3px] border-brutalist-black px-6 py-4 transition-transform hover:bg-brutalist-black disabled:opacity-50 disabled:cursor-not-allowed active-btn flex items-center justify-center"
+                            style={{ boxShadow: loading ? '0px 0px 0px 0px #060608' : '6px 6px 0px 0px #060608' }}
                         >
-                            {loading ? 'Signing in…' : 'Sign In'}
+                            {loading ? 'Signing In...' : 'Sign In'}
                         </button>
                     </form>
-
-                    <p style={{
-                        fontFamily: 'var(--font-body)', fontSize: '13px',
-                        color: 'var(--color-white-40)', textAlign: 'center',
-                        marginTop: '24px',
-                    }}>
-                        Don't have an account?{' '}
-                        <Link to="/register" style={{ color: 'var(--color-white-65)', fontWeight: 500, textDecoration: 'none' }}
-                            onMouseEnter={e => e.target.style.color = 'var(--color-white)'}
-                            onMouseLeave={e => e.target.style.color = 'var(--color-white-65)'}
-                        >
-                            Sign up →
-                        </Link>
-                    </p>
                 </div>
             </div>
 
-            {/* Error modal popup */}
+            {/* Error popup */}
             {errorMsg && (
-                <div
-                    onClick={() => setErrorMsg('')}
-                    style={{
-                        position: 'fixed', inset: 0,
-                        background: 'rgba(0,0,0,0.6)',
-                        backdropFilter: 'blur(4px)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        zIndex: 9999,
-                        animation: 'backdropFadeIn 0.25s ease-out',
-                    }}
-                >
-                    <div
-                        onClick={e => e.stopPropagation()}
-                        style={{
-                            position: 'fixed', top: '50%', left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            background: 'var(--color-surface-1)',
-                            border: '1px solid rgba(239, 68, 68, 0.3)',
-                            borderRadius: '16px',
-                            padding: '32px',
-                            maxWidth: '400px',
-                            width: '90%',
-                            textAlign: 'center',
-                            animation: 'popupFadeIn 0.3s ease-out',
-                            boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
-                        }}
-                    >
-                        <div style={{
-                            width: '56px', height: '56px', borderRadius: '50%',
-                            background: 'rgba(239, 68, 68, 0.12)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            margin: '0 auto 16px',
-                        }}>
-                            <span style={{ fontSize: '28px' }}>✕</span>
+                <div onClick={() => setErrorMsg('')} className="fixed inset-0 bg-brutalist-black/80 flex items-center justify-center z-[9999] p-4">
+                    <div onClick={e => e.stopPropagation()} className="bg-pure-white border-[4px] border-brutalist-black p-8 max-w-md w-full text-center sticker-rotate-neg" style={{ boxShadow: '12px 12px 0px 0px #FF6B00' }}>
+                        <div className="w-16 h-16 border-[3px] border-brutalist-black bg-vibrant-orange text-pure-white flex items-center justify-center mx-auto mb-6 rounded-full font-black text-4xl leading-none">
+                            <span style={{ marginTop: '-4px' }}>!</span>
                         </div>
-                        <h3 style={{
-                            fontFamily: 'var(--font-display)', fontWeight: 700,
-                            fontSize: '18px', color: '#fca5a5',
-                            margin: '0 0 8px',
-                        }}>Login Failed</h3>
-                        <p style={{
-                            fontFamily: 'var(--font-body)', fontSize: '14px',
-                            color: 'var(--color-white-65)', lineHeight: 1.6,
-                            margin: '0 0 24px',
-                        }}>{errorMsg}</p>
-                        <button
-                            onClick={() => setErrorMsg('')}
-                            style={{
-                                fontFamily: 'var(--font-display)', fontWeight: 700,
-                                fontSize: '14px', color: '#000',
-                                background: 'var(--color-orange)',
-                                padding: '10px 32px',
-                                borderRadius: '8px', border: 'none',
-                                cursor: 'pointer',
-                                transition: 'background 0.2s',
-                            }}
-                            onMouseEnter={e => e.currentTarget.style.background = 'var(--color-orange-hover)'}
-                            onMouseLeave={e => e.currentTarget.style.background = 'var(--color-orange)'}
-                        >Try Again</button>
+                        <h3 className="font-black text-2xl uppercase mb-4">Login Failed</h3>
+                        <p className="font-label-mono font-bold mb-8 text-sm">{errorMsg}</p>
+                        <button onClick={() => setErrorMsg('')} className="font-black uppercase text-lg bg-brutalist-black text-pure-white border-[3px] border-brutalist-black px-8 py-3 transition-transform hover:bg-vibrant-orange active-btn inline-block" style={{ boxShadow: '6px 6px 0px 0px #FF6B00' }}>
+                            Try Again
+                        </button>
                     </div>
                 </div>
             )}
