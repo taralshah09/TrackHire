@@ -122,7 +122,7 @@ export default function NewLandingPage() {
 
                     {/* Center: Builder + Product Hunt */}
                     <div className="hidden md:flex gap-6 items-center">
-                        <Link className="font-body-lg text-body-lg text-brutalist-black hover:text-vibrant-orange transition-colors" to="/meet-the-builder">Builder</Link>
+                        <a className="font-body-lg text-body-lg text-brutalist-black hover:text-vibrant-orange transition-colors" href="https://taralshah.xyz" target="_blank" rel="noreferrer">Builder</a>
                         <a
                             className="font-body-lg text-body-lg text-brutalist-black hover:text-vibrant-orange transition-colors flex items-center gap-2"
                             href="https://www.producthunt.com/products/trackhire"
@@ -514,7 +514,7 @@ export default function NewLandingPage() {
                             <div className="relative w-full md:w-auto flex justify-center">
                                 <Link to="/login" className="w-full md:w-auto font-black text-[20px] md:text-[32px] bg-vibrant-orange text-pure-white border-4 border-brutalist-black px-8 py-4 md:px-16 md:py-8 brutalist-shadow-lg active-btn block text-center">GET STARTED NOW</Link>
                             </div>
-                            <Link to="/meet-the-builder" className="w-full md:w-auto font-black text-[20px] md:text-[32px] bg-pure-white text-brutalist-black border-4 border-brutalist-black px-8 py-4 md:px-16 md:py-8 brutalist-shadow active-btn block text-center">LEARN MORE</Link>
+                            <a href="https://taralshah.xyz" target="_blank" rel="noreferrer" className="w-full md:w-auto font-black text-[20px] md:text-[32px] bg-pure-white text-brutalist-black border-4 border-brutalist-black px-8 py-4 md:px-16 md:py-8 brutalist-shadow active-btn block text-center">LEARN MORE</a>
                         </div>
                     </div>
                 </div>
@@ -532,8 +532,8 @@ export default function NewLandingPage() {
                     <div className="md:col-span-3 flex flex-col items-center">
                         <h4 className="font-label-mono text-label-mono uppercase mb-8 border-b-2 border-pure-white inline-block">START</h4>
                         <nav className="flex flex-col gap-4 items-center">
-                            <Link className="font-label-mono text-label-mono opacity-80 hover:opacity-100 hover:text-vibrant-orange transition-opacity" to="/meet-the-builder">About</Link>
-                            <Link className="font-label-mono text-label-mono opacity-80 hover:opacity-100 hover:text-vibrant-orange transition-opacity" to="/meet-the-builder">Learn Next</Link>
+                            <a className="font-label-mono text-label-mono opacity-80 hover:opacity-100 hover:text-vibrant-orange transition-opacity" href="https://taralshah.xyz" target="_blank" rel="noreferrer">About</a>
+                            <a className="font-label-mono text-label-mono opacity-80 hover:opacity-100 hover:text-vibrant-orange transition-opacity" href="https://taralshah.xyz" target="_blank" rel="noreferrer">Learn Next</a>
                             <Link className="font-label-mono text-label-mono opacity-80 hover:opacity-100 hover:text-vibrant-orange transition-opacity" to="/login">Sign In</Link>
                             <a className="font-label-mono text-label-mono opacity-80 hover:opacity-100 hover:text-vibrant-orange transition-opacity" href="mailto:support@trackhire.com">Contact Us</a>
                         </nav>

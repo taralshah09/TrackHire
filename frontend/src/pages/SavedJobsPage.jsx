@@ -135,13 +135,13 @@ export default function SavedJobsPage() {
                     </div>
                 } />
 
-                <div className="flex-1 overflow-y-auto">
+                <div className="flex-1 overflow-y-auto dashboard-main-content p-8 md:p-14 lg:p-20">
                     <div className="max-w-7xl mx-auto" style={{ padding: "40px 10px" }}>
 
                         {/* Page title */}
-                        <div className="flex items-end justify-between flex-wrap gap-6 mb-16 bg-pure-white border-[4px] border-brutalist-black shadow-[4px_4px_0px_0px_#060608]" style={{ padding: "48px" }}>
+                        <div className="flex items-end justify-between flex-wrap gap-6 mb-16 bg-pure-white border-[4px] border-brutalist-black shadow-[4px_4px_0px_0px_#060608] dashboard-header-block" style={{ padding: "48px" }}>
                             <div>
-                                <h1 className="font-headline-md font-black uppercase tracking-tighter text-3xl md:text-5xl text-brutalist-black m-0">
+                                <h1 className="font-headline-md font-black uppercase tracking-tighter text-3xl md:text-5xl text-brutalist-black m-0 dashboard-greeting">
                                     Saved Jobs
                                 </h1>
                                 <p className="font-label-mono font-bold uppercase text-sm text-gray-500 m-0 mt-2">

@@ -77,14 +77,14 @@ export default function DashboardPage() {
                 } />
 
                 {/* ↑ px-8 py-4 (was px-6 py-3) */}
-                <div style={{ "padding": "00px 10px" , "padding":"80px"}} className="flex-1 overflow-y-auto p-8 md:p-14 lg:p-20">
+                <div style={{ "padding": "00px 10px" , "padding":"80px"}} className="flex-1 overflow-y-auto p-8 md:p-14 lg:p-20 dashboard-main-content">
                     {/* ↑ p-8 / p-14 / p-20 (was p-6 / p-12 / p-16) */}
                     <div className="max-w-7xl mx-auto">
 
                         {/* Greeting */}
-                        <div className="bg-pure-white border-[4px] border-brutalist-black p-12 md:p-16 shadow-[4px_4px_0px_0px_#060608]" style={{ margin: "20px 0", padding: "0 10px" , "padding":"64px"}}>
+                        <div className="bg-pure-white border-[4px] border-brutalist-black p-12 md:p-16 shadow-[4px_4px_0px_0px_#060608] dashboard-header-block" style={{ margin: "20px 0", padding: "0 10px" , "padding":"64px"}}>
                             {/* ↑ mb-14, p-12 / p-16 (was mb-12, p-10 / p-14) */}
-                            <h1 className="font-headline-md font-black uppercase tracking-tighter text-3xl md:text-5xl text-brutalist-black m-0 flex items-center flex-wrap gap-4">
+                            <h1 className="font-headline-md font-black uppercase tracking-tighter text-3xl md:text-5xl text-brutalist-black m-0 flex items-center flex-wrap gap-4 dashboard-greeting">
                                 {getGreeting()}, {username}
                                 <FiSmile className="text-vibrant-orange w-10 h-10 inline-block" />
                             </h1>
@@ -104,12 +104,12 @@ export default function DashboardPage() {
                         </div>
 
                         {/* Bottom row */}
-                        <div style={{ "padding": "00px 10px" }} className="flex flex-col lg:flex-row gap-12 items-stretch">
+                        <div style={{ "padding": "00px 10px" }} className="flex flex-col lg:flex-row gap-12 items-stretch tables-container">
                             {/* ↑ items-stretch (was items-start) */}
 
                             {/* Applied jobs table */}
                             <div className="flex-1 w-full bg-pure-white border-[4px] border-brutalist-black shadow-[4px_4px_0px_0px_#060608] overflow-hidden flex flex-col">
-                                <div className="p-10 border-b-[4px] border-brutalist-black flex items-center justify-between bg-vibrant-orange" style={{"padding":"40px"}}>
+                                <div className="p-10 border-b-[4px] border-brutalist-black flex items-center justify-between bg-vibrant-orange table-header-block" style={{"padding":"40px"}}>
                                     {/* ↑ p-10 (was p-8) */}
                                     <h2 className="font-headline-md font-black uppercase tracking-tighter text-2xl text-pure-white m-0">Recent Activity</h2>
                                 </div>
@@ -118,7 +118,7 @@ export default function DashboardPage() {
                                         <thead>
                                             <tr className="border-b-[4px] border-brutalist-black bg-[#F4F4F5]">
                                                 {['Job Title', 'Company', 'Status', 'Date Applied'].map(h => (
-                                                    <th key={h} className="px-8 py-7 font-label-mono font-bold uppercase text-sm text-brutalist-black text-left whitespace-nowrap border-r-[4px] border-brutalist-black last:border-r-0" style={{"paddingLeft":"32px","paddingRight":"32px","paddingTop":"28px","paddingBottom":"28px"}}>
+                                                    <th key={h} className="px-8 py-7 font-label-mono font-bold uppercase text-sm text-brutalist-black text-left whitespace-nowrap border-r-[4px] border-brutalist-black last:border-r-0 table-header" style={{"paddingLeft":"32px","paddingRight":"32px","paddingTop":"28px","paddingBottom":"28px"}}>
                                                         {/* ↑ px-8 py-7 (was p-6) */}
                                                         {h}
                                                     </th>
@@ -140,22 +140,22 @@ export default function DashboardPage() {
                                                 const s = getStatus(job.applicationStatus);
                                                 return (
                                                     <tr key={job.id} className={`${index !== appliedJobs.length - 1 ? 'border-b-[4px] border-brutalist-black' : ''} transition-colors hover:bg-gray-100`}>
-                                                        <td className="px-8 py-7 border-r-[4px] border-brutalist-black" style={{"paddingLeft":"32px","paddingRight":"32px","paddingTop":"28px","paddingBottom":"28px"}}>
+                                                        <td className="px-8 py-7 border-r-[4px] border-brutalist-black table-cell" style={{"paddingLeft":"32px","paddingRight":"32px","paddingTop":"28px","paddingBottom":"28px"}}>
                                                             {/* ↑ px-8 py-7 (was p-6) */}
                                                             <Link to={`/jobs/${job.id}`} className="font-headline-md font-bold text-lg text-brutalist-black no-underline hover:text-vibrant-orange hover:underline decoration-4 underline-offset-4 transition-colors">
                                                                 {job.title || job.role}
                                                             </Link>
                                                         </td>
-                                                        <td className="px-8 py-7 border-r-[4px] border-brutalist-black font-label-mono text-sm text-brutalist-black font-bold" style={{"paddingLeft":"32px","paddingRight":"32px","paddingTop":"28px","paddingBottom":"28px"}}>
+                                                        <td className="px-8 py-7 border-r-[4px] border-brutalist-black font-label-mono text-sm text-brutalist-black font-bold table-cell" style={{"paddingLeft":"32px","paddingRight":"32px","paddingTop":"28px","paddingBottom":"28px"}}>
                                                             {job.companyName || job.company}
                                                         </td>
-                                                        <td className="px-8 py-7 border-r-[4px] border-brutalist-black" style={{"paddingLeft":"32px","paddingRight":"32px","paddingTop":"28px","paddingBottom":"28px"}}>
+                                                        <td className="px-8 py-7 border-r-[4px] border-brutalist-black table-cell" style={{"paddingLeft":"32px","paddingRight":"32px","paddingTop":"28px","paddingBottom":"28px"}}>
                                                             <span className={`font-label-mono font-bold uppercase text-xs tracking-wider px-5 py-3 border-[3px] shadow-[2px_2px_0px_0px_#060608] inline-block ${s.bg} ${s.text} ${s.border}`} style={{"paddingLeft":"20px","paddingRight":"20px","paddingTop":"12px","paddingBottom":"12px"}}>
                                                                 {/* ↑ px-5 py-3 (was px-4 py-2) */}
                                                                 {job.applicationStatus || 'Applied'}
                                                             </span>
                                                         </td>
-                                                        <td className="px-8 py-7 font-label-mono text-sm text-brutalist-black font-bold" style={{"paddingLeft":"32px","paddingRight":"32px","paddingTop":"28px","paddingBottom":"28px"}}>
+                                                        <td className="px-8 py-7 font-label-mono text-sm text-brutalist-black font-bold table-cell" style={{"paddingLeft":"32px","paddingRight":"32px","paddingTop":"28px","paddingBottom":"28px"}}>
                                                             {formatDate(job.appliedAt)}
                                                         </td>
                                                     </tr>
@@ -172,9 +172,9 @@ export default function DashboardPage() {
                             </div>
 
                             {/* Saved jobs panel */}
-                            <div className="w-full lg:w-[380px] shrink-0 bg-pure-white border-[4px] border-brutalist-black shadow-[4px_4px_0px_0px_#060608] overflow-hidden flex flex-col">
+                            <div className="w-full lg:w-[380px] shrink-0 bg-pure-white border-[4px] border-brutalist-black shadow-[4px_4px_0px_0px_#060608] overflow-hidden flex flex-col saved-jobs-panel">
                                 {/* ↑ w-[380px] (was w-[360px]) */}
-                                <div className="p-10 border-b-[4px] border-brutalist-black bg-brutalist-black" style={{"padding":"40px"}}>
+                                <div className="p-10 border-b-[4px] border-brutalist-black bg-brutalist-black table-header-block" style={{"padding":"40px"}}>
                                     {/* ↑ p-10 (was p-8) */}
                                     <h2 className="font-headline-md font-black uppercase tracking-tighter text-xl text-pure-white m-0">Saved Jobs</h2>
                                 </div>

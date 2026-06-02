@@ -143,13 +143,13 @@ export default function AppliedJobsPage() {
                     </div>
                 } />
 
-                <div className="flex-1 overflow-y-auto">
+                <div className="flex-1 overflow-y-auto dashboard-main-content p-8 md:p-14 lg:p-20">
                     <div className="max-w-7xl mx-auto" style={{ padding: "40px 10px" }}>
 
                         {/* Title + controls */}
-                        <div className="flex items-end justify-between flex-wrap gap-6 mb-16 bg-pure-white border-[4px] border-brutalist-black shadow-[4px_4px_0px_0px_#060608]" style={{ padding: "48px" }}>
+                        <div className="flex items-end justify-between flex-wrap gap-6 mb-16 bg-pure-white border-[4px] border-brutalist-black shadow-[4px_4px_0px_0px_#060608] dashboard-header-block" style={{ padding: "48px" }}>
                             <div>
-                                <h1 className="font-headline-md font-black uppercase tracking-tighter text-3xl md:text-5xl text-brutalist-black m-0 mb-2">
+                                <h1 className="font-headline-md font-black uppercase tracking-tighter text-3xl md:text-5xl text-brutalist-black m-0 mb-2 dashboard-greeting">
                                     Applied Jobs
                                 </h1>
                                 <p className="font-label-mono font-bold uppercase text-sm text-gray-500 m-0">
@@ -205,7 +205,7 @@ export default function AppliedJobsPage() {
                                                         }
                                                         setPage(0);
                                                     }}
-                                                    className={`text-left font-label-mono font-bold text-sm uppercase tracking-wider whitespace-nowrap select-none transition-colors ${key ? 'cursor-pointer' : 'cursor-default'} ${sort === key ? 'text-vibrant-orange' : 'text-brutalist-black'}`}
+                                                    className={`text-left font-label-mono font-bold text-sm uppercase tracking-wider whitespace-nowrap select-none transition-colors table-header ${key ? 'cursor-pointer' : 'cursor-default'} ${sort === key ? 'text-vibrant-orange' : 'text-brutalist-black'}`}
                                                     style={{ padding: "20px 24px" }}
                                                 >
                                                     <div className="flex items-center gap-2">
@@ -244,16 +244,16 @@ export default function AppliedJobsPage() {
                                                     const isLast = jobs.length === idx + 1;
                                                     return (
                                                         <tr key={job?.id} ref={isLast ? lastJobElementRef : null} className="border-b-[2px] border-brutalist-black hover:bg-[#F4F4F5] transition-colors">
-                                                            <td className="font-headline-md font-bold text-lg text-brutalist-black" style={{ padding: "20px 24px" }}>
+                                                            <td className="font-headline-md font-bold text-lg text-brutalist-black table-cell" style={{ padding: "20px 24px" }}>
                                                                 {job?.title || job?.role}
                                                             </td>
-                                                            <td className="font-body text-base text-brutalist-black" style={{ padding: "20px 24px" }}>
+                                                            <td className="font-body text-base text-brutalist-black table-cell" style={{ padding: "20px 24px" }}>
                                                                 {job?.companyName || job?.company}
                                                             </td>
-                                                            <td className="font-body text-sm text-gray-600" style={{ padding: "20px 24px" }}>
+                                                            <td className="font-body text-sm text-gray-600 table-cell" style={{ padding: "20px 24px" }}>
                                                                 {job?.location || '—'}
                                                             </td>
-                                                            <td style={{ padding: "20px 24px" }}>
+                                                            <td className="table-cell" style={{ padding: "20px 24px" }}>
                                                                 <span className="font-label-mono font-bold text-xs uppercase tracking-wider whitespace-nowrap border-[2px] border-brutalist-black shadow-[2px_2px_0px_0px_#060608]"
                                                                     style={{
                                                                         padding: "8px 12px",
@@ -268,13 +268,13 @@ export default function AppliedJobsPage() {
                                                                     {job?.applicationStatus || 'Applied'}
                                                                 </span>
                                                             </td>
-                                                            <td className="font-label-mono font-bold text-sm text-gray-600 whitespace-nowrap" style={{ padding: "20px 24px" }}>
+                                                            <td className="font-label-mono font-bold text-sm text-gray-600 whitespace-nowrap table-cell" style={{ padding: "20px 24px" }}>
                                                                 {job?.postedAt ? new Date(job.postedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
                                                             </td>
-                                                            <td className="font-label-mono font-bold text-sm text-gray-600 whitespace-nowrap" style={{ padding: "20px 24px" }}>
+                                                            <td className="font-label-mono font-bold text-sm text-gray-600 whitespace-nowrap table-cell" style={{ padding: "20px 24px" }}>
                                                                 {job?.appliedAt ? new Date(job.appliedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
                                                             </td>
-                                                            <td style={{ padding: "20px 24px" }}>
+                                                            <td className="table-cell" style={{ padding: "20px 24px" }}>
                                                                 <Link to={`/jobs/${job?.jobId || job?.id}`} className="font-label-mono font-bold text-sm uppercase text-vibrant-orange hover:text-brutalist-black transition-colors no-underline">
                                                                     View →
                                                                 </Link>
