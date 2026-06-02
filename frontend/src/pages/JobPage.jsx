@@ -167,7 +167,7 @@ export default function JobPage() {
     const tags = [job.employmentType, job.jobCategory].filter(Boolean);
 
     return (
-        <div className="min-h-screen bg-surface flex font-body-lg text-brutalist-black selection:bg-vibrant-orange selection:text-pure-white">
+        <div className="h-screen overflow-hidden bg-surface flex font-body-lg text-brutalist-black selection:bg-vibrant-orange selection:text-pure-white">
             <style>{`
                 @media (max-width: 900px) {
                     .job-layout { flex-direction: column !important; }

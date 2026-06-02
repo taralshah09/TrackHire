@@ -124,7 +124,7 @@ export default function SavedJobsPage() {
     }, [loading, isFetchingMore, hasMore]);
 
     return (
-        <div className="flex min-h-screen bg-background-light">
+        <div className="flex h-screen overflow-hidden bg-background-light">
             <Sidebar />
 
             <main className="flex-1 flex flex-col overflow-hidden relative z-10">

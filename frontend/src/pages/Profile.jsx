@@ -232,7 +232,7 @@ export default function Profile() {
     /* ── loading ── */
     if (loading) {
         return (
-            <div className="flex min-h-screen bg-background-light">
+        <div className="flex h-screen overflow-hidden bg-background-light">
                 <Sidebar />
                 <main className="flex-1 flex items-center justify-center">
                     <div className="text-center font-label-mono font-bold uppercase text-brutalist-black">
@@ -244,7 +244,7 @@ export default function Profile() {
     }
 
     return (
-        <div className="flex min-h-screen bg-background-light">
+        <div className="flex h-screen overflow-hidden bg-background-light">
             <style>{`
                 input[type=range]::-webkit-slider-thumb { background: var(--color-orange) !important; }
                 @media (max-width: 1024px) { 

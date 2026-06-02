@@ -198,7 +198,7 @@ export default function JobsPage() {
     ];
 
     return (
-        <div className="flex min-h-screen bg-[#F4F4F5] relative">
+        <div className="flex h-screen overflow-hidden bg-[#F4F4F5] relative">
             <div className="fixed inset-0 pointer-events-none opacity-20 z-0" style={{ backgroundImage: 'linear-gradient(to right, #060608 1px, transparent 1px), linear-gradient(to bottom, #060608 1px, transparent 1px)', backgroundSize: '64px 64px' }} />
 
             <Sidebar />

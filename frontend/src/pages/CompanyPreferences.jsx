@@ -78,7 +78,7 @@ export default function CompanyPreferences() {
     ).slice(0, 5000); // Show all/more matching companies
 
     return (
-        <div className="flex min-h-screen bg-background-light">
+        <div className="flex h-screen overflow-hidden bg-background-light">
             <Sidebar />
             <main className="flex-1 flex flex-col overflow-hidden relative z-10">
                 <AppHeader left={

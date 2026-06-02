@@ -118,7 +118,7 @@ export default function AppliedJobsPage() {
     }, [loading, isFetchingMore, hasMore]);
 
     return (
-        <div className="flex min-h-screen bg-background-light">
+        <div className="flex h-screen overflow-hidden bg-background-light">
             <style>{`
                 @media (max-width: 1024px) {
                     .applied-table th:nth-child(3), .applied-table td:nth-child(3),
