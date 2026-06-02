@@ -94,7 +94,7 @@ export default function RegisterPage() {
     };
 
     return (
-        <div className="min-h-screen bg-surface flex items-center justify-center p-8 md:p-12 lg:p-16 font-body-lg text-brutalist-black selection:bg-vibrant-orange selection:text-pure-white overflow-hidden relative py-12">
+        <div className="min-h-screen bg-surface flex items-center justify-center font-body-lg text-brutalist-black selection:bg-vibrant-orange selection:text-pure-white overflow-hidden relative" style={{ padding: "48px" }}>
             <style>{`
                 .sticker-rotate-pos { transform: rotate(3deg); }
                 .sticker-rotate-neg { transform: rotate(-3deg); }
@@ -113,9 +113,9 @@ export default function RegisterPage() {
             <div className="w-full max-w-5xl bg-pure-white border-[4px] border-brutalist-black rounded-none flex flex-col md:flex-row z-10" style={{ boxShadow: '12px 12px 0px 0px #060608' }}>
 
                 {/* Left Panel */}
-                <div style={{ "padding": "25px 25px" }} className="hidden md:flex flex-col flex-[0.8] border-r-[4px] border-brutalist-black bg-brutalist-black text-pure-white p-12 lg:p-16 justify-between relative overflow-hidden">
+                <div className="hidden md:flex flex-col flex-[0.8] border-r-[4px] border-brutalist-black bg-brutalist-black text-pure-white justify-between relative overflow-hidden" style={{ padding: "48px" }}>
                     <div className="relative z-10">
-                        <Link to="/" className="font-headline-md text-3xl uppercase tracking-tighter block mb-12 border-b-[3px] border-pure-white pb-2 inline-block">
+                        <Link to="/" className="font-headline-md text-3xl uppercase tracking-tighter block mb-12 border-b-[3px] border-pure-white inline-block" style={{ paddingBottom: "8px" }}>
                             TRACK<span className="text-vibrant-orange">HIRE</span>
                         </Link>
                         <h1 className="font-black text-5xl uppercase leading-none mb-6">
@@ -137,15 +137,15 @@ export default function RegisterPage() {
                                 <span className="font-label-mono text-sm font-bold uppercase">{text}</span>
                             </div>
                         ))}
-                        <div className="bg-vibrant-orange border-[3px] border-pure-white p-4 sticker-rotate-neg w-max mt-8 shadow-[4px_4px_0px_0px_#FFFFFF]">
+                        <div className="bg-vibrant-orange border-[3px] border-pure-white sticker-rotate-neg w-max mt-8 shadow-[4px_4px_0px_0px_#FFFFFF]" style={{ padding: "16px" }}>
                             <span className="font-label-mono text-xs font-black uppercase text-pure-white">NO CREDIT CARD REQUIRED</span>
                         </div>
                     </div>
                 </div>
 
                 {/* Right Panel - Form */}
-                <div style={{ "padding": "25px 25px" }} className="flex-[1.2] p-10 md:p-12 lg:p-16 flex flex-col justify-center bg-pure-white relative">
-                    <div className="md:hidden font-headline-md text-2xl uppercase tracking-tighter block mb-8 border-b-[3px] border-brutalist-black pb-2 inline-block w-max">
+                <div className="flex-[1.2] flex flex-col justify-center bg-pure-white relative" style={{ padding: "48px" }}>
+                    <div className="md:hidden font-headline-md text-2xl uppercase tracking-tighter block mb-8 border-b-[3px] border-brutalist-black inline-block w-max" style={{ paddingBottom: "8px" }}>
                         TRACK<span className="text-vibrant-orange">HIRE</span>
                     </div>
 
@@ -165,7 +165,8 @@ export default function RegisterPage() {
                                     type="text" name="username" required
                                     placeholder="e.g. Alex Johnson"
                                     value={formData.username} onChange={handleChange}
-                                    className="w-full bg-pure-white border-[3px] border-brutalist-black px-4 py-3 font-body-lg text-base outline-none focus:border-vibrant-orange transition-colors"
+                                    className="w-full bg-pure-white border-[3px] border-brutalist-black font-body-lg text-base outline-none focus:border-vibrant-orange transition-colors"
+                                    style={{ padding: "12px 16px" }}
                                 />
                             </div>
 
@@ -175,7 +176,8 @@ export default function RegisterPage() {
                                     type="email" name="email" required
                                     placeholder="name@company.com"
                                     value={formData.email} onChange={handleChange}
-                                    className="w-full bg-pure-white border-[3px] border-brutalist-black px-4 py-3 font-body-lg text-base outline-none focus:border-vibrant-orange transition-colors"
+                                    className="w-full bg-pure-white border-[3px] border-brutalist-black font-body-lg text-base outline-none focus:border-vibrant-orange transition-colors"
+                                    style={{ padding: "12px 16px" }}
                                 />
                             </div>
                         </div>
@@ -189,7 +191,8 @@ export default function RegisterPage() {
                                         name="password" required
                                         placeholder="••••••••"
                                         value={formData.password} onChange={handleChange}
-                                        className="w-full bg-pure-white border-[3px] border-brutalist-black px-4 py-3 pr-10 font-body-lg text-base outline-none focus:border-vibrant-orange transition-colors"
+                                        className="w-full bg-pure-white border-[3px] border-brutalist-black font-body-lg text-base outline-none focus:border-vibrant-orange transition-colors"
+                                        style={{ padding: "12px 40px 12px 16px" }}
                                     />
                                     <button
                                         type="button"
@@ -226,10 +229,11 @@ export default function RegisterPage() {
                                         name="confirmPassword" required
                                         placeholder="••••••••"
                                         value={formData.confirmPassword} onChange={handleChange}
-                                        className={`w-full bg-pure-white border-[3px] px-4 py-3 pr-10 font-body-lg text-base outline-none transition-colors ${formData.confirmPassword && formData.confirmPassword !== formData.password
+                                        className={`w-full bg-pure-white border-[3px] font-body-lg text-base outline-none transition-colors ${formData.confirmPassword && formData.confirmPassword !== formData.password
                                             ? 'border-red-500 focus:border-red-500'
                                             : 'border-brutalist-black focus:border-vibrant-orange'
                                             }`}
+                                        style={{ padding: "12px 40px 12px 16px" }}
                                     />
                                 </div>
                             </div>
@@ -266,11 +270,11 @@ export default function RegisterPage() {
                                     <button
                                         type="submit"
                                         disabled={!isFormValid}
-                                        className={`w-full font-black uppercase text-xl border-[3px] border-brutalist-black px-6 py-4 transition-all flex items-center justify-center ${isFormValid
+                                        className={`w-full font-black uppercase text-xl border-[3px] border-brutalist-black transition-all flex items-center justify-center ${isFormValid
                                             ? 'bg-vibrant-orange text-pure-white hover:bg-brutalist-black active-btn cursor-pointer'
                                             : 'bg-[#e5e5e5] text-brutalist-black/50 cursor-not-allowed'
                                             }`}
-                                        style={{ boxShadow: !isFormValid || loading ? '0px 0px 0px 0px #060608' : '6px 6px 0px 0px #060608' }}
+                                        style={{ padding: "16px 24px", boxShadow: !isFormValid || loading ? '0px 0px 0px 0px #060608' : '6px 6px 0px 0px #060608' }}
                                     >
                                         {loading ? 'Creating...' : 'Create Account'}
                                     </button>
@@ -293,14 +297,14 @@ export default function RegisterPage() {
 
             {/* Error popup */}
             {errorMsg && (
-                <div onClick={() => setErrorMsg('')} className="fixed inset-0 bg-brutalist-black/80 flex items-center justify-center z-[9999] p-4">
-                    <div onClick={e => e.stopPropagation()} className="bg-pure-white border-[4px] border-brutalist-black p-8 max-w-md w-full text-center sticker-rotate-neg" style={{ boxShadow: '12px 12px 0px 0px #FF6B00' }}>
+                <div onClick={() => setErrorMsg('')} className="fixed inset-0 bg-brutalist-black/80 flex items-center justify-center z-[9999]" style={{ padding: "16px" }}>
+                    <div onClick={e => e.stopPropagation()} className="bg-pure-white border-[4px] border-brutalist-black max-w-md w-full text-center sticker-rotate-neg" style={{ padding: "32px", boxShadow: '12px 12px 0px 0px #FF6B00' }}>
                         <div className="w-16 h-16 border-[3px] border-brutalist-black bg-vibrant-orange text-pure-white flex items-center justify-center mx-auto mb-6 rounded-full font-black text-4xl leading-none">
                             <span style={{ marginTop: '-4px' }}>!</span>
                         </div>
                         <h3 className="font-black text-2xl uppercase mb-4">Registration Failed</h3>
                         <p className="font-label-mono font-bold mb-8 text-sm">{errorMsg}</p>
-                        <button onClick={() => setErrorMsg('')} className="font-black uppercase text-lg bg-brutalist-black text-pure-white border-[3px] border-brutalist-black px-8 py-3 transition-transform hover:bg-vibrant-orange active-btn inline-block" style={{ boxShadow: '6px 6px 0px 0px #FF6B00' }}>
+                        <button onClick={() => setErrorMsg('')} className="font-black uppercase text-lg bg-brutalist-black text-pure-white border-[3px] border-brutalist-black transition-transform hover:bg-vibrant-orange active-btn inline-block" style={{ padding: "12px 32px", boxShadow: '6px 6px 0px 0px #FF6B00' }}>
                             Try Again
                         </button>
                     </div>

@@ -50,7 +50,7 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen bg-surface flex items-center justify-center p-8 md:p-12 lg:p-16 font-body-lg text-brutalist-black selection:bg-vibrant-orange selection:text-pure-white overflow-hidden relative">
+        <div className="min-h-screen bg-surface flex items-center justify-center font-body-lg text-brutalist-black selection:bg-vibrant-orange selection:text-pure-white overflow-hidden relative" style={{ padding: "48px" }}>
             <style>{`
                 .sticker-rotate-pos { transform: rotate(3deg); }
                 .sticker-rotate-neg { transform: rotate(-3deg); }
@@ -69,9 +69,9 @@ export default function LoginPage() {
             <div className="w-full max-w-5xl bg-pure-white border-[4px] border-brutalist-black rounded-none flex flex-col md:flex-row min-h-[600px] z-10" style={{ boxShadow: '12px 12px 0px 0px #060608' }}>
 
                 {/* Left Panel */}
-                <div style={{ "padding": "25px 25px" }} className="hidden md:flex flex-col flex-1 border-r-[4px] border-brutalist-black bg-vibrant-orange text-brutalist-black p-12 lg:p-16 justify-between relative overflow-hidden">
+                <div className="hidden md:flex flex-col flex-1 border-r-[4px] border-brutalist-black bg-vibrant-orange text-brutalist-black justify-between relative overflow-hidden" style={{ padding: "48px" }}>
                     <div className="relative z-10">
-                        <Link to="/" className="font-headline-md text-3xl uppercase tracking-tighter block mb-12 border-b-[3px] border-brutalist-black pb-2 inline-block">
+                        <Link to="/" className="font-headline-md text-3xl uppercase tracking-tighter block mb-12 border-b-[3px] border-brutalist-black inline-block" style={{ paddingBottom: "8px" }}>
                             TRACK<span className="text-pure-white">HIRE</span>
                         </Link>
                         <h1 className="font-black text-5xl uppercase leading-none mb-6">
@@ -88,7 +88,7 @@ export default function LoginPage() {
                             { stat: '< 5 min', label: 'Alerts' },
                             { stat: '9 min', label: 'Daily time' },
                         ].map(({ stat, label }, i) => (
-                            <div key={label} className={`flex items-center gap-4 bg-pure-white border-[3px] border-brutalist-black px-4 py-2 w-max ${i % 2 === 0 ? 'sticker-rotate-neg' : 'sticker-rotate-pos'}`} style={{ boxShadow: '4px 4px 0px 0px #060608' }}>
+                            <div key={label} className={`flex items-center gap-4 bg-pure-white border-[3px] border-brutalist-black w-max ${i % 2 === 0 ? 'sticker-rotate-neg' : 'sticker-rotate-pos'}`} style={{ boxShadow: '4px 4px 0px 0px #060608', padding: "8px 16px" }}>
                                 <span className="font-black text-xl text-vibrant-orange min-w-[72px]">{stat}</span>
                                 <span className="font-label-mono text-sm font-bold uppercase">{label}</span>
                             </div>
@@ -97,13 +97,13 @@ export default function LoginPage() {
                 </div>
 
                 {/* Right Panel - Form */}
-                <div style={{ "padding": "25px 25px" }} className="flex-1 p-10 md:p-12 lg:p-16 flex flex-col justify-center bg-pure-white relative">
+                <div className="flex-1 flex flex-col justify-center bg-pure-white relative" style={{ padding: "48px" }}>
                     {/* decorative star */}
                     <svg width="48" height="48" viewBox="0 0 100 100" className="absolute top-6 right-6 fill-pure-white stroke-brutalist-black stroke-[4px] hidden lg:block sticker-rotate-pos pointer-events-none">
                         <polygon points="50,5 62,38 95,50 62,62 50,95 38,62 5,50 38,38" strokeLinejoin="round" />
                     </svg>
 
-                    <div className="md:hidden font-headline-md text-2xl uppercase tracking-tighter block mb-8 border-b-[3px] border-brutalist-black pb-2 inline-block w-max">
+                    <div className="md:hidden font-headline-md text-2xl uppercase tracking-tighter block mb-8 border-b-[3px] border-brutalist-black inline-block w-max" style={{ paddingBottom: "8px" }}>
                         TRACK<span className="text-vibrant-orange">HIRE</span>
                     </div>
 
@@ -125,7 +125,8 @@ export default function LoginPage() {
                                 required
                                 value={formData.loginIdentifier}
                                 onChange={handleChange}
-                                className="w-full bg-pure-white border-[3px] border-brutalist-black px-4 py-3 font-body-lg text-base outline-none focus:border-vibrant-orange transition-colors"
+                                className="w-full bg-pure-white border-[3px] border-brutalist-black font-body-lg text-base outline-none focus:border-vibrant-orange transition-colors"
+                                style={{ padding: "12px 16px" }}
                             />
                         </div>
 
@@ -144,7 +145,8 @@ export default function LoginPage() {
                                     required
                                     value={formData.password}
                                     onChange={handleChange}
-                                    className="w-full bg-pure-white border-[3px] border-brutalist-black px-4 py-3 pr-12 font-body-lg text-base outline-none focus:border-vibrant-orange transition-colors"
+                                    className="w-full bg-pure-white border-[3px] border-brutalist-black font-body-lg text-base outline-none focus:border-vibrant-orange transition-colors"
+                                    style={{ padding: "12px 48px 12px 16px" }}
                                 />
                                 <button
                                     type="button"
@@ -159,8 +161,8 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full mt-4 font-black uppercase text-xl bg-vibrant-orange text-pure-white border-[3px] border-brutalist-black px-6 py-4 transition-transform hover:bg-brutalist-black disabled:opacity-50 disabled:cursor-not-allowed active-btn flex items-center justify-center"
-                            style={{ boxShadow: loading ? '0px 0px 0px 0px #060608' : '6px 6px 0px 0px #060608' }}
+                            className="w-full mt-4 font-black uppercase text-xl bg-vibrant-orange text-pure-white border-[3px] border-brutalist-black transition-transform hover:bg-brutalist-black disabled:opacity-50 disabled:cursor-not-allowed active-btn flex items-center justify-center"
+                            style={{ padding: "16px 24px", boxShadow: loading ? '0px 0px 0px 0px #060608' : '6px 6px 0px 0px #060608' }}
                         >
                             {loading ? 'Signing In...' : 'Sign In'}
                         </button>
@@ -170,14 +172,14 @@ export default function LoginPage() {
 
             {/* Error popup */}
             {errorMsg && (
-                <div onClick={() => setErrorMsg('')} className="fixed inset-0 bg-brutalist-black/80 flex items-center justify-center z-[9999] p-4">
-                    <div onClick={e => e.stopPropagation()} className="bg-pure-white border-[4px] border-brutalist-black p-8 max-w-md w-full text-center sticker-rotate-neg" style={{ boxShadow: '12px 12px 0px 0px #FF6B00' }}>
+                <div onClick={() => setErrorMsg('')} className="fixed inset-0 bg-brutalist-black/80 flex items-center justify-center z-[9999]" style={{ padding: "16px" }}>
+                    <div onClick={e => e.stopPropagation()} className="bg-pure-white border-[4px] border-brutalist-black max-w-md w-full text-center sticker-rotate-neg" style={{ padding: "32px", boxShadow: '12px 12px 0px 0px #FF6B00' }}>
                         <div className="w-16 h-16 border-[3px] border-brutalist-black bg-vibrant-orange text-pure-white flex items-center justify-center mx-auto mb-6 rounded-full font-black text-4xl leading-none">
                             <span style={{ marginTop: '-4px' }}>!</span>
                         </div>
                         <h3 className="font-black text-2xl uppercase mb-4">Login Failed</h3>
                         <p className="font-label-mono font-bold mb-8 text-sm">{errorMsg}</p>
-                        <button onClick={() => setErrorMsg('')} className="font-black uppercase text-lg bg-brutalist-black text-pure-white border-[3px] border-brutalist-black px-8 py-3 transition-transform hover:bg-vibrant-orange active-btn inline-block" style={{ boxShadow: '6px 6px 0px 0px #FF6B00' }}>
+                        <button onClick={() => setErrorMsg('')} className="font-black uppercase text-lg bg-brutalist-black text-pure-white border-[3px] border-brutalist-black transition-transform hover:bg-vibrant-orange active-btn inline-block" style={{ padding: "12px 32px", boxShadow: '6px 6px 0px 0px #FF6B00' }}>
                             Try Again
                         </button>
                     </div>

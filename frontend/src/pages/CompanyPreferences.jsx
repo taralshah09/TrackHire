@@ -78,85 +78,62 @@ export default function CompanyPreferences() {
     ).slice(0, 5000); // Show all/more matching companies
 
     return (
-        <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
+        <div className="flex min-h-screen bg-background-light">
             <Sidebar />
-            <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <main className="flex-1 flex flex-col overflow-hidden relative z-10">
                 <AppHeader left={
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)' }}>
-                        <span>Preferred Companies</span>
+                    <div className="font-label-mono font-bold uppercase text-sm text-brutalist-black bg-pure-white border-[3px] border-brutalist-black shadow-[4px_4px_0px_0px_#060608] inline-block" style={{ padding: "16px 32px" }}>
+                        Preferred Companies
                     </div>
                 } />
 
-                <div style={{ flex: 1, overflowY: 'auto' }}>
-                    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '32px' }}>
-                        <div style={{ marginBottom: '32px' }}>
-                            <h1 style={{
-                                fontFamily: 'var(--font-display)', fontWeight: 800,
-                                fontSize: '32px', letterSpacing: '-0.025em',
-                                color: 'var(--color-white)', margin: 0,
-                            }}>Preferred Companies</h1>
-                            <p style={{ fontFamily: 'var(--font-body)', fontSize: '15px', color: 'var(--color-white-40)', marginTop: '8px' }}>
+                <div className="flex-1 overflow-y-auto">
+                    <div className="max-w-4xl mx-auto" style={{ padding: "40px 10px" }}>
+                        <div className="bg-pure-white border-[4px] border-brutalist-black shadow-[4px_4px_0px_0px_#060608] mb-12" style={{ padding: "48px" }}>
+                            <h1 className="font-headline-md font-black uppercase tracking-tighter text-3xl md:text-5xl text-brutalist-black m-0 mb-4">
+                                Preferred Companies
+                            </h1>
+                            <p className="font-label-mono font-bold uppercase text-sm text-gray-500 m-0">
                                 Select companies you're most interested in. Jobs from these companies will be prioritized in your feed.
                             </p>
                         </div>
 
                         {loading ? (
-                            <div style={{ color: 'var(--color-white-40)', textAlign: 'center', padding: '40px' }}>Loading companies...</div>
+                            <div className="font-label-mono font-bold uppercase text-center text-gray-500" style={{ padding: "40px" }}>Loading companies...</div>
                         ) : (
                             <>
                                 {/* Selection Summary */}
-                                <div style={{
-                                    background: 'var(--color-surface-2)',
-                                    padding: '20px',
-                                    borderRadius: '12px',
-                                    border: '1px solid var(--color-border)',
-                                    marginBottom: '24px'
-                                }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                                        <h3 style={{ margin: 0, color: 'var(--color-white)', fontFamily: 'var(--font-display)', fontSize: '16px' }}>
+                                <div className="bg-[#F4F4F5] border-[4px] border-brutalist-black shadow-[4px_4px_0px_0px_#060608] mb-12" style={{ padding: "32px" }}>
+                                    <div className="flex justify-between items-center flex-wrap gap-4 mb-6">
+                                        <h3 className="font-headline-md font-bold uppercase text-xl text-brutalist-black m-0">
                                             Selected Companies ({preferredCompanies.length})
                                         </h3>
                                         <button
                                             onClick={handleSave}
                                             disabled={saving}
-                                            style={{
-                                                background: 'var(--color-orange)',
-                                                border: 'none', borderRadius: '6px',
-                                                color: '#000', fontFamily: 'var(--font-display)', fontWeight: 700,
-                                                padding: '8px 20px', cursor: 'pointer',
-                                                opacity: saving ? 0.6 : 1, transition: 'all 0.2s'
-                                            }}
+                                            className="bg-vibrant-orange border-[3px] border-brutalist-black text-pure-white font-label-mono font-bold text-sm uppercase transition-all shadow-[2px_2px_0px_0px_#060608] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none cursor-pointer disabled:opacity-50"
+                                            style={{ padding: "12px 24px" }}
                                         >
                                             {saving ? 'Saving...' : 'Save Preferences'}
                                         </button>
                                     </div>
 
                                     {message && (
-                                        <div style={{
-                                            padding: '10px',
-                                            borderRadius: '6px',
-                                            backgroundColor: message.includes('success') ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                                            color: message.includes('success') ? '#22c55e' : '#ef4444',
-                                            fontSize: '14px', marginBottom: '16px', border: '1px solid currentColor'
-                                        }}>
+                                        <div className={`font-label-mono font-bold text-sm uppercase border-[3px] border-brutalist-black mb-6 ${message.includes('success') ? 'bg-[#22c55e] text-pure-white' : 'bg-[#ef4444] text-pure-white'}`} style={{ padding: "16px" }}>
                                             {message}
                                         </div>
                                     )}
 
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                    <div className="flex flex-wrap gap-3">
                                         {preferredCompanies.length === 0 ? (
-                                            <span style={{ color: 'var(--color-white-40)', fontSize: '14px' }}>No companies selected yet.</span>
+                                            <span className="font-label-mono font-bold text-sm uppercase text-gray-500">No companies selected yet.</span>
                                         ) : (
                                             preferredCompanies.map(company => (
-                                                <div key={company} style={{
-                                                    display: 'flex', alignItems: 'center', gap: '8px',
-                                                    background: 'var(--color-orange)', color: '#000',
-                                                    padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600
-                                                }}>
+                                                <div key={company} className="flex items-center gap-2 bg-pure-white border-[2px] border-brutalist-black text-brutalist-black font-label-mono font-bold text-xs uppercase shadow-[2px_2px_0px_0px_#060608]" style={{ padding: "6px 12px" }}>
                                                     {company}
                                                     <span
                                                         onClick={() => toggleCompany(company)}
-                                                        style={{ cursor: 'pointer', opacity: 0.6, fontSize: '14px' }}
+                                                        className="cursor-pointer text-gray-400 hover:text-[#ef4444] transition-colors text-lg leading-none"
                                                     >×</span>
                                                 </div>
                                             ))
@@ -165,61 +142,39 @@ export default function CompanyPreferences() {
                                 </div>
 
                                 {/* Search and List */}
-                                <div style={{ marginBottom: '20px', position: 'relative' }}>
-                                    <FaSearch style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-white-40)' }} />
+                                <div className="relative mb-8 border-[4px] border-brutalist-black shadow-[4px_4px_0px_0px_#060608] bg-pure-white flex items-center">
+                                    <div style={{ padding: "0 0 0 16px" }} className="text-brutalist-black text-xl"><FaSearch /></div>
                                     <input
                                         type="text"
                                         placeholder="Search companies (e.g. Google, Amazon...)"
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        style={{
-                                            width: '100%', padding: '12px 12px 12px 40px',
-                                            background: 'var(--color-surface-2)', border: '1px solid var(--color-border)',
-                                            borderRadius: '8px', color: 'white', outline: 'none', boxSizing: 'border-box'
-                                        }}
+                                        className="w-full bg-transparent border-none text-brutalist-black font-label-mono font-bold uppercase text-sm outline-none"
+                                        style={{ padding: "16px" }}
                                     />
                                 </div>
 
-                                <div style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                                    gap: '12px',
-                                    maxHeight: '500px',
-                                    overflowY: 'auto',
-                                    paddingRight: '10px'
-                                }}>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-h-[500px] overflow-y-auto" style={{ padding: "10px" }}>
                                     {filteredCompanies.map(company => {
                                         const isSelected = preferredCompanies.includes(company);
                                         return (
                                             <div
                                                 key={company}
                                                 onClick={() => toggleCompany(company)}
-                                                style={{
-                                                    padding: '12px',
-                                                    background: isSelected ? 'rgba(249, 115, 22, 0.1)' : 'var(--color-surface-2)',
-                                                    border: `1px solid ${isSelected ? 'var(--color-orange)' : 'var(--color-border)'}`,
-                                                    borderRadius: '8px', cursor: 'pointer',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                                    transition: 'all 0.2s'
-                                                }}
+                                                className={`flex items-center justify-between border-[3px] border-brutalist-black cursor-pointer transition-all shadow-[2px_2px_0px_0px_#060608] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none ${isSelected ? 'bg-vibrant-orange text-pure-white' : 'bg-pure-white text-brutalist-black'}`}
+                                                style={{ padding: "16px" }}
                                             >
-                                                <span style={{ color: 'var(--color-white)', fontSize: '14px', fontWeight: isSelected ? 600 : 400 }}>{company}</span>
-                                                {isSelected ? <FaCheck color="var(--color-orange)" /> : <FaPlus color="var(--color-white-20)" />}
+                                                <span className="font-label-mono font-bold text-sm uppercase">{company}</span>
+                                                {isSelected ? <FaCheck /> : <FaPlus className="opacity-40" />}
                                             </div>
                                         );
                                     })}
                                 </div>
-                                <div style={{ marginTop: '32px', textAlign: 'center' }}>
+                                <div className="mt-12 text-center" style={{ padding: "0 0 40px 0" }}>
                                     <button
                                         onClick={() => navigate('/preferred-jobs')}
-                                        style={{
-                                            background: 'transparent',
-                                            border: '1px solid var(--color-border)', borderRadius: '8px',
-                                            color: 'var(--color-white-65)', fontFamily: 'var(--font-display)', fontWeight: 600,
-                                            padding: '12px 24px', cursor: 'pointer', transition: 'all 0.2s'
-                                        }}
-                                        onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-white-40)'}
-                                        onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-border)'}
+                                        className="bg-pure-white border-[3px] border-brutalist-black text-brutalist-black font-label-mono font-bold text-sm uppercase transition-all shadow-[4px_4px_0px_0px_#060608] hover:bg-brutalist-black hover:text-pure-white hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none cursor-pointer"
+                                        style={{ padding: "16px 32px" }}
                                     >
                                         Go to Preferred Jobs →
                                     </button>

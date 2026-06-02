@@ -60,7 +60,7 @@ export default function NewLandingPage() {
         <div className="bg-surface text-brutalist-black font-body-lg overflow-x-hidden selection:bg-vibrant-orange selection:text-pure-white">
             <GlobalStyles />
             {/* TopNavBar */}
-            <nav className="w-full sticky top-0 z-50 bg-surface border-b-4 border-brutalist-black px-8 md:px-12 lg:px-16">
+            <nav style={{ "padding": "10px 25px" }} className="w-full sticky top-0 z-50 bg-surface border-b-4 border-brutalist-black px-8 md:px-12 lg:px-16">
                 <div className="w-full flex justify-between items-center py-6 gap-4">
                     {/* Brand */}
                     <Link to="/" className="font-headline-md text-headline-md uppercase tracking-tighter text-brutalist-black shrink-0">
@@ -199,7 +199,7 @@ export default function NewLandingPage() {
             </header>
 
             {/* Problem Section */}
-            <section className="py-24 px-4 md:px-8 bg-[#F4F4F4] border-t-[6px] border-brutalist-black overflow-hidden flex justify-center">
+            <section style={{ "padding": "25px 25px" }} className="py-24 px-4 md:px-8 bg-[#F4F4F4] border-t-[6px] border-brutalist-black overflow-hidden flex justify-center">
                 <div className="max-w-[1100px] w-full grid grid-cols-1 lg:grid-cols-2 gap-16 md:gap-24 items-center justify-items-center">
 
                     {/* Left Column */}

@@ -9,14 +9,14 @@ import {
     FaLayerGroup, FaLink, FaChevronDown, FaCheck, FaTimes,
 } from 'react-icons/fa';
 
-/* ── Brand status tokens (mirrors DashboardPage) ── */
+/* ── Brand status tokens ── */
 const STATUS_STYLES = {
-    APPLIED: { bg: 'rgba(59,130,246,0.12)', color: '#60a5fa', border: 'rgba(59,130,246,0.20)' },
-    INTERVIEW: { bg: 'rgba(249,115,22,0.12)', color: '#f97316', border: 'rgba(249,115,22,0.22)' },
-    OFFER: { bg: 'rgba(34,197,94,0.12)', color: '#4ade80', border: 'rgba(34,197,94,0.20)' },
-    REJECTED: { bg: 'rgba(239,68,68,0.10)', color: '#f87171', border: 'rgba(239,68,68,0.18)' },
-    PHONE_SCREEN: { bg: 'rgba(20,184,166,0.12)', color: '#2dd4bf', border: 'rgba(20,184,166,0.20)' },
-    WITHDRAWN: { bg: 'rgba(100,116,139,0.12)', color: '#94a3b8', border: 'rgba(100,116,139,0.20)' },
+    APPLIED: { bg: '#3b82f6', color: '#ffffff', border: '#060608' },
+    INTERVIEW: { bg: '#f97316', color: '#ffffff', border: '#060608' },
+    OFFER: { bg: '#22c55e', color: '#ffffff', border: '#060608' },
+    REJECTED: { bg: '#ef4444', color: '#ffffff', border: '#060608' },
+    PHONE_SCREEN: { bg: '#14b8a6', color: '#ffffff', border: '#060608' },
+    WITHDRAWN: { bg: '#94a3b8', color: '#ffffff', border: '#060608' },
 };
 
 const STATUS_OPTIONS = [
@@ -27,25 +27,15 @@ const STATUS_OPTIONS = [
     { value: 'PHONE_SCREEN', label: 'Phone Screen', icon: <FaCheck /> },
 ];
 
-/* ── Shared inline style helpers ── */
-const card = {
-    background: 'var(--color-surface-2)',
-    border: '1px solid var(--color-border)',
-    borderRadius: '14px',
-    padding: '24px',
+/* ── Shared Neo-Brutalist helpers ── */
+const cardClasses = "bg-pure-white border-[4px] border-brutalist-black rounded-none";
+const cardStyle = {
+    padding: '32px',
+    boxShadow: '8px 8px 0px 0px #060608',
 };
 
-const labelStyle = {
-    fontFamily: 'var(--font-display)', fontWeight: 700,
-    fontSize: '10px', letterSpacing: '0.12em',
-    textTransform: 'uppercase', color: 'var(--color-white-40)',
-    marginBottom: '4px',
-};
-
-const valueStyle = {
-    fontFamily: 'var(--font-body)', fontSize: '14px',
-    color: 'var(--color-white-65)',
-};
+const btnClasses = "font-black uppercase border-[3px] border-brutalist-black flex items-center justify-center transition-transform hover:-translate-y-1 active:translate-y-1 active:shadow-none";
+const pillClasses = "font-label-mono font-bold text-xs uppercase bg-pure-white border-[2px] border-brutalist-black text-brutalist-black flex items-center gap-1";
 
 export default function JobPage() {
     const { id } = useParams();
@@ -107,11 +97,6 @@ export default function JobPage() {
         finally { setActionLoading(false); }
     };
 
-    const handleApplyClick = () => {
-        if (applied) setShowDropdown(d => !d);
-        else handleStatusChange('APPLIED');
-    };
-
     const handleStatusChange = async (status) => {
         try {
             setActionLoading(true);
@@ -135,7 +120,6 @@ export default function JobPage() {
     };
 
     /* ── formatters ── */
-
     const formatDate = (ds) => {
         if (!ds) return 'Recently';
         const diff = Math.ceil((Date.now() - new Date(ds)) / 86400000);
@@ -153,21 +137,12 @@ export default function JobPage() {
     /* ── loading skeleton ── */
     if (loading) {
         return (
-            <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
+            <div className="min-h-screen bg-surface flex font-body-lg text-brutalist-black selection:bg-vibrant-orange selection:text-pure-white">
                 <Sidebar />
-                <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <div style={{ textAlign: 'center' }}>
-                        <div style={{
-                            width: '40px', height: '40px', borderRadius: '50%',
-                            border: '3px solid var(--color-border)',
-                            borderTopColor: 'var(--color-orange)',
-                            animation: 'spin 0.7s linear infinite',
-                            margin: '0 auto 16px',
-                        }} />
-                        <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--color-white-40)' }}>
-                            Loading job…
-                        </p>
-                        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+                <main className="flex-1 flex items-center justify-center">
+                    <div className="text-center">
+                        <div className="w-12 h-12 border-[4px] border-brutalist-black border-t-vibrant-orange rounded-full animate-spin mx-auto mb-4" />
+                        <p className="font-label-mono font-bold uppercase">Loading job…</p>
                     </div>
                 </main>
             </div>
@@ -177,17 +152,11 @@ export default function JobPage() {
     /* ── job not found ── */
     if (!job) {
         return (
-            <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
+            <div className="min-h-screen bg-surface flex font-body-lg text-brutalist-black selection:bg-vibrant-orange selection:text-pure-white">
                 <Sidebar />
-                <main style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
-                    <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '18px', color: 'var(--color-white)' }}>
-                        Job not found.
-                    </p>
-                    <button onClick={() => navigate('/jobs')} style={{
-                        fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '14px',
-                        color: 'var(--color-orange)', background: 'transparent', border: 'none',
-                        cursor: 'pointer', textDecoration: 'underline',
-                    }}>
+                <main className="flex-1 flex flex-col items-center justify-center gap-4">
+                    <p className="font-black text-2xl uppercase">Job not found.</p>
+                    <button onClick={() => navigate('/jobs')} className="font-label-mono font-bold uppercase text-vibrant-orange underline decoration-[2px] underline-offset-4">
                         ← Back to Browse Jobs
                     </button>
                 </main>
@@ -198,15 +167,13 @@ export default function JobPage() {
     const tags = [job.employmentType, job.jobCategory].filter(Boolean);
 
     return (
-        <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
+        <div className="min-h-screen bg-surface flex font-body-lg text-brutalist-black selection:bg-vibrant-orange selection:text-pure-white">
             <style>{`
-                @keyframes spin { to { transform: rotate(360deg); } }
                 @media (max-width: 900px) {
                     .job-layout { flex-direction: column !important; }
                     .job-sidebar { width: 100% !important; }
                 }
                 @media (max-width: 768px) {
-                    .job-main-inner { padding: 80px 16px 32px !important; }
                     .job-action-btns { 
                         flex-direction: column !important; 
                         width: 100% !important;
@@ -218,34 +185,20 @@ export default function JobPage() {
 
             <Sidebar />
 
-            <main style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-
-                {/* ── Sticky top header ── */}
+            <main className="flex-1 overflow-y-auto flex flex-col">
                 <AppHeader left={
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div className="flex items-center gap-3">
                         <button
                             onClick={() => navigate(-1)}
-                            style={{
-                                display: 'flex', alignItems: 'center', gap: '8px',
-                                background: 'transparent', border: 'none', cursor: 'pointer',
-                                fontFamily: 'var(--font-display)', fontWeight: 600,
-                                fontSize: '14px', color: 'var(--color-white-65)',
-                                transition: 'color 0.2s',
-                            }}
-                            onMouseEnter={e => e.currentTarget.style.color = 'var(--color-white)'}
-                            onMouseLeave={e => e.currentTarget.style.color = 'var(--color-white-65)'}
+                            className="font-label-mono font-bold uppercase text-sm flex items-center gap-2 hover:text-vibrant-orange transition-colors"
                         >
-                            <FaArrowLeft style={{ fontSize: '13px' }} />
-                            Back
+                            <FaArrowLeft /> Back
                         </button>
-                        <span style={{ color: 'var(--color-border)' }}>|</span>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)' }}>
-                            <Link to="/jobs" style={{ color: 'var(--color-white-40)', textDecoration: 'none' }}
-                                onMouseEnter={e => e.target.style.color = 'var(--color-orange)'}
-                                onMouseLeave={e => e.target.style.color = 'var(--color-white-40)'}
-                            >Browse Jobs</Link>
+                        <span className="text-brutalist-black/20">|</span>
+                        <div className="font-label-mono font-bold uppercase text-xs flex items-center gap-2 text-brutalist-black/60">
+                            <Link to="/jobs" className="hover:text-vibrant-orange transition-colors">Browse Jobs</Link>
                             <span>/</span>
-                            <span style={{ color: 'var(--color-white-65)' }}>
+                            <span className="text-brutalist-black">
                                 {window.innerWidth <= 600 && job.title.length > 25 ? job.title.slice(0, 25) + '...' : job.title}
                             </span>
                         </div>
@@ -253,161 +206,97 @@ export default function JobPage() {
                 } />
 
                 {/* ── Page content ── */}
-                <div className="job-main-inner" style={{ maxWidth: '1100px', margin: '0 auto', padding: '32px', width: '100%', boxSizing: 'border-box' }}>
+                <div className="w-full max-w-6xl mx-auto box-border" style={{ padding: '32px' }}>
 
                     {/* ── Hero card ── */}
-                    <div style={{ ...card, marginBottom: '24px' }}>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div className={cardClasses} style={{ ...cardStyle, marginBottom: '32px' }}>
+                        <div className="flex flex-wrap gap-6 justify-between items-start">
 
                             {/* Job identity */}
-                            <div style={{ flex: 1, minWidth: '240px' }}>
+                            <div className="flex-1 min-w-[240px]">
                                 {/* Company logo placeholder */}
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
-                                    <div style={{
-                                        width: '56px', height: '56px', borderRadius: '12px',
-                                        background: 'var(--color-surface-3)', border: '1px solid var(--color-border)',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        fontSize: '22px', fontWeight: 700,
-                                        fontFamily: 'var(--font-display)', color: 'var(--color-orange)',
-                                        flexShrink: 0,
-                                    }}>
-                                        {job.company?.[0]?.toUpperCase() || '?'}
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="w-16 h-16 bg-vibrant-orange text-pure-white border-[3px] border-brutalist-black flex items-center justify-center text-3xl font-black uppercase shrink-0" style={{ boxShadow: '4px 4px 0px 0px #060608' }}>
+                                        {job.company?.[0] || '?'}
                                     </div>
                                     <div>
-                                        <h1 style={{
-                                            fontFamily: 'var(--font-display)', fontWeight: 800,
-                                            fontSize: 'clamp(16px, 2.8vw, 22px)', letterSpacing: '-0.02em',
-                                            color: 'var(--color-white)', margin: '0 0 4px',
-                                        }}>
+                                        <h1 className="font-black text-3xl uppercase mb-1">
                                             {window.innerWidth <= 600 && job.title.length > 40 ? job.title.slice(0, 40) + '...' : job.title}
                                         </h1>
-                                        <p style={{
-                                            fontFamily: 'var(--font-body)', fontSize: '15px',
-                                            color: 'var(--color-orange)', margin: 0, fontWeight: 500,
-                                        }}>
+                                        <p className="font-label-mono font-bold text-lg text-vibrant-orange uppercase">
                                             {job.company}
                                         </p>
                                     </div>
                                 </div>
 
                                 {/* Meta pills */}
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+                                <div className="flex flex-wrap gap-2 mb-4">
                                     {job.location && (
-                                        <span style={{
-                                            display: 'flex', alignItems: 'center', gap: '5px',
-                                            fontFamily: 'var(--font-body)', fontSize: '13px',
-                                            color: 'var(--color-white-65)',
-                                            background: 'var(--color-surface-3)',
-                                            border: '1px solid var(--color-border)',
-                                            padding: '4px 10px', borderRadius: '999px',
-                                        }}>
-                                            <FaMapMarkerAlt style={{ fontSize: '11px', color: 'var(--color-white-40)' }} />
+                                        <span className={pillClasses} style={{ padding: '6px 12px' }}>
+                                            <FaMapMarkerAlt className="text-vibrant-orange" />
                                             {job.location}
                                         </span>
                                     )}
                                     {tags.map((t, i) => (
-                                        <span key={i} style={{
-                                            fontFamily: 'var(--font-display)', fontWeight: 700,
-                                            fontSize: '10px', letterSpacing: '0.08em',
-                                            textTransform: 'uppercase',
-                                            color: 'var(--color-white-65)',
-                                            background: 'var(--color-surface-3)',
-                                            border: '1px solid var(--color-border)',
-                                            padding: '4px 10px', borderRadius: '999px',
-                                        }}>
+                                        <span key={i} className={pillClasses} style={{ padding: '6px 12px' }}>
                                             {t}
                                         </span>
                                     ))}
-                                    <span style={{
-                                        fontFamily: 'var(--font-display)', fontWeight: 700,
-                                        fontSize: '10px', letterSpacing: '0.08em',
-                                        textTransform: 'uppercase',
-                                        color: 'var(--color-white-40)',
-                                        fontStyle: 'italic',
-                                        display: 'flex', alignItems: 'center', gap: '4px',
-                                        padding: '4px 0',
-                                    }}>
-                                        <FaCalendarAlt style={{ fontSize: '10px' }} />
+                                    <span className={pillClasses} style={{ padding: '6px 12px', background: '#f5f5f5' }}>
+                                        <FaCalendarAlt />
                                         {formatDate(job.postedAt)}
                                     </span>
                                 </div>
 
                                 {/* Applied badge */}
                                 {applied && statusMeta && (
-                                    <span style={{
-                                        display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                    <span className="font-black text-sm uppercase flex items-center gap-2 border-[3px]" style={{
                                         background: statusMeta.bg, color: statusMeta.color,
-                                        border: `1px solid ${statusMeta.border}`,
-                                        padding: '4px 12px', borderRadius: '999px',
-                                        fontFamily: 'var(--font-display)', fontWeight: 700,
-                                        fontSize: '11px', letterSpacing: '0.06em',
+                                        borderColor: statusMeta.border, padding: '8px 16px',
+                                        width: 'max-content', boxShadow: '4px 4px 0px 0px #060608'
                                     }}>
-                                        <FaCheck style={{ fontSize: '9px' }} />
-                                        {currentStatusLabel}
+                                        <FaCheck /> {currentStatusLabel}
                                     </span>
                                 )}
                             </div>
 
                             {/* Action buttons */}
-                            <div className="job-action-btns" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'flex-start', flexShrink: 0 }}>
+                            <div className="job-action-btns flex gap-3 flex-wrap items-start shrink-0">
                                 {/* Save */}
                                 <button
                                     onClick={handleSaveToggle}
                                     disabled={actionLoading}
-                                    style={{
-                                        display: 'flex', alignItems: 'center', gap: '8px',
-                                        padding: '10px 18px', borderRadius: '8px', cursor: 'pointer',
-                                        fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px',
-                                        transition: 'all 0.2s',
-                                        background: saved ? 'rgba(168,85,247,0.10)' : 'transparent',
-                                        color: saved ? '#c084fc' : 'var(--color-white-65)',
-                                        border: saved ? '1px solid rgba(168,85,247,0.25)' : '1px solid var(--color-border)',
-                                    }}
-                                    onMouseEnter={e => { if (!saved) { e.currentTarget.style.borderColor = 'rgba(168,85,247,0.25)'; e.currentTarget.style.color = '#c084fc'; } }}
-                                    onMouseLeave={e => { if (!saved) { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.color = 'var(--color-white-65)'; } }}
+                                    className={`${btnClasses} ${saved ? 'bg-brutalist-black text-pure-white' : 'bg-pure-white text-brutalist-black'}`}
+                                    style={{ padding: '12px 24px', boxShadow: '4px 4px 0px 0px #060608', fontSize: '14px' }}
                                 >
-                                    {saved ? <FaBookmark style={{ fontSize: '13px' }} /> : <FaRegBookmark style={{ fontSize: '13px' }} />}
+                                    {saved ? <FaBookmark className="mr-2" /> : <FaRegBookmark className="mr-2" />}
                                     {saved ? 'Saved' : 'Save Job'}
                                 </button>
 
                                 {/* Application Status Dropdown */}
-                                <div style={{ position: 'relative' }} ref={dropdownRef}>
+                                <div className="relative" ref={dropdownRef}>
                                     <select
                                         value={applicationStatus || 'NOT_APPLIED'}
                                         disabled={actionLoading}
                                         onChange={(e) => {
                                             const value = e.target.value;
-
                                             if (value === 'NOT_APPLIED') {
-                                                handleWithdraw(); // mark as not applied
+                                                handleWithdraw();
                                             } else {
                                                 handleStatusChange(value);
                                             }
                                         }}
+                                        className={`${btnClasses} cursor-pointer appearance-none min-w-[200px] outline-none`}
                                         style={{
-                                            padding: '10px 18px',
-                                            borderRadius: '8px',
-                                            fontFamily: 'var(--font-display)',
-                                            fontWeight: 700,
-                                            fontSize: '13px',
-                                            cursor: 'pointer',
-                                            background: applied
-                                                ? (statusMeta?.bg || 'rgba(59,130,246,0.12)')
-                                                : 'var(--color-surface-3)',
-                                            color: applied
-                                                ? (statusMeta?.color || '#60a5fa')
-                                                : 'var(--color-white-65)',
-                                            border: applied
-                                                ? `1px solid ${statusMeta?.border || 'rgba(59,130,246,0.20)'}`
-                                                : '1px solid var(--color-border)',
-                                            appearance: 'none',
-                                            minWidth: '180px',
+                                            padding: '12px 24px',
+                                            boxShadow: '4px 4px 0px 0px #060608',
+                                            fontSize: '14px',
+                                            background: applied ? (statusMeta?.bg || '#3b82f6') : '#ffffff',
+                                            color: applied ? (statusMeta?.color || '#ffffff') : '#060608',
+                                            borderColor: '#060608'
                                         }}
                                     >
-                                        {/* Default */}
                                         <option value="NOT_APPLIED">Not Applied</option>
-
-                                        {/* Status options */}
                                         {STATUS_OPTIONS.map(opt => (
                                             <option key={opt.value} value={opt.value}>
                                                 {opt.label}
@@ -422,19 +311,10 @@ export default function JobPage() {
                                         href={job.applyUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        style={{
-                                            display: 'flex', alignItems: 'center', gap: '7px',
-                                            padding: '10px 16px', borderRadius: '8px',
-                                            fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px',
-                                            color: 'var(--color-white-65)',
-                                            background: 'transparent',
-                                            border: '1px solid var(--color-border)',
-                                            textDecoration: 'none', transition: 'all 0.2s',
-                                        }}
-                                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--color-white-40)'; e.currentTarget.style.color = 'var(--color-white)'; }}
-                                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.color = 'var(--color-white-65)'; }}
+                                        className={`${btnClasses} bg-vibrant-orange text-pure-white`}
+                                        style={{ padding: '12px 24px', boxShadow: '4px 4px 0px 0px #060608', fontSize: '14px' }}
                                     >
-                                        <FaExternalLinkAlt style={{ fontSize: '11px' }} />
+                                        <FaExternalLinkAlt className="mr-2" />
                                         Apply on Site
                                     </a>
                                 )}
@@ -443,18 +323,14 @@ export default function JobPage() {
                     </div>
 
                     {/* ── Two-column layout ── */}
-                    <div className="job-layout" style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
+                    <div className="job-layout flex gap-8 items-start">
 
                         {/* Left — description */}
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '24px', minWidth: 0 }}>
+                        <div className="flex-1 flex flex-col gap-8 min-w-0">
 
                             {/* Description */}
-                            <div style={card}>
-                                <h2 style={{
-                                    fontFamily: 'var(--font-display)', fontWeight: 700,
-                                    fontSize: '16px', color: 'var(--color-white)',
-                                    margin: '0 0 20px', letterSpacing: '-0.01em',
-                                }}>
+                            <div className={cardClasses} style={cardStyle}>
+                                <h2 className="font-black text-2xl uppercase mb-6 border-b-[3px] border-brutalist-black inline-block" style={{ paddingBottom: '8px' }}>
                                     Job Description
                                 </h2>
                                 {(() => {
@@ -466,21 +342,13 @@ export default function JobPage() {
                                         : desc;
                                     return (
                                         <>
-                                            <div style={{
-                                                fontFamily: 'var(--font-body)', fontSize: '14px', lineHeight: 1.8,
-                                                color: 'var(--color-white-65)', whiteSpace: 'pre-wrap',
-                                            }}>
+                                            <div className="font-body-lg text-base whitespace-pre-wrap leading-relaxed opacity-80">
                                                 {displayed}
                                             </div>
                                             {isLong && (
                                                 <button
                                                     onClick={() => setDescExpanded(e => !e)}
-                                                    style={{
-                                                        background: 'none', border: 'none', cursor: 'pointer',
-                                                        color: 'var(--color-orange)', fontSize: '13px',
-                                                        fontFamily: 'var(--font-body)', fontWeight: 600,
-                                                        marginTop: '12px', padding: 0,
-                                                    }}
+                                                    className="mt-4 font-label-mono font-bold uppercase text-vibrant-orange hover:underline decoration-[2px] underline-offset-4"
                                                 >
                                                     {descExpanded ? 'Read less' : 'Read more'}
                                                 </button>
@@ -493,22 +361,10 @@ export default function JobPage() {
                             {/* Skills */}
                             {skills.length > 0 && (() => {
                                 const SKILL_COLORS = {
-                                    'Required': {
-                                        bg: 'rgba(249,115,22,0.10)',
-                                        color: 'var(--color-orange)',
-                                        border: 'rgba(249,115,22,0.22)',
-                                    },
-                                    'Nice to Have': {
-                                        bg: 'rgba(59,130,246,0.10)',
-                                        color: '#60a5fa',
-                                        border: 'rgba(59,130,246,0.20)',
-                                    },
+                                    'Required': { bg: '#FF6B00', color: '#ffffff' },
+                                    'Nice to Have': { bg: '#2dd4bf', color: '#ffffff' },
                                 };
-                                const fallbackColors = {
-                                    bg: 'var(--color-surface-3)',
-                                    color: 'var(--color-white-65)',
-                                    border: 'var(--color-border)',
-                                };
+                                const fallbackColors = { bg: '#f5f5f5', color: '#060608' };
 
                                 const groups = skills.reduce((acc, s) => {
                                     const key = s.category || '';
@@ -521,34 +377,27 @@ export default function JobPage() {
                                 const hasCategories = groupEntries.some(([key]) => key !== '');
 
                                 return (
-                                    <div style={card}>
-                                        <h2 style={{
-                                            fontFamily: 'var(--font-display)', fontWeight: 700,
-                                            fontSize: '16px', color: 'var(--color-white)',
-                                            margin: '0 0 16px', letterSpacing: '-0.01em',
-                                        }}>
+                                    <div className={cardClasses} style={cardStyle}>
+                                        <h2 className="font-black text-2xl uppercase mb-6 border-b-[3px] border-brutalist-black inline-block" style={{ paddingBottom: '8px' }}>
                                             Skills
                                         </h2>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                        <div className="flex flex-col gap-6">
                                             {groupEntries.map(([category, names]) => {
                                                 const colors = SKILL_COLORS[category] || fallbackColors;
                                                 return (
                                                     <div key={category || 'uncategorized'}>
                                                         {hasCategories && category && (
-                                                            <div style={{ ...labelStyle, marginBottom: '10px' }}>
+                                                            <div className="font-label-mono font-bold uppercase text-sm mb-3">
                                                                 {category}
                                                             </div>
                                                         )}
-                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                                        <div className="flex flex-wrap gap-3">
                                                             {names.map((name, i) => (
-                                                                <span key={i} style={{
-                                                                    fontFamily: 'var(--font-display)', fontWeight: 700,
-                                                                    fontSize: '11px', letterSpacing: '0.06em',
-                                                                    textTransform: 'uppercase',
+                                                                <span key={i} className="font-black text-xs uppercase border-[2px] border-brutalist-black" style={{
                                                                     background: colors.bg,
                                                                     color: colors.color,
-                                                                    border: `1px solid ${colors.border}`,
-                                                                    padding: '5px 12px', borderRadius: '999px',
+                                                                    padding: '8px 16px',
+                                                                    boxShadow: '3px 3px 0px 0px #060608'
                                                                 }}>
                                                                     {name}
                                                                 </span>
@@ -564,39 +413,28 @@ export default function JobPage() {
                         </div>
 
                         {/* Right sidebar — job overview */}
-                        <div className="job-sidebar" style={{ width: '300px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <div className="job-sidebar w-[320px] shrink-0 flex flex-col gap-8">
 
                             {/* Overview */}
-                            <div style={card}>
-                                <h2 style={{
-                                    fontFamily: 'var(--font-display)', fontWeight: 700,
-                                    fontSize: '14px', color: 'var(--color-white)',
-                                    margin: '0 0 20px', letterSpacing: '-0.01em',
-                                }}>
+                            <div className={cardClasses} style={cardStyle}>
+                                <h2 className="font-black text-xl uppercase mb-6 border-b-[3px] border-brutalist-black inline-block" style={{ paddingBottom: '8px' }}>
                                     Job Overview
                                 </h2>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                <div className="flex flex-col gap-6">
                                     {[
                                         { icon: <FaCalendarAlt />, label: 'Posted', value: formatDate(job.postedAt) },
                                         { icon: <FaBriefcase />, label: 'Job Type', value: job.employmentType || 'Full-time' },
-
                                         { icon: <FaMapMarkerAlt />, label: 'Location', value: job.location || 'Not specified' },
                                         { icon: <FaLayerGroup />, label: 'Category', value: job.jobCategory || '—' },
                                         { icon: <FaLink />, label: 'Source', value: job.source || '—' },
                                     ].map(({ icon, label, value }) => (
-                                        <div key={label} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                                            <div style={{
-                                                width: '32px', height: '32px', borderRadius: '8px',
-                                                background: 'var(--color-surface-3)',
-                                                border: '1px solid var(--color-border)',
-                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                color: 'var(--color-white-40)', fontSize: '12px', flexShrink: 0,
-                                            }}>
+                                        <div key={label} className="flex gap-4 items-start">
+                                            <div className="w-10 h-10 bg-pure-white border-[2px] border-brutalist-black flex items-center justify-center text-vibrant-orange shrink-0" style={{ boxShadow: '2px 2px 0px 0px #060608' }}>
                                                 {icon}
                                             </div>
                                             <div>
-                                                <div style={labelStyle}>{label}</div>
-                                                <div style={valueStyle}>{value}</div>
+                                                <div className="font-label-mono font-bold uppercase text-xs opacity-60 mb-1">{label}</div>
+                                                <div className="font-body-lg font-bold">{value}</div>
                                             </div>
                                         </div>
                                     ))}
@@ -605,34 +443,17 @@ export default function JobPage() {
 
                             {/* Applied? track it card */}
                             {!applied && (
-                                <div style={{
-                                    background: 'linear-gradient(135deg, rgba(249,115,22,0.14) 0%, rgba(249,115,22,0.05) 100%)',
-                                    border: '1px solid var(--color-orange-border)',
-                                    borderRadius: '14px', padding: '20px', textAlign: 'center',
-                                }}>
-                                    <p style={{
-                                        fontFamily: 'var(--font-display)', fontWeight: 700,
-                                        fontSize: '14px', color: 'var(--color-white)', margin: '0 0 8px',
-                                    }}>
+                                <div className="bg-vibrant-orange border-[4px] border-brutalist-black text-center" style={{ padding: '32px', boxShadow: '8px 8px 0px 0px #060608' }}>
+                                    <p className="font-black text-2xl uppercase text-pure-white mb-2">
                                         Applied externally?
                                     </p>
-                                    <p style={{
-                                        fontFamily: 'var(--font-body)', fontSize: '13px',
-                                        color: 'var(--color-white-65)', margin: '0 0 16px', lineHeight: 1.6,
-                                    }}>
-                                        Track this application → in your pipeline.
+                                    <p className="font-label-mono font-bold text-sm text-pure-white mb-6">
+                                        Track this application in your pipeline.
                                     </p>
                                     <button
                                         onClick={() => handleStatusChange('APPLIED')}
-                                        style={{
-                                            fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px',
-                                            color: '#000', background: 'var(--color-orange)',
-                                            border: 'none', borderRadius: '8px',
-                                            padding: '10px 20px', cursor: 'pointer',
-                                            transition: 'background 0.2s',
-                                        }}
-                                        onMouseEnter={e => e.currentTarget.style.background = 'var(--color-orange-hover)'}
-                                        onMouseLeave={e => e.currentTarget.style.background = 'var(--color-orange)'}
+                                        className="w-full font-black uppercase text-lg bg-pure-white text-brutalist-black border-[3px] border-brutalist-black hover:-translate-y-1 active:translate-y-1 transition-transform"
+                                        style={{ padding: '12px', boxShadow: '4px 4px 0px 0px #060608' }}
                                     >
                                         Mark as Applied →
                                     </button>

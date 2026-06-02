@@ -200,31 +200,13 @@ export default function JobCard({ job, onAppliedChange, onBookmarkChange, score,
 
     return (
         <div
+            style={{ "padding": "15px" }}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
-            style={{
-                background: 'var(--color-surface-2)',
-                border: hovered ? '1px solid var(--color-orange-border)' : '1px solid var(--color-border)',
-                borderRadius: '14px',
-                padding: '24px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0',
-                transition: 'border-color 0.25s, box-shadow 0.25s, transform 0.2s',
-                boxShadow: hovered ? '0 0 32px rgba(249,115,22,0.10)' : 'none',
-                transform: hovered ? 'translateY(-3px)' : 'translateY(0)',
-                cursor: 'default',
-                position: 'relative',
-            }}
+            className={`bg-pure-white border-[4px] border-brutalist-black p-8 flex flex-col gap-0 transition-all duration-200 shadow-[4px_4px_0px_0px_#060608] relative group hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-[0px_0px_0px_0px_#060608] w-full`}
         >
             {followed && (
-                <div style={{
-                    position: 'absolute', top: '-10px', right: '12px',
-                    background: 'var(--color-orange)', color: '#000',
-                    fontSize: '10px', fontWeight: 800, padding: '2px 8px',
-                    borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.05em',
-                    boxShadow: '0 4px 12px rgba(249,115,22,0.3)', zIndex: 5
-                }}>
+                <div className="absolute -top-3 right-4 bg-vibrant-orange text-pure-white font-label-mono font-bold text-xs uppercase px-3 py-1 border-[2px] border-brutalist-black shadow-[2px_2px_0px_0px_#060608] z-10" style={{ "paddingLeft": "12px", "paddingRight": "12px", "paddingTop": "4px", "paddingBottom": "4px" }}>
                     Prioritized
                 </div>
             )}
@@ -232,199 +214,73 @@ export default function JobCard({ job, onAppliedChange, onBookmarkChange, score,
             {score != null && <MatchBadge score={score} reasons={reasons} />}
 
             {/* Top row: company initial + bookmark button */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-                <div style={{
-                    width: '40px', height: '40px',
-                    background: 'var(--color-surface-3)',
-                    border: '1px solid var(--color-border)',
-                    borderRadius: '10px',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontFamily: 'var(--font-display)',
-                    fontWeight: 700,
-                    fontSize: '16px',
-                    color: 'var(--color-orange)',
-                }}>
+            <div className="flex items-center justify-between mb-6">
+                <div className="w-14 h-14 bg-[#F4F4F5] border-[3px] border-brutalist-black flex items-center justify-center font-headline-md font-bold text-2xl text-brutalist-black shadow-[2px_2px_0px_0px_#060608]">
                     {companyLabel.charAt(0).toUpperCase()}
                 </div>
                 <button
                     onClick={handleBookmarkClick}
                     disabled={bookmarkLoading}
                     title={saved ? "Remove Bookmark" : "Bookmark Job"}
-                    style={{
-                        background: 'transparent',
-                        border: 'none',
-                        color: saved ? '#c084fc' : 'var(--color-white-40)',
-                        fontSize: '18px',
-                        cursor: 'pointer',
-                        padding: '8px',
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        transition: 'all 0.2s',
-                    }}
-                    onMouseEnter={e => {
-                        e.currentTarget.style.color = saved ? '#c084fc' : 'var(--color-white-65)';
-                        e.currentTarget.style.background = 'var(--color-surface-3)';
-                    }}
-                    onMouseLeave={e => {
-                        e.currentTarget.style.color = saved ? '#c084fc' : 'var(--color-white-40)';
-                        e.currentTarget.style.background = 'transparent';
-                    }}
-                >
+                    className={`bg-pure-white border-[3px] border-brutalist-black p-3 text-lg cursor-pointer transition-all ${saved ? 'text-pure-white bg-brutalist-black' : 'text-brutalist-black'} hover:bg-vibrant-orange hover:text-pure-white shadow-[2px_2px_0px_0px_#060608]`}
+                    style={{ "padding": "12px" }}>
                     {saved ? <FaBookmark /> : <FaRegBookmark />}
                 </button>
             </div>
 
             {/* Title + company */}
-            <h3 style={{
-                fontFamily: 'var(--font-display)',
-                fontWeight: 700,
-                fontSize: '16px',
-                letterSpacing: '-0.01em',
-                color: 'var(--color-white)',
-                margin: '0 0 4px',
-                lineHeight: 1.3,
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
-            }}>
+            <h3 className="font-headline-md font-black uppercase text-xl text-brutalist-black m-0 mb-3 line-clamp-2 leading-tight">
                 {title}
             </h3>
-            <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                margin: '0 0 16px',
-            }}>
-                <p style={{
-                    fontFamily: 'var(--font-body)',
-                    fontSize: '13px',
-                    color: 'var(--color-orange)',
-                    margin: 0,
-                    fontWeight: 500,
-                }}>
+            <div className="flex items-center justify-between mb-6">
+                <p className="font-label-mono font-bold text-base text-vibrant-orange m-0">
                     {companyLabel}
                 </p>
                 <button
                     onClick={handleFollowToggle}
                     disabled={followLoading}
-                    style={{
-                        background: followed ? 'var(--color-orange)' : 'transparent',
-                        border: followed ? '1px solid var(--color-orange)' : '1px solid var(--color-orange-border)',
-                        color: followed ? '#000' : 'var(--color-orange)',
-                        fontSize: '10px',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        padding: '3px 10px',
-                        borderRadius: '6px',
-                        transition: 'all 0.2s',
-                        opacity: followLoading ? 0.6 : 1,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.02em',
-                    }}
-                    onMouseEnter={e => {
-                        if (!followed) {
-                            e.currentTarget.style.background = 'var(--color-orange)';
-                            e.currentTarget.style.color = '#000';
-                        }
-                    }}
-                    onMouseLeave={e => {
-                        if (!followed) {
-                            e.currentTarget.style.background = 'transparent';
-                            e.currentTarget.style.color = 'var(--color-orange)';
-                        }
-                    }}
-                >
+                    className={`font-label-mono font-bold text-xs uppercase px-4 py-2 border-[2px] border-brutalist-black transition-all cursor-pointer shadow-[2px_2px_0px_0px_#060608] ${followed ? 'bg-brutalist-black text-pure-white' : 'bg-pure-white text-brutalist-black'} hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none ${followLoading ? 'opacity-50' : ''}`}
+                    style={{ "paddingLeft": "16px", "paddingRight": "16px", "paddingTop": "8px", "paddingBottom": "8px" }}>
                     {followLoading ? '...' : followed ? 'Following' : 'Follow'}
                 </button>
             </div>
 
             {/* Meta: location, type */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '16px', flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ fontSize: '12px', color: 'var(--color-white-40)', display: 'flex' }}><FaMapMarkerAlt /></span>
-                    <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-65)' }}>{location}</span>
+            <div className="flex flex-col gap-3 mb-6 flex-1">
+                <div className="flex items-center gap-3">
+                    <span className="text-brutalist-black text-sm"><FaMapMarkerAlt /></span>
+                    <span className="font-label-mono font-bold text-sm text-brutalist-black">{location}</span>
                 </div>
                 {employmentType && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '12px', color: 'var(--color-white-40)', display: 'flex' }}><FaBriefcase /></span>
-                        <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-65)' }}>{employmentType}</span>
+                    <div className="flex items-center gap-3">
+                        <span className="text-brutalist-black text-sm"><FaBriefcase /></span>
+                        <span className="font-label-mono font-bold text-sm text-brutalist-black">{employmentType}</span>
                     </div>
                 )}
             </div>
 
             {/* Divider */}
-            <div style={{ borderTop: '1px solid var(--color-border)', marginBottom: '16px' }} />
+            <div className="border-t-[4px] border-brutalist-black mb-6" />
 
             {/* Interactive Actions Row */}
-            <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: '12px',
-                marginBottom: '16px',
-                background: 'rgba(255,255,255,0.02)',
-                border: '1px solid var(--color-border)',
-                borderRadius: '8px',
-                padding: '8px 12px',
-            }}>
+            <div className="flex items-center justify-between gap-4 mb-6 bg-[#F4F4F5] border-[3px] border-brutalist-black p-4 shadow-[2px_2px_0px_0px_#060608]" style={{ "padding": "16px" }}>
                 <div
                     onClick={handleAppliedCheckboxChange}
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        cursor: 'pointer',
-                        userSelect: 'none',
-                        fontFamily: 'var(--font-display)',
-                        fontSize: '12px',
-                        fontWeight: 700,
-                        color: applied ? '#60a5fa' : 'var(--color-white-40)',
-                        transition: 'color 0.2s',
-                    }}
+                    className={`flex items-center gap-3 cursor-pointer select-none font-label-mono font-bold text-xs uppercase transition-colors ${applied ? 'text-vibrant-orange' : 'text-brutalist-black'}`}
                 >
-                    <div style={{
-                        width: '16px',
-                        height: '16px',
-                        border: applied ? '1px solid rgba(59,130,246,0.6)' : '1px solid var(--color-border)',
-                        borderRadius: '4px',
-                        background: applied ? 'rgba(59,130,246,0.12)' : 'transparent',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#60a5fa',
-                        fontSize: '10px',
-                        transition: 'all 0.2s',
-                    }}>
+                    <div className={`w-6 h-6 border-[2px] border-brutalist-black flex items-center justify-center text-xs transition-colors ${applied ? 'bg-vibrant-orange text-pure-white' : 'bg-pure-white'}`}>
                         {applied && <FaCheck />}
                     </div>
                     <span>Applied</span>
                 </div>
 
-                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <div className="relative flex items-center">
                     <select
                         value={applied ? (statusState || 'APPLIED') : (saved ? 'SAVED' : 'NOT_APPLIED')}
                         disabled={applyLoading || bookmarkLoading}
                         onChange={handleDropdownChange}
-                        style={{
-                            appearance: 'none',
-                            background: 'var(--color-surface-3)',
-                            border: '1px solid var(--color-border)',
-                            borderRadius: '6px',
-                            padding: '4px 24px 4px 10px',
-                            color: 'var(--color-white-65)',
-                            fontFamily: 'var(--font-display)',
-                            fontWeight: 600,
-                            fontSize: '11px',
-                            cursor: 'pointer',
-                            outline: 'none',
-                            transition: 'all 0.2s',
-                        }}
-                        onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--color-white-40)'}
-                        onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-border)'}
-                    >
+                        className="appearance-none bg-pure-white border-[2px] border-brutalist-black px-4 py-2 pr-8 font-label-mono font-bold text-xs uppercase text-brutalist-black cursor-pointer outline-none focus:border-vibrant-orange shadow-[2px_2px_0px_0px_#060608]"
+                        style={{ "paddingLeft": "16px", "paddingRight": "32px", "paddingTop": "8px", "paddingBottom": "8px" }}>
                         <option value="NOT_APPLIED">Not Applied</option>
                         <option value="SAVED">Saved</option>
                         <option value="APPLIED">Applied</option>
@@ -432,65 +288,28 @@ export default function JobCard({ job, onAppliedChange, onBookmarkChange, score,
                         <option value="OFFER">Offer</option>
                         <option value="REJECTED">Rejected</option>
                     </select>
-                    <FaChevronDown style={{
-                        position: 'absolute',
-                        right: '8px',
-                        pointerEvents: 'none',
-                        fontSize: '9px',
-                        color: 'var(--color-white-40)'
-                    }} />
+                    <FaChevronDown className="absolute right-3 pointer-events-none text-xs text-brutalist-black" />
                 </div>
             </div>
 
-            {/* Footer: date + status + CTA */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--color-white-40)', letterSpacing: '0.04em' }}>
+            {/* Footer: date + status */}
+            <div className="flex items-center justify-between gap-2 flex-wrap mb-6">
+                <span className="font-label-mono font-bold text-sm text-brutalist-black">
                     {formatPostedDate(postedAt)}
                 </span>
                 {statusStyle && (
-                    <span style={{
-                        fontFamily: 'var(--font-display)',
-                        fontWeight: 700,
-                        fontSize: '11px',
-                        letterSpacing: '0.06em',
-                        background: statusStyle.bg,
-                        color: statusStyle.color,
-                        border: `1px solid ${statusStyle.border}`,
-                        padding: '3px 10px',
-                        borderRadius: '999px',
-                    }}>
+                    <span className="font-label-mono font-bold text-xs uppercase px-4 py-2 bg-[#F4F4F5] text-brutalist-black border-[3px] border-brutalist-black shadow-[2px_2px_0px_0px_#060608]" style={{ "paddingLeft": "16px", "paddingRight": "16px", "paddingTop": "8px", "paddingBottom": "8px" }}>
                         {applicationStatus}
                     </span>
                 )}
             </div>
 
             {/* Bottom CTAs */}
-            <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+            <div className="flex gap-4 mt-auto">
                 <Link
                     to={`/jobs/${id}`}
-                    style={{
-                        flex: 1,
-                        textAlign: 'center',
-                        padding: '10px',
-                        borderRadius: '8px',
-                        background: 'transparent',
-                        border: '1px solid var(--color-border)',
-                        color: 'var(--color-white-65)',
-                        fontFamily: 'var(--font-display)',
-                        fontWeight: 700,
-                        fontSize: '13px',
-                        textDecoration: 'none',
-                        transition: 'all 0.2s',
-                    }}
-                    onMouseEnter={e => {
-                        e.currentTarget.style.borderColor = 'var(--color-white-40)';
-                        e.currentTarget.style.color = 'var(--color-white)';
-                    }}
-                    onMouseLeave={e => {
-                        e.currentTarget.style.borderColor = 'var(--color-border)';
-                        e.currentTarget.style.color = 'var(--color-white-65)';
-                    }}
-                >
+                    className="flex-1 text-center py-4 bg-pure-white border-[3px] border-brutalist-black text-brutalist-black font-label-mono font-bold text-sm uppercase no-underline transition-all hover:bg-brutalist-black hover:text-pure-white shadow-[2px_2px_0px_0px_#060608] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
+                    style={{ "paddingTop": "16px", "paddingBottom": "16px" }}>
                     View Details
                 </Link>
 
@@ -499,27 +318,8 @@ export default function JobCard({ job, onAppliedChange, onBookmarkChange, score,
                         href={applyUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        style={{
-                            flex: 1,
-                            textAlign: 'center',
-                            padding: '10px',
-                            borderRadius: '8px',
-                            background: 'var(--color-orange)',
-                            border: 'none',
-                            color: '#000',
-                            fontFamily: 'var(--font-display)',
-                            fontWeight: 700,
-                            fontSize: '13px',
-                            textDecoration: 'none',
-                            transition: 'background 0.2s',
-                        }}
-                        onMouseEnter={e => {
-                            e.currentTarget.style.background = 'var(--color-orange-hover)';
-                        }}
-                        onMouseLeave={e => {
-                            e.currentTarget.style.background = 'var(--color-orange)';
-                        }}
-                    >
+                        className="flex-1 text-center py-4 bg-vibrant-orange border-[3px] border-brutalist-black text-pure-white font-label-mono font-bold text-sm uppercase no-underline transition-all shadow-[2px_2px_0px_0px_#060608] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
+                        style={{ "paddingTop": "16px", "paddingBottom": "16px" }}>
                         Apply
                     </a>
                 )}

@@ -124,53 +124,37 @@ export default function SavedJobsPage() {
     }, [loading, isFetchingMore, hasMore]);
 
     return (
-        <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
-            <style>{`
-                @media (max-width: 768px) {
-                    .saved-main-inner { padding: 72px 16px 24px !important; }
-                    .saved-jobs-grid { grid-template-columns: 1fr !important; }
-                }
-                @media (min-width: 769px) and (max-width: 1024px) {
-                    .saved-jobs-grid { grid-template-columns: 1fr 1fr !important; }
-                }
-            `}</style>
-
+        <div className="flex min-h-screen bg-background-light">
             <Sidebar />
 
-            <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <main className="flex-1 flex flex-col overflow-hidden relative z-10">
                 {/* Header */}
                 <AppHeader left={
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)' }}>
-                        <span style={{ color: 'var(--color-white-65)' }}>Saved Jobs</span>
+                    <div className="font-label-mono font-bold uppercase text-sm text-brutalist-black bg-pure-white border-[3px] border-brutalist-black shadow-[4px_4px_0px_0px_#060608] inline-block" style={{ padding: "16px 32px" }}>
+                        Saved Jobs
                     </div>
                 } />
 
-                <div style={{ flex: 1, overflowY: 'auto' }}>
-                    <div className="saved-main-inner" style={{ maxWidth: '1200px', margin: '0 auto', padding: '32px' }}>
+                <div className="flex-1 overflow-y-auto">
+                    <div className="max-w-7xl mx-auto" style={{ padding: "40px 10px" }}>
 
-                        {/* Title + sort */}
-                        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+                        {/* Page title */}
+                        <div className="flex items-end justify-between flex-wrap gap-6 mb-16 bg-pure-white border-[4px] border-brutalist-black shadow-[4px_4px_0px_0px_#060608]" style={{ padding: "48px" }}>
                             <div>
-                                <h1 style={{
-                                    fontFamily: 'var(--font-display)', fontWeight: 800,
-                                    fontSize: 'clamp(22px, 3vw, 32px)', letterSpacing: '-0.025em',
-                                    color: 'var(--color-white)', margin: 0,
-                                }}>Saved Jobs</h1>
-                                <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--color-white-40)', marginTop: '4px' }}>
+                                <h1 className="font-headline-md font-black uppercase tracking-tighter text-3xl md:text-5xl text-brutalist-black m-0">
+                                    Saved Jobs
+                                </h1>
+                                <p className="font-label-mono font-bold uppercase text-sm text-gray-500 m-0 mt-2">
                                     {loading ? 'Loading…' : `${totalElements} jobs saved`}
                                 </p>
                             </div>
                             {/* Sort controls */}
-                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <div className="flex items-center gap-4">
                                 <select
                                     value={sort}
                                     onChange={e => { setSort(e.target.value); setPage(0); }}
-                                    style={{
-                                        background: 'var(--color-surface-2)', border: '1px solid var(--color-border)',
-                                        borderRadius: '8px', color: 'var(--color-white)',
-                                        fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '12px',
-                                        padding: '7px 12px', outline: 'none', cursor: 'pointer',
-                                    }}
+                                    className="bg-pure-white border-[3px] border-brutalist-black shadow-[4px_4px_0px_0px_#060608] font-label-mono font-bold text-sm outline-none cursor-pointer text-brutalist-black focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[2px_2px_0px_0px_#060608]"
+                                    style={{ padding: "8px 16px" }}
                                 >
                                     <option value="savedAt">Date Saved</option>
                                     <option value="job.postedAt">Date Posted</option>
@@ -180,93 +164,59 @@ export default function SavedJobsPage() {
                                 <select
                                     value={direction}
                                     onChange={e => { setDirection(e.target.value); setPage(0); }}
-                                    style={{
-                                        background: 'var(--color-surface-2)', border: '1px solid var(--color-border)',
-                                        borderRadius: '8px', color: 'var(--color-white)',
-                                        fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '12px',
-                                        padding: '7px 12px', outline: 'none', cursor: 'pointer',
-                                    }}
+                                    className="bg-pure-white border-[3px] border-brutalist-black shadow-[4px_4px_0px_0px_#060608] font-label-mono font-bold text-sm outline-none cursor-pointer text-brutalist-black focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[2px_2px_0px_0px_#060608]"
+                                    style={{ padding: "8px 16px" }}
                                 >
                                     <option value="DESC">Newest First</option>
                                     <option value="ASC">Oldest First</option>
                                 </select>
                             </div>
-
                         </div>
 
                         {/* Grid or empty state */}
                         {loading ? (
-                            <div style={{ textAlign: 'center', padding: '80px', color: 'var(--color-white-40)', fontFamily: 'var(--font-body)', fontSize: '15px' }}>
+                            <div className="text-center font-label-mono font-bold uppercase text-lg text-brutalist-black border-[4px] border-dashed border-brutalist-black bg-pure-white" style={{ padding: "64px" }}>
                                 Loading…
                             </div>
                         ) : error ? (
-                            <div style={{
-                                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                                minHeight: '320px', border: '1px solid var(--color-border)',
-                                borderRadius: '14px', textAlign: 'center', padding: '48px',
-                            }}>
-                                <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '18px', color: '#f87171', margin: '0 0 12px' }}>{error}</p>
+                            <div className="flex flex-col items-center justify-center min-h-[320px] bg-pure-white border-[4px] border-dashed border-brutalist-black text-center shadow-[4px_4px_0px_0px_#060608]" style={{ padding: "48px" }}>
+                                <p className="font-headline-md font-bold text-xl text-[#f87171] uppercase mb-4">{error}</p>
                                 <button
                                     onClick={() => loadJobs(0, false)}
-                                    style={{
-                                        background: 'var(--color-surface-3)', border: '1px solid var(--color-border)',
-                                        color: 'var(--color-white)', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer'
-                                    }}
+                                    className="bg-pure-white border-[3px] border-brutalist-black text-brutalist-black font-label-mono font-bold text-sm uppercase transition-all shadow-[2px_2px_0px_0px_#060608] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none cursor-pointer"
+                                    style={{ padding: "10px 20px" }}
                                 >
                                     Try Again
                                 </button>
                             </div>
                         ) : jobs.length === 0 ? (
-                            <div style={{
-                                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                                minHeight: '320px', border: '1px dashed var(--color-border)',
-                                borderRadius: '14px', textAlign: 'center', padding: '48px',
-                            }}>
-                                <div style={{ fontSize: '48px', marginBottom: '16px', color: 'var(--color-orange)' }}><FaBookmark /></div>
-                                <p style={{
-                                    fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '18px',
-                                    color: 'var(--color-white-65)', margin: '0 0 8px',
-                                }}>
+                            <div className="flex flex-col items-center justify-center min-h-[320px] bg-pure-white border-[4px] border-dashed border-brutalist-black text-center shadow-[4px_4px_0px_0px_#060608]" style={{ padding: "48px" }}>
+                                <div className="text-5xl text-vibrant-orange mb-4"><FaBookmark /></div>
+                                <p className="font-headline-md font-bold text-2xl text-brutalist-black uppercase m-0 mb-2">
                                     No saved jobs yet.
                                 </p>
-                                <p style={{
-                                    fontFamily: 'var(--font-body)', fontSize: '14px',
-                                    color: 'var(--color-white-40)', margin: '0 0 24px',
-                                }}>
+                                <p className="font-label-mono font-bold uppercase text-sm text-gray-500 m-0 mb-6">
                                     Browse jobs and save roles that interest you.
                                 </p>
-                                <Link to="/jobs" style={{
-                                    fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px',
-                                    color: '#000', background: 'var(--color-orange)',
-                                    textDecoration: 'none', padding: '10px 20px',
-                                    borderRadius: '8px', border: 'none',
-                                    transition: 'background 0.2s',
-                                }}
-                                    onMouseEnter={e => e.currentTarget.style.background = 'var(--color-orange-hover)'}
-                                    onMouseLeave={e => e.currentTarget.style.background = 'var(--color-orange)'}
-                                >
+                                <Link to="/jobs" className="bg-vibrant-orange border-[3px] border-brutalist-black text-pure-white font-label-mono font-bold text-sm uppercase transition-all shadow-[4px_4px_0px_0px_#060608] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none" style={{ padding: "12px 24px" }}>
                                     Browse Jobs →
                                 </Link>
                             </div>
                         ) : (
                             <>
-                                <div
-                                    className="saved-jobs-grid"
-                                    style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '32px' }}
-                                >
+                                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-10 mb-16" style={{ marginTop: "20px" }}>
                                     {jobs?.map((job, i) => {
                                         if (jobs.length === i + 1) {
-                                            return <div ref={lastJobElementRef} key={job?.id || i}><JobCard job={job} onAppliedChange={handleJobAppliedChange} onBookmarkChange={handleJobBookmarkChange} /></div>;
+                                            return <div ref={lastJobElementRef} key={job?.id || i} className="flex"><JobCard job={job} onAppliedChange={handleJobAppliedChange} onBookmarkChange={handleJobBookmarkChange} /></div>;
                                         }
                                         return <JobCard key={job?.id || i} job={job} onAppliedChange={handleJobAppliedChange} onBookmarkChange={handleJobBookmarkChange} />;
                                     })}
                                 </div>
                                 {isFetchingMore && (
-                                    <div style={{ textAlign: 'center', padding: '24px', color: 'var(--color-white-40)', fontFamily: 'var(--font-body)', fontSize: '14px' }}>
+                                    <div className="text-center font-label-mono font-bold uppercase text-sm text-brutalist-black border-[3px] border-dashed border-brutalist-black bg-[#F4F4F5]" style={{ padding: "32px" }}>
                                         Loading more saved jobs…
                                     </div>
                                 )}
-                                {/* Pagination removed */}
                             </>
                         )}
                     </div>

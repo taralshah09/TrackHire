@@ -12,49 +12,10 @@ import {
 } from 'react-icons/fa';
 
 /* ── Shared style helpers ── */
-const card = {
-    background: 'var(--color-surface-2)',
-    border: '1px solid var(--color-border)',
-    borderRadius: '14px',
-    padding: '24px',
-};
-
-const inputStyle = {
-    width: '100%',
-    background: 'var(--color-surface-3)',
-    border: '1px solid var(--color-border)',
-    borderRadius: '8px',
-    padding: '10px 14px',
-    fontFamily: 'var(--font-body)',
-    fontSize: '14px',
-    color: 'var(--color-white)',
-    outline: 'none',
-    transition: 'border-color 0.2s, box-shadow 0.2s',
-    boxSizing: 'border-box',
-};
-
-const labelStyle = {
-    display: 'block',
-    fontFamily: 'var(--font-display)',
-    fontWeight: 700,
-    fontSize: '10px',
-    letterSpacing: '0.12em',
-    textTransform: 'uppercase',
-    color: 'var(--color-white-40)',
-    marginBottom: '8px',
-};
-
-const sectionTitle = {
-    fontFamily: 'var(--font-display)',
-    fontWeight: 700,
-    fontSize: '16px',
-    color: 'var(--color-white)',
-    margin: '0 0 20px',
-    letterSpacing: '-0.01em',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-};
+const cardClasses = "bg-pure-white border-[4px] border-brutalist-black shadow-[4px_4px_0px_0px_#060608]";
+const inputClasses = "w-full bg-transparent border-[3px] border-brutalist-black font-label-mono font-bold uppercase text-sm text-brutalist-black outline-none focus:bg-vibrant-orange focus:text-pure-white focus:placeholder-pure-white transition-colors shadow-[2px_2px_0px_0px_#060608]";
+const labelClasses = "block font-headline-md font-bold text-xs uppercase text-brutalist-black mb-2";
+const sectionTitleClasses = "font-headline-md font-black uppercase text-xl text-brutalist-black mb-6 flex items-center gap-3";
 
 const WORK_TYPES = ['REMOTE', 'HYBRID', 'ONSITE'];
 
@@ -67,16 +28,12 @@ function InputField({ label, icon, value, onChange, name, type = 'text', placeho
     const [focused, setFocused] = useState(false);
     return (
         <div>
-            <label style={labelStyle}>{label}</label>
-            <div style={{ position: 'relative' }}>
+            <label className={labelClasses}>{label}</label>
+            <div className="relative">
                 {icon && (
-                    <span style={{
-                        position: 'absolute', left: '12px', top: '50%',
-                        transform: 'translateY(-50%)',
-                        color: focused ? 'var(--color-orange)' : 'var(--color-white-40)',
-                        fontSize: '13px', transition: 'color 0.2s',
-                        pointerEvents: 'none',
-                    }}>{icon}</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-brutalist-black text-lg pointer-events-none z-10">
+                        {icon}
+                    </span>
                 )}
                 <input
                     type={type}
@@ -86,12 +43,8 @@ function InputField({ label, icon, value, onChange, name, type = 'text', placeho
                     placeholder={placeholder}
                     onFocus={() => setFocused(true)}
                     onBlur={() => setFocused(false)}
-                    style={{
-                        ...inputStyle,
-                        paddingLeft: icon ? '36px' : '14px',
-                        borderColor: focused ? 'var(--color-orange)' : 'var(--color-border)',
-                        boxShadow: focused ? '0 0 0 3px rgba(249,115,22,0.12)' : 'none',
-                    }}
+                    className={inputClasses}
+                    style={{ padding: icon ? "12px 12px 12px 48px" : "12px 16px" }}
                 />
             </div>
         </div>
@@ -279,19 +232,11 @@ export default function Profile() {
     /* ── loading ── */
     if (loading) {
         return (
-            <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
+            <div className="flex min-h-screen bg-background-light">
                 <Sidebar />
-                <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <div style={{ textAlign: 'center' }}>
-                        <div style={{
-                            width: '40px', height: '40px', borderRadius: '50%',
-                            border: '3px solid var(--color-border)',
-                            borderTopColor: 'var(--color-orange)',
-                            animation: 'spin 0.7s linear infinite',
-                            margin: '0 auto 16px',
-                        }} />
-                        <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--color-white-40)' }}>Loading profile…</p>
-                        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+                <main className="flex-1 flex items-center justify-center">
+                    <div className="text-center font-label-mono font-bold uppercase text-brutalist-black">
+                        Loading profile…
                     </div>
                 </main>
             </div>
@@ -299,9 +244,8 @@ export default function Profile() {
     }
 
     return (
-        <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
+        <div className="flex min-h-screen bg-background-light">
             <style>{`
-                @keyframes spin { to { transform: rotate(360deg); } }
                 input[type=range]::-webkit-slider-thumb { background: var(--color-orange) !important; }
                 @media (max-width: 1024px) { 
                     .profile-grid { grid-template-columns: 1fr !important; } 
@@ -318,115 +262,83 @@ export default function Profile() {
 
             <Sidebar />
 
-            <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <main className="flex-1 flex flex-col overflow-hidden relative z-10">
 
                 {/* ── Header ── */}
                 <AppHeader left={
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)' }}>
-                        <span style={{ color: 'var(--color-white-65)' }}>Profile</span>
+                    <div className="font-label-mono font-bold uppercase text-sm text-brutalist-black bg-pure-white border-[3px] border-brutalist-black shadow-[4px_4px_0px_0px_#060608] inline-block" style={{ padding: "16px 32px" }}>
+                        Profile
                     </div>
                 } />
 
                 {/* ── Scrollable content ── */}
-                <div style={{ flex: 1, overflowY: 'auto' }}>
-                    <div className="profile-main-inner" style={{ maxWidth: '1100px', margin: '0 auto', padding: '32px', boxSizing: 'border-box' }}>
+                <div className="flex-1 overflow-y-auto">
+                    <div className="profile-main-inner max-w-6xl mx-auto" style={{ padding: "40px 10px" }}>
 
                         {/* Page title */}
-                        <div style={{ marginBottom: '28px' }}>
-                            <h1 style={{
-                                fontFamily: 'var(--font-display)', fontWeight: 800,
-                                fontSize: 'clamp(20px, 3vw, 28px)', letterSpacing: '-0.025em',
-                                color: 'var(--color-white)', margin: '0 0 6px',
-                            }}>Profile Settings</h1>
-                            <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--color-white-40)', margin: 0 }}>
+                        <div className="bg-pure-white border-[4px] border-brutalist-black shadow-[4px_4px_0px_0px_#060608] mb-12" style={{ padding: "48px" }}>
+                            <h1 className="font-headline-md font-black uppercase tracking-tighter text-3xl md:text-5xl text-brutalist-black m-0 mb-4">
+                                Profile Settings
+                            </h1>
+                            <p className="font-label-mono font-bold uppercase text-sm text-gray-500 m-0">
                                 Manage your professional identity and job hunt preferences.
                             </p>
                         </div>
 
-                        <div className="profile-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '24px' }}>
+                        <div className="profile-grid grid" style={{ gridTemplateColumns: "1fr 350px", gap: "32px" }}>
 
                             {/* ── Left column ── */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
                                 {/* Personal Info */}
-                                <div style={card}>
-                                    <h2 style={sectionTitle}>
-                                        <span style={{
-                                            width: '28px', height: '28px', borderRadius: '8px',
-                                            background: 'var(--color-orange-dim)',
-                                            border: '1px solid var(--color-orange-border)',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            color: 'var(--color-orange)', fontSize: '12px',
-                                        }}><FaUser /></span>
-                                        Personal Information
+                                <div className={cardClasses} style={{ padding: "32px" }}>
+                                    <h2 className={sectionTitleClasses}>
+                                        <FaUser /> Personal Information
                                     </h2>
-                                    <div className="personal-info-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                                    <div className="personal-info-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                                         <InputField label="Full Name" icon={<FaUser />} name="fullName" value={formData.fullName} onChange={handleChange} placeholder="Jane Doe" />
                                         <InputField label="Email Address" icon={<FaEnvelope />} name="email" value={formData.email} onChange={handleChange} type="email" placeholder="jane@example.com" />
                                         <div style={{ gridColumn: '1 / -1' }}>
                                             <InputField label="Location" icon={<FaMapMarkerAlt />} name="location" value={formData.location} onChange={handleChange} placeholder="San Francisco, CA" />
                                         </div>
                                         <div style={{ gridColumn: '1 / -1' }}>
-                                            <label style={labelStyle}>
+                                            <label className={labelClasses}>
                                                 Years of Experience
-                                                <span style={{
-                                                    marginLeft: '10px',
-                                                    fontFamily: 'var(--font-mono)', fontWeight: 700,
-                                                    fontSize: '13px', color: 'var(--color-orange)',
-                                                    letterSpacing: 0,
-                                                }}>{formData.experience} yrs</span>
+                                                <span className="ml-2 font-label-mono font-bold text-sm text-vibrant-orange">
+                                                    {formData.experience} yrs
+                                                </span>
                                             </label>
                                             <input
                                                 type="range" min="0" max="40" step="1"
                                                 value={formData.experience}
                                                 onChange={e => setFormData(p => ({ ...p, experience: +e.target.value }))}
-                                                style={{
-                                                    width: '100%', height: '4px',
-                                                    borderRadius: '999px', cursor: 'pointer',
-                                                    accentColor: 'var(--color-orange)',
-                                                }}
+                                                className="w-full h-2 rounded-full cursor-pointer accent-vibrant-orange mt-2"
                                             />
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                                                <span style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--color-white-20)' }}>0</span>
-                                                <span style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--color-white-20)' }}>40 yrs</span>
+                                            <div className="flex justify-between mt-2 font-label-mono font-bold text-xs text-gray-500 uppercase">
+                                                <span>0</span>
+                                                <span>40 yrs</span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Career Alignment */}
-                                <div style={card}>
-                                    <h2 style={sectionTitle}>
-                                        <span style={{
-                                            width: '28px', height: '28px', borderRadius: '8px',
-                                            background: 'var(--color-orange-dim)',
-                                            border: '1px solid var(--color-orange-border)',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            color: 'var(--color-orange)', fontSize: '12px',
-                                        }}><FaBriefcase /></span>
-                                        Career Alignment
+                                <div className={cardClasses} style={{ padding: "32px" }}>
+                                    <h2 className={sectionTitleClasses}>
+                                        <FaBriefcase /> Career Alignment
                                     </h2>
 
                                     {/* Work Preferences */}
-                                    <div style={{ marginBottom: '24px' }}>
-                                        <label style={labelStyle}>Work Preferences</label>
-                                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                    <div className="mb-8">
+                                        <label className={labelClasses}>Work Preferences</label>
+                                        <div className="flex gap-2 flex-wrap">
                                             {WORK_TYPES.map(p => {
                                                 const active = preferences.includes(p);
                                                 return (
                                                     <button
                                                         key={p}
                                                         onClick={() => togglePref(p)}
-                                                        style={{
-                                                            fontFamily: 'var(--font-display)', fontWeight: 700,
-                                                            fontSize: '11px', letterSpacing: '0.08em',
-                                                            textTransform: 'uppercase',
-                                                            padding: '7px 16px', borderRadius: '999px',
-                                                            cursor: 'pointer', transition: 'all 0.2s',
-                                                            background: active ? 'var(--color-orange-dim)' : 'var(--color-surface-3)',
-                                                            color: active ? 'var(--color-orange)' : 'var(--color-white-40)',
-                                                            border: active ? '1px solid var(--color-orange-border)' : '1px solid var(--color-border)',
-                                                        }}
+                                                        className={`font-label-mono font-bold text-xs uppercase px-4 py-2 border-[2px] border-brutalist-black transition-all shadow-[2px_2px_0px_0px_#060608] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none ${active ? 'bg-vibrant-orange text-pure-white' : 'bg-pure-white text-brutalist-black'}`}
                                                     >
                                                         {p}
                                                     </button>
@@ -437,29 +349,14 @@ export default function Profile() {
 
                                     {/* Skills */}
                                     <div>
-                                        <label style={labelStyle}>Top Skills</label>
-                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
+                                        <label className={labelClasses}>Top Skills</label>
+                                        <div className="flex flex-wrap gap-2 mb-4">
                                             {skills.map(s => (
-                                                <span key={s} style={{
-                                                    display: 'flex', alignItems: 'center', gap: '6px',
-                                                    fontFamily: 'var(--font-display)', fontWeight: 700,
-                                                    fontSize: '11px', letterSpacing: '0.06em',
-                                                    background: 'var(--color-surface-3)',
-                                                    color: 'var(--color-white-65)',
-                                                    border: '1px solid var(--color-border)',
-                                                    padding: '5px 10px 5px 12px', borderRadius: '999px',
-                                                }}>
+                                                <span key={s} className="flex items-center gap-2 bg-pure-white border-[2px] border-brutalist-black text-brutalist-black font-label-mono font-bold text-xs uppercase shadow-[2px_2px_0px_0px_#060608]" style={{ padding: "6px 12px" }}>
                                                     {s}
                                                     <button
                                                         onClick={() => removeSkill(s)}
-                                                        style={{
-                                                            background: 'none', border: 'none', cursor: 'pointer',
-                                                            color: 'var(--color-white-40)', fontSize: '10px',
-                                                            display: 'flex', alignItems: 'center', padding: 0,
-                                                            transition: 'color 0.15s',
-                                                        }}
-                                                        onMouseEnter={e => e.currentTarget.style.color = '#f87171'}
-                                                        onMouseLeave={e => e.currentTarget.style.color = 'var(--color-white-40)'}
+                                                        className="bg-transparent border-none cursor-pointer text-gray-400 hover:text-[#ef4444] text-sm p-0 flex items-center transition-colors"
                                                     >
                                                         <FaTimes />
                                                     </button>
@@ -467,35 +364,21 @@ export default function Profile() {
                                             ))}
                                         </div>
                                         {/* Add skill input */}
-                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                        <div className="flex gap-2">
                                             <input
                                                 value={newSkill}
                                                 onChange={e => setNewSkill(e.target.value)}
                                                 onKeyDown={e => e.key === 'Enter' && addSkill()}
                                                 placeholder="e.g. React, Python..."
-                                                style={{
-                                                    ...inputStyle,
-                                                    flex: 1,
-                                                    borderStyle: 'dashed',
-                                                }}
-                                                onFocus={e => { e.target.style.borderColor = 'var(--color-orange)'; e.target.style.boxShadow = '0 0 0 3px rgba(249,115,22,0.12)'; }}
-                                                onBlur={e => { e.target.style.borderColor = 'var(--color-border)'; e.target.style.boxShadow = 'none'; }}
+                                                className={inputClasses}
+                                                style={{ padding: "12px 16px" }}
                                             />
                                             <button
                                                 onClick={addSkill}
-                                                style={{
-                                                    display: 'flex', alignItems: 'center', gap: '6px',
-                                                    padding: '10px 16px', borderRadius: '8px',
-                                                    background: 'var(--color-orange-dim)',
-                                                    color: 'var(--color-orange)',
-                                                    border: '1px solid var(--color-orange-border)',
-                                                    cursor: 'pointer', fontFamily: 'var(--font-display)',
-                                                    fontWeight: 700, fontSize: '12px', transition: 'all 0.2s',
-                                                }}
-                                                onMouseEnter={e => e.currentTarget.style.background = 'var(--color-orange)' && (e.currentTarget.style.color = '#000')}
-                                                onMouseLeave={e => { e.currentTarget.style.background = 'var(--color-orange-dim)'; e.currentTarget.style.color = 'var(--color-orange)'; }}
+                                                className="flex items-center gap-2 bg-vibrant-orange text-pure-white border-[3px] border-brutalist-black font-label-mono font-bold text-xs uppercase shadow-[2px_2px_0px_0px_#060608] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all cursor-pointer whitespace-nowrap"
+                                                style={{ padding: "12px 24px" }}
                                             >
-                                                <FaPlus style={{ fontSize: '10px' }} />
+                                                <FaPlus />
                                                 Add
                                             </button>
                                         </div>
@@ -503,18 +386,11 @@ export default function Profile() {
                                 </div>
 
                                 {/* Portfolio & Socials */}
-                                <div style={card}>
-                                    <h2 style={sectionTitle}>
-                                        <span style={{
-                                            width: '28px', height: '28px', borderRadius: '8px',
-                                            background: 'var(--color-orange-dim)',
-                                            border: '1px solid var(--color-orange-border)',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            color: 'var(--color-orange)', fontSize: '12px',
-                                        }}><FaGlobe /></span>
-                                        Portfolio &amp; Socials
+                                <div className={cardClasses} style={{ padding: "32px" }}>
+                                    <h2 className={sectionTitleClasses}>
+                                        <FaGlobe /> Portfolio &amp; Socials
                                     </h2>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                                    <div className="flex flex-col gap-4">
                                         <InputField label="Website" icon={<FaGlobe />} name="website" value={formData.website} onChange={handleChange} placeholder="https://yourwebsite.com" />
                                         <InputField label="GitHub" icon={<FaGithub />} name="github" value={formData.github} onChange={handleChange} placeholder="https://github.com/username" />
                                         <InputField label="LinkedIn" icon={<FaLinkedin />} name="linkedin" value={formData.linkedin} onChange={handleChange} placeholder="https://linkedin.com/in/username" />
@@ -522,205 +398,116 @@ export default function Profile() {
                                 </div>
 
                                 {/* ── Email Job Notification Preferences ── */}
-                                <div style={card}>
-                                    <h2 style={sectionTitle}>
-                                        <span style={{
-                                            width: '28px', height: '28px', borderRadius: '8px',
-                                            background: 'rgba(99,102,241,0.15)',
-                                            border: '1px solid rgba(99,102,241,0.30)',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            color: '#818cf8', fontSize: '12px',
-                                        }}><FaBell /></span>
-                                        Email Job Notifications
+                                <div className={cardClasses} style={{ padding: "32px" }}>
+                                    <h2 className={sectionTitleClasses}>
+                                        <FaBell /> Email Job Notifications
                                     </h2>
 
                                     {/* Email toggle */}
-                                    <div className="email-prefs-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                                    <div className="email-prefs-header flex items-center justify-between mb-6">
                                         <div>
-                                            <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px', color: 'var(--color-white)', margin: '0 0 2px' }}>
+                                            <p className="font-headline-md font-bold text-sm text-brutalist-black m-0 mb-1">
                                                 Weekly Job Digest
                                             </p>
-                                            <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--color-white-40)', margin: 0 }}>
+                                            <p className="font-label-mono font-bold text-xs text-gray-500 m-0 uppercase">
                                                 Receive matching new jobs every week by email
                                             </p>
                                         </div>
                                         {/* Toggle switch */}
                                         <button
                                             onClick={() => setEmailPrefs(p => ({ ...p, emailEnabled: !p.emailEnabled }))}
-                                            style={{
-                                                width: '44px', height: '24px', borderRadius: '999px',
-                                                background: emailPrefs.emailEnabled ? '#6366f1' : 'var(--color-surface-3)',
-                                                border: emailPrefs.emailEnabled ? '1px solid rgba(99,102,241,0.50)' : '1px solid var(--color-border)',
-                                                cursor: 'pointer', position: 'relative',
-                                                transition: 'background 0.25s, border-color 0.25s',
-                                                flexShrink: 0,
-                                            }}
+                                            className={`relative w-12 h-6 border-[3px] border-brutalist-black transition-colors cursor-pointer shadow-[2px_2px_0px_0px_#060608] shrink-0 ${emailPrefs.emailEnabled ? 'bg-vibrant-orange' : 'bg-pure-white'}`}
+                                            style={{ padding: 0 }}
                                         >
-                                            <span style={{
-                                                position: 'absolute', top: '3px',
-                                                left: emailPrefs.emailEnabled ? '22px' : '3px',
-                                                width: '16px', height: '16px', borderRadius: '50%',
-                                                background: '#fff', transition: 'left 0.25s',
-                                                boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
-                                            }} />
+                                            <span className={`absolute top-0 w-[18px] h-[18px] bg-brutalist-black transition-all ${emailPrefs.emailEnabled ? 'left-[22px]' : 'left-0'}`} />
                                         </button>
                                     </div>
 
                                     {/* Preferred Job Titles */}
-                                    <div style={{ marginBottom: '20px' }}>
-                                        <label style={labelStyle}>Preferred Job Titles</label>
-                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
+                                    <div className="mb-6">
+                                        <label className={labelClasses}>Preferred Job Titles</label>
+                                        <div className="flex flex-wrap gap-2 mb-3">
                                             {emailPrefs.jobTitles.map(t => (
-                                                <span key={t} style={{
-                                                    display: 'flex', alignItems: 'center', gap: '6px',
-                                                    fontFamily: 'var(--font-display)', fontWeight: 700,
-                                                    fontSize: '11px', letterSpacing: '0.06em',
-                                                    background: 'rgba(99,102,241,0.12)',
-                                                    color: '#a5b4fc',
-                                                    border: '1px solid rgba(99,102,241,0.25)',
-                                                    padding: '5px 10px 5px 12px', borderRadius: '999px',
-                                                }}>
+                                                <span key={t} className="flex items-center gap-2 bg-pure-white border-[2px] border-brutalist-black text-brutalist-black font-label-mono font-bold text-xs uppercase shadow-[2px_2px_0px_0px_#060608]" style={{ padding: "6px 12px" }}>
                                                     {t}
                                                     <button
                                                         onClick={() => removeEmailTitle(t)}
-                                                        style={{
-                                                            background: 'none', border: 'none', cursor: 'pointer',
-                                                            color: 'rgba(165,180,252,0.6)', fontSize: '10px',
-                                                            display: 'flex', alignItems: 'center', padding: 0,
-                                                            transition: 'color 0.15s',
-                                                        }}
-                                                        onMouseEnter={e => e.currentTarget.style.color = '#f87171'}
-                                                        onMouseLeave={e => e.currentTarget.style.color = 'rgba(165,180,252,0.6)'}
+                                                        className="bg-transparent border-none cursor-pointer text-gray-400 hover:text-[#ef4444] text-sm p-0 flex items-center transition-colors"
                                                     ><FaTimes /></button>
                                                 </span>
                                             ))}
                                         </div>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                        <div className="flex gap-2">
                                             <input
                                                 value={newEmailTitle}
                                                 onChange={e => setNewEmailTitle(e.target.value)}
                                                 onKeyDown={e => e.key === 'Enter' && addEmailTitle()}
                                                 placeholder="e.g. Software Engineer, Backend Developer…"
-                                                style={{ ...inputStyle, flex: 1, borderStyle: 'dashed' }}
-                                                onFocus={e => { e.target.style.borderColor = '#6366f1'; e.target.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.12)'; }}
-                                                onBlur={e => { e.target.style.borderColor = 'var(--color-border)'; e.target.style.boxShadow = 'none'; }}
+                                                className={inputClasses}
+                                                style={{ padding: "12px 16px" }}
                                             />
                                             <button
                                                 onClick={addEmailTitle}
-                                                style={{
-                                                    display: 'flex', alignItems: 'center', gap: '6px',
-                                                    padding: '10px 16px', borderRadius: '8px',
-                                                    background: 'rgba(99,102,241,0.15)',
-                                                    color: '#818cf8',
-                                                    border: '1px solid rgba(99,102,241,0.30)',
-                                                    cursor: 'pointer', fontFamily: 'var(--font-display)',
-                                                    fontWeight: 700, fontSize: '12px', whiteSpace: 'nowrap',
-                                                }}
+                                                className="flex items-center gap-2 bg-vibrant-orange text-pure-white border-[3px] border-brutalist-black font-label-mono font-bold text-xs uppercase shadow-[2px_2px_0px_0px_#060608] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all cursor-pointer whitespace-nowrap"
+                                                style={{ padding: "12px 24px" }}
                                             >
-                                                <FaPlus style={{ fontSize: '10px' }} /> Add
+                                                <FaPlus /> Add
                                             </button>
                                         </div>
                                     </div>
 
                                     {/* Skills to match */}
-                                    <div style={{ marginBottom: '24px' }}>
-                                        <label style={labelStyle}>Skills to Match</label>
-                                        <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--color-white-40)', margin: '0 0 10px', lineHeight: 1.5 }}>
+                                    <div className="mb-8">
+                                        <label className={labelClasses}>Skills to Match</label>
+                                        <p className="font-label-mono font-bold text-xs text-gray-500 mb-3 uppercase">
                                             Jobs mentioning any of these skills rank higher in your digest.
                                         </p>
-                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
+                                        <div className="flex flex-wrap gap-2 mb-3">
                                             {emailPrefs.skills.map(s => (
-                                                <span key={s} style={{
-                                                    display: 'flex', alignItems: 'center', gap: '6px',
-                                                    fontFamily: 'var(--font-display)', fontWeight: 700,
-                                                    fontSize: '11px', letterSpacing: '0.06em',
-                                                    background: 'var(--color-surface-3)',
-                                                    color: 'var(--color-white-65)',
-                                                    border: '1px solid var(--color-border)',
-                                                    padding: '5px 10px 5px 12px', borderRadius: '999px',
-                                                }}>
+                                                <span key={s} className="flex items-center gap-2 bg-pure-white border-[2px] border-brutalist-black text-brutalist-black font-label-mono font-bold text-xs uppercase shadow-[2px_2px_0px_0px_#060608]" style={{ padding: "6px 12px" }}>
                                                     {s}
                                                     <button
                                                         onClick={() => removeEmailSkill(s)}
-                                                        style={{
-                                                            background: 'none', border: 'none', cursor: 'pointer',
-                                                            color: 'var(--color-white-40)', fontSize: '10px',
-                                                            display: 'flex', alignItems: 'center', padding: 0,
-                                                            transition: 'color 0.15s',
-                                                        }}
-                                                        onMouseEnter={e => e.currentTarget.style.color = '#f87171'}
-                                                        onMouseLeave={e => e.currentTarget.style.color = 'var(--color-white-40)'}
+                                                        className="bg-transparent border-none cursor-pointer text-gray-400 hover:text-[#ef4444] text-sm p-0 flex items-center transition-colors"
                                                     ><FaTimes /></button>
                                                 </span>
                                             ))}
                                         </div>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                        <div className="flex gap-2">
                                             <input
                                                 value={newEmailSkill}
                                                 onChange={e => setNewEmailSkill(e.target.value)}
                                                 onKeyDown={e => e.key === 'Enter' && addEmailSkill()}
                                                 placeholder="e.g. Java, React, AWS…"
-                                                style={{ ...inputStyle, flex: 1, borderStyle: 'dashed' }}
-                                                onFocus={e => { e.target.style.borderColor = '#6366f1'; e.target.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.12)'; }}
-                                                onBlur={e => { e.target.style.borderColor = 'var(--color-border)'; e.target.style.boxShadow = 'none'; }}
+                                                className={inputClasses}
+                                                style={{ padding: "12px 16px" }}
                                             />
                                             <button
                                                 onClick={addEmailSkill}
-                                                style={{
-                                                    display: 'flex', alignItems: 'center', gap: '6px',
-                                                    padding: '10px 16px', borderRadius: '8px',
-                                                    background: 'var(--color-orange-dim)',
-                                                    color: 'var(--color-orange)',
-                                                    border: '1px solid var(--color-orange-border)',
-                                                    cursor: 'pointer', fontFamily: 'var(--font-display)',
-                                                    fontWeight: 700, fontSize: '12px', whiteSpace: 'nowrap',
-                                                }}
+                                                className="flex items-center gap-2 bg-vibrant-orange text-pure-white border-[3px] border-brutalist-black font-label-mono font-bold text-xs uppercase shadow-[2px_2px_0px_0px_#060608] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all cursor-pointer whitespace-nowrap"
+                                                style={{ padding: "12px 24px" }}
                                             >
-                                                <FaPlus style={{ fontSize: '10px' }} /> Add
+                                                <FaPlus /> Add
                                             </button>
                                         </div>
                                     </div>
 
                                     {/* Role Types */}
-                                    <div style={{ marginBottom: '24px' }}>
-                                        <label style={labelStyle}>Preferred Role Types</label>
-                                        <p style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--color-white-40)', margin: '0 0 12px', lineHeight: 1.5 }}>
+                                    <div className="mb-8">
+                                        <label className={labelClasses}>Preferred Role Types</label>
+                                        <p className="font-label-mono font-bold text-xs text-gray-500 mb-3 uppercase">
                                             Only receive emails for these role levels.
                                         </p>
-                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                        <div className="flex flex-wrap gap-2">
                                             {ROLE_TYPE_OPTIONS.map(type => {
                                                 const active = emailPrefs.roleTypes.includes(type);
                                                 return (
                                                     <button
                                                         key={type}
                                                         onClick={() => toggleRoleType(type)}
-                                                        style={{
-                                                            fontFamily: 'var(--font-display)', fontWeight: 700,
-                                                            fontSize: '11px', letterSpacing: '0.07em',
-                                                            textTransform: 'uppercase',
-                                                            padding: '6px 14px', borderRadius: '999px',
-                                                            cursor: 'pointer', transition: 'all 0.2s',
-                                                            background: active ? 'rgba(99,102,241,0.20)' : 'var(--color-surface-3)',
-                                                            color: active ? '#a5b4fc' : 'var(--color-white-40)',
-                                                            border: active ? '1px solid rgba(99,102,241,0.40)' : '1px solid var(--color-border)',
-                                                            boxShadow: active ? '0 0 0 2px rgba(99,102,241,0.12)' : 'none',
-                                                        }}
-                                                        onMouseEnter={e => {
-                                                            if (!active) {
-                                                                e.currentTarget.style.background = 'rgba(99,102,241,0.10)';
-                                                                e.currentTarget.style.color = '#818cf8';
-                                                                e.currentTarget.style.borderColor = 'rgba(99,102,241,0.25)';
-                                                            }
-                                                        }}
-                                                        onMouseLeave={e => {
-                                                            if (!active) {
-                                                                e.currentTarget.style.background = 'var(--color-surface-3)';
-                                                                e.currentTarget.style.color = 'var(--color-white-40)';
-                                                                e.currentTarget.style.borderColor = 'var(--color-border)';
-                                                            }
-                                                        }}
+                                                        className={`font-label-mono font-bold text-xs uppercase px-3 py-1 border-[2px] border-brutalist-black transition-all shadow-[2px_2px_0px_0px_#060608] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none ${active ? 'bg-vibrant-orange text-pure-white' : 'bg-pure-white text-brutalist-black'}`}
                                                     >
-                                                        {active && <FaCheckCircle style={{ marginRight: '5px', fontSize: '9px' }} />}
+                                                        {active && <FaCheckCircle className="inline mr-1" />}
                                                         {type}
                                                     </button>
                                                 );
@@ -732,86 +519,63 @@ export default function Profile() {
                                     <button
                                         onClick={handleSaveEmailPrefs}
                                         disabled={savingPrefs}
-                                        style={{
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                                            width: '100%', padding: '12px',
-                                            background: savingPrefs ? 'var(--color-surface-3)' : 'rgba(99,102,241,0.20)',
-                                            color: savingPrefs ? 'var(--color-white-40)' : '#818cf8',
-                                            border: '1px solid rgba(99,102,241,0.35)',
-                                            borderRadius: '10px',
-                                            fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '13px',
-                                            cursor: savingPrefs ? 'not-allowed' : 'pointer',
-                                            transition: 'all 0.2s',
-                                        }}
-                                        onMouseEnter={e => { if (!savingPrefs) { e.currentTarget.style.background = '#6366f1'; e.currentTarget.style.color = '#fff'; } }}
-                                        onMouseLeave={e => { if (!savingPrefs) { e.currentTarget.style.background = 'rgba(99,102,241,0.20)'; e.currentTarget.style.color = '#818cf8'; } }}
+                                        className="flex items-center justify-center gap-2 w-full bg-pure-white border-[3px] border-brutalist-black text-brutalist-black font-label-mono font-bold text-sm uppercase transition-all shadow-[4px_4px_0px_0px_#060608] hover:bg-brutalist-black hover:text-pure-white hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none cursor-pointer disabled:opacity-50"
+                                        style={{ padding: "16px" }}
                                     >
                                         {savingPrefs ? (
-                                            <><div style={{
-                                                width: '14px', height: '14px', borderRadius: '50%',
-                                                border: '2px solid var(--color-border)',
-                                                borderTopColor: '#818cf8',
-                                                animation: 'spin 0.7s linear infinite',
-                                            }} /> Saving…</>
+                                            'Saving…'
                                         ) : (
-                                            <><FaBell style={{ fontSize: '12px' }} /> Save Notification Preferences</>
+                                            <><FaBell /> Save Notification Preferences</>
                                         )}
                                     </button>
                                 </div>
                             </div>
 
                             {/* ── Right column ── */}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            <div className="flex flex-col gap-6">
 
                                 {/* Avatar card */}
-                                <div style={{ ...card, textAlign: 'center' }}>
-                                    <div style={{
-                                        width: '80px', height: '80px', borderRadius: '50%',
-                                        margin: '0 auto 16px',
-                                        border: '3px solid var(--color-orange-border)',
-                                        overflow: 'hidden',
-                                    }}>
+                                <div className={`${cardClasses} text-center`} style={{ padding: "32px" }}>
+                                    <div className="w-20 h-20 rounded-full mx-auto mb-4 border-[3px] border-brutalist-black overflow-hidden bg-vibrant-orange">
                                         <img
                                             src={`https://ui-avatars.com/api/?name=${encodeURIComponent(formData.fullName || 'User')}&background=f97316&color=000&bold=true&size=128`}
                                             alt="avatar"
-                                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                            className="w-full h-full object-cover"
                                         />
                                     </div>
-                                    <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '16px', color: 'var(--color-white)', margin: '0 0 4px' }}>
+                                    <p className="font-headline-md font-bold text-lg text-brutalist-black m-0 mb-1">
                                         {formData.fullName || 'Your Name'}
                                     </p>
-                                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)', margin: '0 0 16px' }}>
+                                    <p className="font-label-mono font-bold text-sm text-gray-500 m-0 mb-4">
                                         {formData.email}
                                     </p>
 
                                     {/* Completion bar */}
-                                    <div style={{ textAlign: 'left' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                                            <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-white-40)' }}>
+                                    <div className="text-left">
+                                        <div className="flex justify-between mb-2">
+                                            <span className="font-label-mono font-bold text-xs uppercase text-gray-500">
                                                 Profile Completion
                                             </span>
-                                            <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '13px', color: 'var(--color-orange)' }}>
+                                            <span className="font-label-mono font-bold text-sm text-vibrant-orange">
                                                 {stats.completion}%
                                             </span>
                                         </div>
-                                        <div style={{ height: '4px', borderRadius: '999px', background: 'var(--color-border)', overflow: 'hidden' }}>
-                                            <div style={{
-                                                height: '100%', borderRadius: '999px',
-                                                background: 'var(--color-orange)',
-                                                width: `${stats.completion}%`,
-                                                transition: 'width 0.4s ease',
-                                            }} />
+                                        <div className="h-2 rounded-full bg-gray-200 overflow-hidden border-[2px] border-brutalist-black">
+                                            <div
+                                                className="h-full bg-vibrant-orange transition-all duration-500 ease-out border-r-[2px] border-brutalist-black"
+                                                style={{ width: `${stats.completion}%` }}
+                                            />
                                         </div>
-                                        <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--color-white-20)', marginTop: '8px', lineHeight: 1.5 }}>
+                                        <p className="font-label-mono font-bold text-xs text-gray-500 mt-2 uppercase">
                                             Add a portfolio link to reach 100% and improve your job matches.
                                         </p>
                                     </div>
                                 </div>
 
                                 {/* Account Overview */}
-                                <div style={card}>
-                                    <h2 style={{ ...sectionTitle, fontSize: '14px' }}>Account Overview</h2>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                                <div className={cardClasses} style={{ padding: "32px" }}>
+                                    <h2 className={sectionTitleClasses}>Account Overview</h2>
+                                    <div className="flex flex-col gap-4">
                                         {[
                                             {
                                                 icon: <FaShieldAlt />,
@@ -831,27 +595,19 @@ export default function Profile() {
                                                 ok: stats.isVerified,
                                             },
                                         ].map(({ icon, label, value, badge, ok }) => (
-                                            <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                    <div style={{
-                                                        width: '28px', height: '28px', borderRadius: '8px',
-                                                        background: 'var(--color-surface-3)',
-                                                        border: '1px solid var(--color-border)',
-                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                        color: 'var(--color-white-40)', fontSize: '11px',
-                                                    }}>{icon}</div>
-                                                    <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-65)' }}>{label}</span>
+                                            <div key={label} className="flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-none border-[2px] border-brutalist-black bg-pure-white flex items-center justify-center text-brutalist-black shadow-[2px_2px_0px_0px_#060608]">
+                                                        {icon}
+                                                    </div>
+                                                    <span className="font-label-mono font-bold text-xs text-brutalist-black uppercase">{label}</span>
                                                 </div>
                                                 {badge ? (
-                                                    <span style={{
-                                                        fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.08em',
-                                                        background: ok ? 'rgba(34,197,94,0.12)' : 'rgba(249,115,22,0.12)',
-                                                        color: ok ? '#4ade80' : '#f97316',
-                                                        border: `1px solid ${ok ? 'rgba(34,197,94,0.20)' : 'rgba(249,115,22,0.22)'}`,
-                                                        padding: '3px 10px', borderRadius: '999px',
-                                                    }}>{value}</span>
+                                                    <span className={`font-label-mono font-bold text-xs uppercase px-2 py-1 border-[2px] border-brutalist-black shadow-[2px_2px_0px_0px_#060608] ${ok ? 'bg-green-400 text-brutalist-black' : 'bg-vibrant-orange text-pure-white'}`}>
+                                                        {value}
+                                                    </span>
                                                 ) : (
-                                                    <span style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)' }}>{value}</span>
+                                                    <span className="font-label-mono font-bold text-xs text-gray-500 uppercase">{value}</span>
                                                 )}
                                             </div>
                                         ))}
@@ -862,52 +618,25 @@ export default function Profile() {
                                 <button
                                     onClick={handleSave}
                                     disabled={saving}
-                                    style={{
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                                        width: '100%', padding: '14px',
-                                        background: saving ? 'var(--color-surface-3)' : 'var(--color-orange)',
-                                        color: saving ? 'var(--color-white-40)' : '#000',
-                                        border: 'none', borderRadius: '10px',
-                                        fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '14px',
-                                        cursor: saving ? 'not-allowed' : 'pointer',
-                                        transition: 'all 0.2s',
-                                        boxShadow: saving ? 'none' : '0 4px 20px rgba(249,115,22,0.25)',
-                                    }}
-                                    onMouseEnter={e => { if (!saving) e.currentTarget.style.background = 'var(--color-orange-hover)'; }}
-                                    onMouseLeave={e => { if (!saving) e.currentTarget.style.background = 'var(--color-orange)'; }}
+                                    className="flex items-center justify-center gap-2 w-full bg-vibrant-orange border-[3px] border-brutalist-black text-pure-white font-label-mono font-bold text-sm uppercase transition-all shadow-[4px_4px_0px_0px_#060608] hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none cursor-pointer disabled:opacity-50"
+                                    style={{ padding: "16px" }}
                                 >
                                     {saving ? (
-                                        <>
-                                            <div style={{
-                                                width: '14px', height: '14px', borderRadius: '50%',
-                                                border: '2px solid var(--color-border)',
-                                                borderTopColor: 'var(--color-orange)',
-                                                animation: 'spin 0.7s linear infinite',
-                                            }} />
-                                            Saving…
-                                        </>
+                                        'Saving…'
                                     ) : (
-                                        <><FaSave style={{ fontSize: '13px' }} /> Save Changes</>
+                                        <><FaSave /> Save Changes</>
                                     )}
                                 </button>
 
                                 {/* Help card */}
-                                <div style={{
-                                    background: 'linear-gradient(135deg, rgba(249,115,22,0.10) 0%, rgba(249,115,22,0.04) 100%)',
-                                    border: '1px solid var(--color-orange-border)',
-                                    borderRadius: '14px', padding: '20px',
-                                }}>
-                                    <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '14px', color: 'var(--color-white)', margin: '0 0 6px' }}>
+                                <div className="bg-pure-white border-[3px] border-brutalist-black shadow-[4px_4px_0px_0px_#060608]" style={{ padding: "24px" }}>
+                                    <p className="font-headline-md font-bold text-md text-brutalist-black m-0 mb-2">
                                         Need help with your profile?
                                     </p>
-                                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-65)', margin: '0 0 14px', lineHeight: 1.6 }}>
+                                    <p className="font-label-mono font-bold text-xs text-gray-500 uppercase m-0 mb-4">
                                         Chat with our career experts to optimize your presence.
                                     </p>
-                                    <button style={{
-                                        fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '12px',
-                                        color: 'var(--color-orange)', background: 'none', border: 'none',
-                                        cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: '4px',
-                                    }}>
+                                    <button className="font-label-mono font-bold text-xs uppercase text-vibrant-orange bg-transparent border-none cursor-pointer p-0 flex items-center gap-1 hover:underline">
                                         Contact Support →
                                     </button>
                                 </div>

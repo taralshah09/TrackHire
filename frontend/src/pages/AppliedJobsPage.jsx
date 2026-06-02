@@ -118,7 +118,7 @@ export default function AppliedJobsPage() {
     }, [loading, isFetchingMore, hasMore]);
 
     return (
-        <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
+        <div className="flex min-h-screen bg-background-light">
             <style>{`
                 @media (max-width: 1024px) {
                     .applied-table th:nth-child(3), .applied-table td:nth-child(3),
@@ -127,69 +127,51 @@ export default function AppliedJobsPage() {
                     }
                 }
                 @media (max-width: 768px) {
-                    .applied-main-inner { padding: 80px 16px 24px !important; }
                     .applied-table th:nth-child(6), .applied-table td:nth-child(6) { 
                         display: none !important; 
                     }
-                }
-                @media (max-width: 480px) {
-                    .applied-main-inner { padding-top: 72px !important; }
                 }
             `}</style>
 
             <Sidebar />
 
-            <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <main className="flex-1 flex flex-col overflow-hidden relative z-10">
                 {/* Header */}
                 <AppHeader left={
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)' }}>
-
-                        <span style={{ color: 'var(--color-white-65)' }}>Applied Jobs</span>
+                    <div className="font-label-mono font-bold uppercase text-sm text-brutalist-black bg-pure-white border-[3px] border-brutalist-black shadow-[4px_4px_0px_0px_#060608] inline-block" style={{ padding: "16px 32px" }}>
+                        Applied Jobs
                     </div>
                 } />
 
-                <div style={{ flex: 1, overflowY: 'auto' }}>
-                    <div className="applied-main-inner" style={{ maxWidth: '1100px', margin: '0 auto', padding: '32px' }}>
+                <div className="flex-1 overflow-y-auto">
+                    <div className="max-w-7xl mx-auto" style={{ padding: "40px 10px" }}>
 
                         {/* Title + controls */}
-                        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+                        <div className="flex items-end justify-between flex-wrap gap-6 mb-16 bg-pure-white border-[4px] border-brutalist-black shadow-[4px_4px_0px_0px_#060608]" style={{ padding: "48px" }}>
                             <div>
-                                <h1 style={{
-                                    fontFamily: 'var(--font-display)', fontWeight: 800,
-                                    fontSize: 'clamp(22px, 3vw, 32px)', letterSpacing: '-0.025em',
-                                    color: 'var(--color-white)', margin: 0,
-                                }}>Applied Jobs</h1>
-                                <p style={{ fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--color-white-40)', marginTop: '4px' }}>
+                                <h1 className="font-headline-md font-black uppercase tracking-tighter text-3xl md:text-5xl text-brutalist-black m-0 mb-2">
+                                    Applied Jobs
+                                </h1>
+                                <p className="font-label-mono font-bold uppercase text-sm text-gray-500 m-0">
                                     {loading ? 'Loading…' : `${totalElements} applications tracked`}
                                 </p>
                             </div>
                             {/* Sort controls */}
-                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <div className="flex gap-4 items-center flex-wrap">
                                 <select
                                     value={sort}
                                     onChange={e => { setSort(e.target.value); setPage(0); }}
-                                    style={{
-                                        background: 'var(--color-surface-2)', border: '1px solid var(--color-border)',
-                                        borderRadius: '8px', color: 'var(--color-white)',
-                                        fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '12px',
-                                        padding: '7px 12px', outline: 'none', cursor: 'pointer',
-                                    }}
+                                    className="bg-pure-white border-[3px] border-brutalist-black text-brutalist-black font-label-mono font-bold uppercase text-sm outline-none cursor-pointer shadow-[2px_2px_0px_0px_#060608] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
+                                    style={{ padding: "12px 16px" }}
                                 >
                                     <option value="appliedAt">Date Applied</option>
                                     <option value="status">Status</option>
-                                    {/* <option value="job.postedAt">Date Posted</option>
-                                    <option value="job.title">Job Title</option>
-                                    <option value="job.company">Company</option> */}
                                 </select>
                                 <select
                                     value={direction}
                                     onChange={e => { setDirection(e.target.value); setPage(0); }}
-                                    style={{
-                                        background: 'var(--color-surface-2)', border: '1px solid var(--color-border)',
-                                        borderRadius: '8px', color: 'var(--color-white)',
-                                        fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '12px',
-                                        padding: '7px 12px', outline: 'none', cursor: 'pointer',
-                                    }}
+                                    className="bg-pure-white border-[3px] border-brutalist-black text-brutalist-black font-label-mono font-bold uppercase text-sm outline-none cursor-pointer shadow-[2px_2px_0px_0px_#060608] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
+                                    style={{ padding: "12px 16px" }}
                                 >
                                     <option value="DESC">Newest First</option>
                                     <option value="ASC">Oldest First</option>
@@ -198,15 +180,11 @@ export default function AppliedJobsPage() {
                         </div>
 
                         {/* Table */}
-                        <div style={{
-                            background: 'var(--color-surface-2)',
-                            border: '1px solid var(--color-border)',
-                            borderRadius: '14px', overflow: 'hidden',
-                        }}>
-                            <div style={{ overflowX: 'auto' }}>
-                                <table className="applied-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <div className="bg-pure-white border-[4px] border-brutalist-black shadow-[4px_4px_0px_0px_#060608] overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="applied-table w-full border-collapse">
                                     <thead>
-                                        <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
+                                        <tr className="border-b-[4px] border-brutalist-black bg-[#F4F4F5]">
                                             {[
                                                 { label: 'Job Title', key: 'job.title' },
                                                 { label: 'Company', key: 'job.company' },
@@ -227,18 +205,10 @@ export default function AppliedJobsPage() {
                                                         }
                                                         setPage(0);
                                                     }}
-                                                    style={{
-                                                        padding: '14px 20px', textAlign: 'left',
-                                                        fontFamily: 'var(--font-display)', fontWeight: 700,
-                                                        fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase',
-                                                        color: sort === key ? 'var(--color-orange)' : 'var(--color-white-40)',
-                                                        whiteSpace: 'nowrap',
-                                                        cursor: key ? 'pointer' : 'default',
-                                                        userSelect: 'none',
-                                                        transition: 'color 0.2s',
-                                                    }}
+                                                    className={`text-left font-label-mono font-bold text-sm uppercase tracking-wider whitespace-nowrap select-none transition-colors ${key ? 'cursor-pointer' : 'cursor-default'} ${sort === key ? 'text-vibrant-orange' : 'text-brutalist-black'}`}
+                                                    style={{ padding: "20px 24px" }}
                                                 >
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <div className="flex items-center gap-2">
                                                         {label}
                                                         {key && sort === key && (
                                                             <span>{direction === 'DESC' ? '↓' : '↑'}</span>
@@ -250,24 +220,22 @@ export default function AppliedJobsPage() {
                                     </thead>
                                     <tbody>
                                         {loading ? (
-                                            <tr><td colSpan="7" style={{ padding: '48px', textAlign: 'center', color: 'var(--color-white-40)', fontFamily: 'var(--font-body)', fontSize: '14px' }}>Loading…</td></tr>
+                                            <tr><td colSpan="7" className="text-center font-label-mono font-bold uppercase text-sm text-gray-500" style={{ padding: "64px" }}>Loading…</td></tr>
                                         ) : error ? (
-                                            <tr><td colSpan="7" style={{ padding: '64px', textAlign: 'center' }}>
-                                                <p style={{ fontFamily: 'var(--font-body)', fontSize: '15px', color: '#f87171', margin: '0 0 12px' }}>{error}</p>
+                                            <tr><td colSpan="7" className="text-center" style={{ padding: "64px" }}>
+                                                <p className="font-headline-md font-bold text-lg text-[#f87171] uppercase mb-4">{error}</p>
                                                 <button
                                                     onClick={() => loadJobs(0, false)}
-                                                    style={{
-                                                        background: 'var(--color-surface-3)', border: '1px solid var(--color-border)',
-                                                        color: 'var(--color-white)', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer'
-                                                    }}
+                                                    className="bg-vibrant-orange border-[3px] border-brutalist-black text-pure-white font-label-mono font-bold text-sm uppercase transition-all shadow-[2px_2px_0px_0px_#060608] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none cursor-pointer"
+                                                    style={{ padding: "12px 24px" }}
                                                 >
                                                     Try Again
                                                 </button>
                                             </td></tr>
                                         ) : jobs?.length === 0 ? (
-                                            <tr><td colSpan="7" style={{ padding: '64px', textAlign: 'center' }}>
-                                                <p style={{ fontFamily: 'var(--font-body)', fontSize: '15px', color: 'var(--color-white-65)', margin: '0 0 6px' }}>No applications tracked yet.</p>
-                                                <p style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-20)', margin: 0 }}>Start applying to jobs and track your pipeline here.</p>
+                                            <tr><td colSpan="7" className="text-center" style={{ padding: "64px" }}>
+                                                <p className="font-headline-md font-bold text-xl text-brutalist-black uppercase mb-2">No applications tracked yet.</p>
+                                                <p className="font-label-mono font-bold uppercase text-sm text-gray-500 m-0">Start applying to jobs and track your pipeline here.</p>
                                             </td></tr>
                                         ) : (
                                             <>
@@ -275,53 +243,48 @@ export default function AppliedJobsPage() {
                                                     const st = getStatus(job?.applicationStatus);
                                                     const isLast = jobs.length === idx + 1;
                                                     return (
-                                                        <tr key={job?.id} ref={isLast ? lastJobElementRef : null} style={{ borderBottom: '1px solid rgba(46,46,46,0.5)' }}>
-                                                            <td style={{ padding: '14px 20px' }}>
-                                                                <span style={{
-                                                                    fontFamily: 'var(--font-display)', fontWeight: 700,
-                                                                    fontSize: '14px', color: 'var(--color-white)',
-                                                                }}>
-                                                                    {job?.title || job?.role}
-                                                                </span>
+                                                        <tr key={job?.id} ref={isLast ? lastJobElementRef : null} className="border-b-[2px] border-brutalist-black hover:bg-[#F4F4F5] transition-colors">
+                                                            <td className="font-headline-md font-bold text-lg text-brutalist-black" style={{ padding: "20px 24px" }}>
+                                                                {job?.title || job?.role}
                                                             </td>
-                                                            <td style={{ padding: '14px 20px', fontFamily: 'var(--font-body)', fontSize: '14px', color: 'var(--color-white-65)' }}>
+                                                            <td className="font-body text-base text-brutalist-black" style={{ padding: "20px 24px" }}>
                                                                 {job?.companyName || job?.company}
                                                             </td>
-                                                            <td style={{ padding: '14px 20px', fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--color-white-40)' }}>
+                                                            <td className="font-body text-sm text-gray-600" style={{ padding: "20px 24px" }}>
                                                                 {job?.location || '—'}
                                                             </td>
-                                                            <td style={{ padding: '14px 20px' }}>
-                                                                <span style={{
-                                                                    fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '11px',
-                                                                    letterSpacing: '0.06em',
-                                                                    background: st.bg, color: st.color, border: `1px solid ${st.border}`,
-                                                                    padding: '4px 10px', borderRadius: '999px', whiteSpace: 'nowrap',
-                                                                }}>
+                                                            <td style={{ padding: "20px 24px" }}>
+                                                                <span className="font-label-mono font-bold text-xs uppercase tracking-wider whitespace-nowrap border-[2px] border-brutalist-black shadow-[2px_2px_0px_0px_#060608]"
+                                                                    style={{
+                                                                        padding: "8px 12px",
+                                                                        background: st.bg,
+                                                                        color: st.color === '#60a5fa' ? '#2563eb' :
+                                                                               st.color === '#2dd4bf' ? '#0d9488' :
+                                                                               st.color === '#f97316' ? '#ea580c' :
+                                                                               st.color === '#4ade80' ? '#16a34a' :
+                                                                               st.color === '#f87171' ? '#dc2626' :
+                                                                               st.color === '#94a3b8' ? '#475569' : st.color,
+                                                                    }}>
                                                                     {job?.applicationStatus || 'Applied'}
                                                                 </span>
                                                             </td>
-                                                            <td style={{ padding: '14px 20px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-white-40)', whiteSpace: 'nowrap' }}>
+                                                            <td className="font-label-mono font-bold text-sm text-gray-600 whitespace-nowrap" style={{ padding: "20px 24px" }}>
                                                                 {job?.postedAt ? new Date(job.postedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
                                                             </td>
-                                                            <td style={{ padding: '14px 20px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--color-white-40)', whiteSpace: 'nowrap' }}>
+                                                            <td className="font-label-mono font-bold text-sm text-gray-600 whitespace-nowrap" style={{ padding: "20px 24px" }}>
                                                                 {job?.appliedAt ? new Date(job.appliedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
                                                             </td>
-                                                            <td style={{ padding: '14px 20px' }}>
-                                                                <Link to={`/jobs/${job?.jobId || job?.id}`} style={{
-                                                                    fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '12px',
-                                                                    color: 'var(--color-orange)', textDecoration: 'none',
-                                                                    transition: 'color 0.2s',
-                                                                }}
-                                                                    onMouseEnter={e => e.target.style.color = 'var(--color-orange-hover)'}
-                                                                    onMouseLeave={e => e.target.style.color = 'var(--color-orange)'}
-                                                                >View →</Link>
+                                                            <td style={{ padding: "20px 24px" }}>
+                                                                <Link to={`/jobs/${job?.jobId || job?.id}`} className="font-label-mono font-bold text-sm uppercase text-vibrant-orange hover:text-brutalist-black transition-colors no-underline">
+                                                                    View →
+                                                                </Link>
                                                             </td>
                                                         </tr>
                                                     );
                                                 })}
                                                 {isFetchingMore && (
                                                     <tr>
-                                                        <td colSpan="7" style={{ padding: '24px', textAlign: 'center', color: 'var(--color-white-40)', fontFamily: 'var(--font-body)', fontSize: '13px' }}>
+                                                        <td colSpan="7" className="text-center font-label-mono font-bold uppercase text-sm text-gray-500" style={{ padding: "32px" }}>
                                                             Loading more applications…
                                                         </td>
                                                     </tr>
@@ -333,8 +296,6 @@ export default function AppliedJobsPage() {
                             </div>
                         </div>
 
-
-                        {/* Pagination removed */}
                     </div>
                 </div>
             </main>
