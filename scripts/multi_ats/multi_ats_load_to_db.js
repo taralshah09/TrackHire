@@ -134,15 +134,16 @@ async function upsertBatch(client, tableName, batch) {
             ${tableName}.location IS DISTINCT FROM EXCLUDED.location OR
             ${tableName}.department IS DISTINCT FROM EXCLUDED.department OR
             (EXCLUDED.description IS NOT NULL AND ${tableName}.description IS DISTINCT FROM EXCLUDED.description)
-        RETURNING (xmax = 0) AS inserted
+        RETURNING id, (xmax = 0) AS inserted
     `;
 
     const res = await client.query(sql, values);
     const inserted = res.rows.filter(r => r.inserted).length;
     const updated = res.rows.filter(r => !r.inserted).length;
     const skipped = batch.length - res.rows.length;
+    const jobIds = res.rows.map(r => r.id);
 
-    return { inserted, updated, skipped };
+    return { inserted, updated, skipped, jobIds };
 }
 
 async function run(filePath) {
@@ -211,13 +212,17 @@ async function upsertSingleJob(jobData) {
     const pool = getWorkerPool();
     const client = await pool.connect();
     try {
-        await upsertBatch(client, "jobs", [jobData]);
+        const result = await upsertBatch(client, "jobs", [jobData]);
+        const jobId = result.jobIds[0] || null;
+
         const isIntern = (jobData.title || "").toLowerCase().includes("intern");
         if (isIntern) {
             await upsertBatch(client, "intern_jobs", [jobData]);
         } else {
             await upsertBatch(client, "fulltime_jobs", [jobData]);
         }
+
+        return jobId;
     } finally {
         client.release();
     }

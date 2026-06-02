@@ -256,7 +256,11 @@ export const api = {
     getPreferredJobs: (params) => {
         const query = new URLSearchParams(params).toString();
         return apiRequest(`/jobs/preferred?${query}`, { method: 'GET' });
-    }
+    },
+
+    // Relevance-based "For You" feed — reads precomputed user_job_relevance scores
+    getForYouFeed: () =>
+        apiRequest('/jobs/for-you', { method: 'GET' }),
 };
 
 export default api;
