@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { ScribbleArrow, ScribbleLine } from "../components/scribble-ui";
+import TestimonialsSection from "../components/TestimonialsSection";
 
 const GLOBAL_CSS = `
     .brutalist-shadow {
@@ -453,51 +454,7 @@ export default function NewLandingPage() {
             </section>
 
             {/* Testimonials Section */}
-            {/* <section className="py-block-gap px-grid-margin bg-surface-bright relative min-h-[60vh] flex flex-col justify-center">
-                <div className="max-w-7xl mx-auto w-full">
-                    <h2 className="font-headline-xl text-headline-xl uppercase mb-16 text-center">Testimonials</h2>
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-                        <div className="lg:col-span-5 relative">
-                            <div className="absolute -top-8 left-4 bg-vibrant-orange text-pure-white px-4 py-2 font-label-mono sticker-rotate-neg z-20">STICKER AGENT</div>
-                            <div className="border-4 border-brutalist-black bg-pure-white p-12 brutalist-shadow-lg relative overflow-hidden">
-                                <span className="material-symbols-outlined text-8xl absolute top-4 left-4 opacity-10">format_quote</span>
-                                <p className="font-headline-md text-headline-md mb-8 relative z-10">
-                                    "Everything changed when we swapped our legacy system for TrackHire. The speed is absolutely ruthless."
-                                </p>
-                                <div className="flex items-center gap-4">
-                                    <div className="font-label-mono text-label-mono uppercase font-bold">— PTRA</div>
-                                    <div className="h-1 w-12 bg-brutalist-black"></div>
-                                </div>
-                            </div>
-                            <div className="absolute -bottom-16 -right-8 hidden md:block">
-                                <span className="font-label-mono text-vibrant-orange sticker-rotate-pos">HAND-DRAWN ARROW</span>
-                                <span className="material-symbols-outlined text-5xl">trending_flat</span>
-                            </div>
-                        </div>
-                        <div className="lg:col-span-4 flex justify-center relative py-12">
-                            <div className="relative w-64 h-80 bg-pure-white border-2 border-brutalist-black p-4 brutalist-shadow sticker-rotate-neg z-10">
-                                <img className="w-full h-56 object-cover border-2 border-brutalist-black mb-4 grayscale" data-alt="A striking black and white portrait of a modern professional in a minimalist city setting. The person has a determined, tech-forward look, wearing high-contrast editorial clothing. The lighting is harsh and direct, creating deep blacks and bright whites to match the brutalist aesthetic of the website." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdtmi0xLRgNatFpqCkz7ElOdMgzan-R2i039iH-1OR7X6xISoTx5OcJKfBb4WEQsW1uxnn2EBxAwOaQLijflb9QHCzjc_9feV1uy_fZFp5q0UQ0UGPrR4A5UITiTuN8thvER1WLawgTEiIMC22PQJJpPkOeq-P-RpawjvLJ-3TnMaGFVIphEK91E3X59aEUPMbJKxd_onfWWKKE8y4w8jfgrpb56rBSCDM6svWF4Vdmnlts1NlPIgCRYvPyc5OgIOqwCvlt4NQCL7b" alt="Sarah" />
-                                <span className="font-label-mono text-label-mono block text-center">— Sarah</span>
-                            </div>
-                            <div className="absolute w-64 h-80 bg-pure-white border-2 border-brutalist-black p-4 brutalist-shadow-orange sticker-rotate-pos -right-4 top-20">
-                                <img className="w-full h-56 object-cover border-2 border-brutalist-black mb-4 grayscale" data-alt="A portrait of a male tech leader with a raw, high-impact gaze. The photo is styled like a polaroid with a thick white border. The background is an industrial concrete space that reflects structural rawness and transparency. The image is high-contrast and sharp, fitting the neo-brutalist design movement." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpdqXmn6bbnIoNuU0sZn1_vuSfm9A2BYAfXvZ36FafvhYpvY8kpzsrbOnVSaZJR4imKvNQ4J-Kmidun4YtDJg-_d-orfPIr6M7UcqEpBpRSNvZbbTNrcv7SUutmEvW5-NVIEWXXVoMHVj04wSz5BFDh6HduB3CYeEF5x9JtH525tvhIhAGxQ_pXxynLPwzouzAqkoJqCbwxaYdfUflOeYt2VqHwDowJFL1vbWqPjSRvq7R9DKEsNBSH_uzoJ0ykg2uyGtX2EytJUDL" alt="James" />
-                                <span className="font-label-mono text-label-mono block text-center">— James</span>
-                            </div>
-                        </div>
-                        <div className="lg:col-span-3 space-y-4">
-                            <div className="bg-vibrant-orange text-pure-white p-6 border-4 border-brutalist-black brutalist-shadow sticker-rotate-neg">
-                                <p className="font-label-mono text-label-mono">"Too useful to ignore. Best tool in our stack."</p>
-                            </div>
-                            <div className="bg-pure-white text-brutalist-black p-6 border-4 border-brutalist-black brutalist-shadow-orange sticker-rotate-pos">
-                                <p className="font-label-mono text-label-mono">"The UI is a breath of fresh air. Bold and unapologetic."</p>
-                            </div>
-                            <div className="bg-brutalist-black text-pure-white p-6 border-4 border-brutalist-black brutalist-shadow sticker-rotate-neg">
-                                <p className="font-label-mono text-label-mono">"Finally, a tool that respects our time and intelligence."</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section> */}
+            <TestimonialsSection />
 
             {/* Final CTA */}
             <section className="py-block-gap px-grid-margin bg-surface-container-highest border-t-4 border-brutalist-black relative overflow-hidden min-h-[60vh] flex flex-col justify-center">
