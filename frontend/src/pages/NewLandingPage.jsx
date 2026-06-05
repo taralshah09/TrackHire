@@ -1,8 +1,46 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { ScribbleArrow, ScribbleLine } from "../components/scribble-ui";
 import TestimonialsSection from "../components/TestimonialsSection";
+
+/* ─── Shared responsive config (mirrors TestimonialsSection) ───────── */
+function getSectionConfig(width) {
+    if (width < 420) {
+        return {
+            paddingV: '48px',
+            paddingH: '16px',
+            maxWidth: '100%',
+            headerMarginBottom: '32px',
+        };
+    }
+    if (width < 720) {
+        return {
+            paddingV: '64px',
+            paddingH: '20px',
+            maxWidth: '100%',
+            headerMarginBottom: '40px',
+        };
+    }
+    return {
+        paddingV: '96px',
+        paddingH: '32px',
+        maxWidth: '1200px',
+        headerMarginBottom: '56px',
+    };
+}
+
+function useWindowWidth() {
+    const [width, setWidth] = useState(
+        typeof window !== 'undefined' ? window.innerWidth : 1024
+    );
+    useEffect(() => {
+        const handler = () => setWidth(window.innerWidth);
+        window.addEventListener('resize', handler);
+        return () => window.removeEventListener('resize', handler);
+    }, []);
+    return width;
+}
 
 const GLOBAL_CSS = `
     .brutalist-shadow {
@@ -109,13 +147,28 @@ function GlobalStyles() {
 
 export default function NewLandingPage() {
     const isLoggedIn = Boolean(Cookies.get('token') || Cookies.get('username') || Cookies.get('accessToken'));
+    const width = useWindowWidth();
+    const cfg = getSectionConfig(width);
 
     return (
         <div className="bg-surface text-brutalist-black font-body-lg overflow-x-hidden selection:bg-vibrant-orange selection:text-pure-white">
             <GlobalStyles />
             {/* TopNavBar */}
-            <nav className="w-full sticky top-0 z-50 bg-surface border-b-4 border-brutalist-black px-4 md:px-8 lg:px-16 py-2 md:py-3">
-                <div className="w-full flex justify-between items-center py-6 gap-4">
+            <nav
+                style={{
+                    width: '100%',
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 50,
+                    backgroundColor: '#FFFFFF',
+                    borderBottom: '4px solid #060608',
+                    paddingLeft: cfg.paddingH,
+                    paddingRight: cfg.paddingH,
+                    // paddingTop: '8px',
+                    // paddingBottom: '8px',
+                }}
+            >
+                <div style={{ maxWidth: cfg.maxWidth, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '16px', paddingBottom: '16px', gap: '16px' }}>
                     {/* Brand */}
                     <Link to="/" className="font-headline-md text-headline-md uppercase tracking-tighter text-brutalist-black shrink-0">
                         TRACK<span className="text-vibrant-orange">HIRE</span>
@@ -161,14 +214,26 @@ export default function NewLandingPage() {
             </nav>
 
             {/* Hero Section */}
-
-            <header className="relative min-h-[calc(100vh-84px)] flex flex-col justify-center items-center px-4 md:px-8 py-16 overflow-hidden bg-pure-white">
+            <header
+                style={{
+                    position: 'relative',
+                    minHeight: 'calc(100vh - 84px)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    paddingLeft: cfg.paddingH,
+                    paddingRight: cfg.paddingH,
+                    overflow: 'hidden',
+                    backgroundColor: '#FFFFFF',
+                }}
+            >
                 {/* Faint background grid */}
                 <div className="hero-grid-bg absolute inset-0 pointer-events-none"></div>
                 {/* Top fade so the grid melts into the surface */}
                 <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-pure-white/40 via-transparent to-pure-white/5"></div>
 
-                <div className="max-w-5xl mx-auto text-center relative z-10 w-full flex flex-col items-center mt-12">
+                <div style={{ maxWidth: cfg.maxWidth, margin: '0 auto', textAlign: 'center', position: 'relative', zIndex: 10, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     <h1 className="font-black text-[48px] sm:text-[64px] md:text-[90px] lg:text-[120px] uppercase leading-[0.85] mb-4 md:mb-6 text-brutalist-black tracking-tighter text-center">
                         Stop Hunting.<br />Start Landing.
                     </h1>
@@ -192,7 +257,7 @@ export default function NewLandingPage() {
                 </div>
 
                 {/* KPI Cards Row — Stepped Brutalist Layout */}
-                <div className="relative z-10 mt-40 md:mt-56 w-full max-w-[1200px] mx-auto flex justify-center pb-16 kpi-section-container">
+                <div className="kpi-section-container" style={{ position: 'relative', zIndex: 10, marginTop: '160px', width: '100%', maxWidth: cfg.maxWidth, margin: `160px auto 0`, display: 'flex', justifyContent: 'center', paddingBottom: '64px' }}>
 
                     {/* Left Orange Starburst */}
                     <div className="absolute left-0 md:left-12 bottom-4 md:bottom-12 z-30 sticker-rotate-neg pointer-events-none hidden md:block">
@@ -253,8 +318,20 @@ export default function NewLandingPage() {
             </header>
 
             {/* Problem Section */}
-            <section style={{ "padding": "25px 25px" }} className="py-24 px-4 md:px-8 bg-[#F4F4F4] border-t-[6px] border-brutalist-black overflow-hidden flex justify-center">
-                <div className="max-w-[1100px] w-full grid grid-cols-1 lg:grid-cols-2 gap-16 md:gap-24 items-center justify-items-center problems-grid-container">
+            <section
+                style={{
+                    paddingTop: cfg.paddingV,
+                    paddingBottom: cfg.paddingV,
+                    paddingLeft: cfg.paddingH,
+                    paddingRight: cfg.paddingH,
+                    backgroundColor: '#F4F4F4',
+                    borderTop: '6px solid #060608',
+                    overflow: 'hidden',
+                    display: 'flex',
+                    justifyContent: 'center',
+                }}
+            >
+                <div className="problems-grid-container" style={{ maxWidth: cfg.maxWidth, width: '100%', display: 'grid', gridTemplateColumns: width >= 900 ? '1fr 1fr' : '1fr', gap: width >= 720 ? '96px' : '48px', alignItems: 'center', justifyItems: 'center' }}>
 
                     {/* Left Column */}
                     <div className="relative flex flex-col items-center text-center w-full">
@@ -330,9 +407,25 @@ export default function NewLandingPage() {
             </section>
 
             {/* Feature Bento Grid Section */}
-            <section id="features" className="py-24 px-4 md:px-8 bg-[#E5E5E5] border-t-[6px] border-brutalist-black overflow-hidden flex flex-col items-center justify-center min-h-[80vh]">
-                <div className="max-w-[1200px] w-full">
-                    <div className="flex flex-col md:flex-row justify-between items-start mb-12 gap-8">
+            <section
+                id="features"
+                style={{
+                    paddingTop: cfg.paddingV,
+                    paddingBottom: cfg.paddingV,
+                    paddingLeft: cfg.paddingH,
+                    paddingRight: cfg.paddingH,
+                    backgroundColor: '#E5E5E5',
+                    borderTop: '6px solid #060608',
+                    overflow: 'hidden',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minHeight: '80vh',
+                }}
+            >
+                <div style={{ maxWidth: cfg.maxWidth, width: '100%' }}>
+                    <div style={{ display: 'flex', flexDirection: width < 720 ? 'column' : 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: cfg.headerMarginBottom, gap: '32px' }}>
                         <div>
                             <span className="font-label-mono font-black text-sm text-vibrant-orange mb-4 block uppercase">// Capabilities</span>
                             <h2 className="font-black text-[36px] sm:text-[48px] md:text-[64px] uppercase leading-[0.9] text-brutalist-black tracking-tighter max-w-2xl">
@@ -419,14 +512,30 @@ export default function NewLandingPage() {
             </section>
 
             {/* Process Section */}
-            <section className="py-block-gap px-grid-margin bg-surface border-t-4 border-brutalist-black border-b-4 relative overflow-hidden min-h-[60vh] flex items-center justify-center">
+            <section
+                style={{
+                    paddingTop: cfg.paddingV,
+                    paddingBottom: cfg.paddingV,
+                    paddingLeft: cfg.paddingH,
+                    paddingRight: cfg.paddingH,
+                    backgroundColor: '#FFFFFF',
+                    borderTop: '4px solid #060608',
+                    borderBottom: '4px solid #060608',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    minHeight: '60vh',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                }}
+            >
                 {/* SVG Doodle Arrow */}
-                <svg className="absolute hidden lg:block left-[15%] top-1/2 -translate-y-1/2 w-32 h-32 opacity-20" viewBox="0 0 100 100">
+                <svg style={{ position: 'absolute', display: width >= 1024 ? 'block' : 'none', left: '15%', top: '50%', transform: 'translateY(-50%)', width: '128px', height: '128px', opacity: 0.2 }} viewBox="0 0 100 100">
                     <path d="M10,50 Q40,10 90,50" fill="none" stroke="black" strokeWidth="2"></path>
                     <path d="M80,40 L90,50 L80,60" fill="none" stroke="black" strokeWidth="2"></path>
                 </svg>
-                <div className="max-w-7xl mx-auto w-full">
-                    <h2 className="font-black text-[36px] sm:text-[48px] md:text-[64px] text-center md:text-left uppercase mb-12 md:mb-16">Process Section</h2>
+                <div style={{ maxWidth: cfg.maxWidth, margin: '0 auto', width: '100%' }}>
+                    <h2 style={{ fontWeight: 900, fontSize: width < 420 ? '36px' : width < 720 ? '48px' : '64px', textAlign: width < 720 ? 'center' : 'left', textTransform: 'uppercase', marginBottom: cfg.headerMarginBottom }}>Process Section</h2>
                     <div className="mt-1 grid grid-cols-1 lg:grid-cols-3 gap-12 relative">
                         {/* Timeline Connectors for Desktop */}
                         <div className="hidden lg:block absolute top-12 left-0 w-full h-1 bg-vibrant-orange z-0"></div>
@@ -457,12 +566,27 @@ export default function NewLandingPage() {
             <TestimonialsSection />
 
             {/* Final CTA */}
-            <section className="py-block-gap px-grid-margin bg-surface-container-highest border-t-4 border-brutalist-black relative overflow-hidden min-h-[60vh] flex flex-col justify-center">
-                <div className="flex flex-col md:flex-row gap-8 justify-center items-center w-full">
+            <section
+                style={{
+                    paddingTop: cfg.paddingV,
+                    paddingBottom: cfg.paddingV,
+                    paddingLeft: cfg.paddingH,
+                    paddingRight: cfg.paddingH,
+                    backgroundColor: '#F4F4F4',
+                    borderTop: '4px solid #060608',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    minHeight: '60vh',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                }}
+            >
+                <div style={{ display: 'flex', flexDirection: width < 720 ? 'column' : 'row', gap: '32px', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
                     <div className="absolute inset-0 flex items-center justify-center opacity-5 select-none pointer-events-none">
                         <span className="font-display-lg text-[20vw] font-bold uppercase whitespace-nowrap">TRACKHIRE</span>
                     </div>
-                    <div className="max-w-5xl mx-auto relative z-10 w-full flex flex-col items-center justify-center text-center">
+                    <div style={{ maxWidth: cfg.maxWidth, margin: '0 auto', position: 'relative', zIndex: 10, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
                         <span className="font-label-mono text-label-mono uppercase mb-4 block text-center">// THE LAST STEP</span>
                         <h2 className="font-black text-[40px] sm:text-[60px] md:text-[90px] lg:text-[120px] uppercase leading-[0.9] mb-8 md:mb-12 tracking-tighter text-center w-full px-4">
                             MISS NOTHING.<br />APPLY SMARTER.
@@ -478,15 +602,37 @@ export default function NewLandingPage() {
             </section>
 
             {/* Footer */}
-            <footer className="w-full bg-brutalist-black text-pure-white border-t-4 border-brutalist-black py-16 flex flex-col justify-center items-center overflow-hidden">
-                <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16 grid grid-cols-1 md:grid-cols-12 gap-12 w-full place-items-center text-center">
+            <footer
+                style={{
+                    width: '100%',
+                    backgroundColor: '#060608',
+                    color: '#FFFFFF',
+                    borderTop: '4px solid #060608',
+                    paddingTop: cfg.paddingV,
+                    paddingBottom: cfg.paddingV,
+                    paddingLeft: cfg.paddingH,
+                    paddingRight: cfg.paddingH,
+                    overflow: 'hidden',
+                }}
+            >
+                <div style={{
+                    maxWidth: cfg.maxWidth,
+                    margin: '0 auto',
+                    width: '100%',
+                    display: 'flex',
+                    flexDirection: width < 720 ? 'column' : 'row',
+                    alignItems: width < 720 ? 'center' : 'flex-start',
+                    justifyContent: 'space-between',
+                    gap: '48px',
+                    textAlign: width < 720 ? 'center' : 'left',
+                }}>
                     <div className="md:col-span-5 flex flex-col items-center">
                         <div className="font-headline-xl text-headline-xl text-pure-white mb-6 text-center">TrackHire</div>
                         <p className="font-body-lg text-body-lg opacity-80 max-w-md mb-8 text-center">
                             The job market is an 8h/day game. Play it strategically. TrackHire is built for those who value speed, honesty, and raw performance.
                         </p>
                     </div>
-                    <div className="md:col-span-3 flex flex-col items-center">
+                    {/* <div className="md:col-span-3 flex flex-col items-center">
                         <h4 className="font-label-mono text-label-mono uppercase mb-8 border-b-2 border-pure-white inline-block">START</h4>
                         <nav className="flex flex-col gap-4 items-center">
                             <a className="font-label-mono text-label-mono opacity-80 hover:opacity-100 hover:text-vibrant-orange transition-opacity" href="https://taralshah.xyz" target="_blank" rel="noreferrer">About</a>
@@ -494,7 +640,7 @@ export default function NewLandingPage() {
                             <Link className="font-label-mono text-label-mono opacity-80 hover:opacity-100 hover:text-vibrant-orange transition-opacity" to="/login">Sign In</Link>
                             <a className="font-label-mono text-label-mono opacity-80 hover:opacity-100 hover:text-vibrant-orange transition-opacity" href="mailto:support@trackhire.com">Contact Us</a>
                         </nav>
-                    </div>
+                    </div> */}
                     <div className="md:col-span-4 border-4 border-vibrant-orange p-8 sticker-rotate-pos flex flex-col items-center footer-weekly-sprint">
                         <h4 className="font-headline-md text-headline-md mb-4 text-vibrant-orange text-center">Weekly Sprint</h4>
                         <p className="font-body-sm text-body-sm mb-6 opacity-80 text-center">Get the best job signals delivered every Monday morning. No spam, just high-quality leads.</p>
