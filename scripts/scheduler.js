@@ -33,6 +33,7 @@ async function pingRenderServer() {
 
     const urls = [
         RENDER_HEALTH_URL,
+        "https://p2p-share-server-vbhp.onrender.com/health",
         "https://tl-dr.onrender.com/",
     ];
 
