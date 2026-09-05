@@ -202,7 +202,6 @@ export default function Profile() {
     }));
 
     const handleSaveEmailPrefs = async () => {
-        console.log('[handleSaveEmailPrefs] called, userId =', userId);
         if (!userId) return;
         setSavingPrefs(true);
         try {
@@ -212,9 +211,7 @@ export default function Profile() {
                 roleTypes: emailPrefs.roleTypes,
                 emailEnabled: emailPrefs.emailEnabled,
             };
-            console.log('[handleSaveEmailPrefs] payload =', JSON.stringify(payload));
             const res = await api.saveJobPreferences(userId, payload);
-            console.log('[handleSaveEmailPrefs] response status =', res.status);
             if (res.ok) toast.success('Email preferences saved!');
             else {
                 const errBody = await res.text();

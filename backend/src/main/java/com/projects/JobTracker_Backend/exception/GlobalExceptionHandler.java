@@ -1,5 +1,6 @@
 package com.projects.JobTracker_Backend.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -8,10 +9,60 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
+
+    /**
+     * Anything the caller is meant to read and act on. The {@code code} field is
+     * what lets the SPA branch — for example showing the Google button on
+     * {@code USE_GOOGLE} rather than a generic "already registered" error.
+     */
+    @ExceptionHandler(ApiException.class)
+    public ResponseEntity<Map<String, Object>> handleApiException(ApiException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("message", ex.getMessage());
+        if (ex.getCode() != null) {
+            body.put("code", ex.getCode());
+        }
+        body.putAll(ex.getDetails());
+        return ResponseEntity.status(ex.getStatus()).body(body);
+    }
+
+    /**
+     * A body that claimed to be an encrypted envelope and was not readable. This
+     * handler has to exist: without it the catch-all RuntimeException handler
+     * below answers 500 and echoes CryptoService's internal wording back to
+     * whoever was tampering with the payload.
+     */
+    @ExceptionHandler(EncryptedRequestException.class)
+    public ResponseEntity<ErrorResponse> handleEncryptedRequest(EncryptedRequestException ex) {
+        ErrorResponse error = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    /** Every Google verification failure looks identical from the outside. */
+    @ExceptionHandler(InvalidGoogleTokenException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidGoogleToken(InvalidGoogleTokenException ex) {
+        log.warn("Google ID token rejected: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("message", "Google sign-in failed"));
+    }
+
+    /** The gateway refused the mail; the code never went out. */
+    @ExceptionHandler(EmailDeliveryException.class)
+    public ResponseEntity<Map<String, Object>> handleEmailDelivery(EmailDeliveryException ex) {
+        log.error("Email gateway failure: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(Map.of("message", "Could not send the verification email. Please try again."));
+    }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException ex) {

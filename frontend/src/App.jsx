@@ -4,6 +4,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import GuestRoute from './components/GuestRoute';
 import LoginPage from './pages/LoginPage';
 import Register from './pages/RegisterPage';
+import ChooseUsernamePage from './pages/ChooseUsernamePage';
 import JobsPage from './pages/JobsPage';
 import JobPage from './pages/JobPage';
 import DashboardPage from './pages/DashboardPage';
@@ -51,6 +52,9 @@ function App() {
           {/* Public (guest-only) Routes — redirect to /dashboard if already logged in */}
           <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
           <Route path="/register" element={<Register />} />
+          {/* Second screen of a brand-new Google signup. Reached only with router
+              state carrying a signupToken; landing here directly bounces back. */}
+          <Route path="/choose-username" element={<ChooseUsernamePage />} />
           <Route path="/" element={<NewLandingPage />} />
 
           {/* Onboarding (post-registration) */}

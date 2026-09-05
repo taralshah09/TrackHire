@@ -30,13 +30,10 @@ export const AuthProvider = ({ children }) => {
         const refreshToken = Cookies.get('refreshToken');
 
         if (!refreshToken) {
-            console.log('No refresh token available');
             return null;
         }
 
         try {
-            console.log('Attempting to refresh access token...');
-
             const response = await fetch(import.meta.env.VITE_API_BASE_URL + '/auth/refresh', {
                 method: 'POST',
                 headers: {
@@ -47,7 +44,6 @@ export const AuthProvider = ({ children }) => {
 
             if (response.ok) {
                 const data = await response.json();
-                console.log('✅ Token refreshed successfully');
 
                 // Update the access token cookie
                 const cookieOptions = {
@@ -82,14 +78,12 @@ export const AuthProvider = ({ children }) => {
         const email = Cookies.get('email');
 
         if (!token && !refreshToken) {
-            console.log('No tokens found, user not authenticated');
             setLoading(false);
             return;
         }
 
         // If access token exists and is not expired
         if (token && !isTokenExpired(token)) {
-            console.log('✅ Valid access token found');
             setAccessToken(token);
             setUser({ username, email });
             setLoading(false);
@@ -98,14 +92,12 @@ export const AuthProvider = ({ children }) => {
 
         // If access token is expired but refresh token exists
         if (refreshToken) {
-            console.log('Access token expired, attempting refresh...');
             const newToken = await refreshAccessToken();
 
             if (newToken) {
                 setUser({ username, email });
             }
         } else {
-            console.log('No valid tokens, logging out');
             logout();
         }
 
@@ -124,7 +116,6 @@ export const AuthProvider = ({ children }) => {
         const interval = setInterval(async () => {
             const token = Cookies.get('accessToken');
             if (token && isTokenExpired(token)) {
-                console.log('Token expired, refreshing...');
                 await refreshAccessToken();
             }
         }, 5 * 60 * 1000); // Check every 5 minutes
@@ -133,21 +124,11 @@ export const AuthProvider = ({ children }) => {
     }, [accessToken]);
 
     const login = (authData) => {
-        // console.log('=== AuthContext login called ===');
-        // console.log('Raw authData received:', authData);
-
         const { token, refreshToken, username, email, user: userData } = authData;
 
         // Handle case where user data might be nested
         const finalUsername = username || userData?.username;
         const finalEmail = email || userData?.email;
-
-        // console.log('Extracted values:', {
-        //     token,
-        //     refreshToken,
-        //     username: finalUsername,
-        //     email: finalEmail
-        // });
 
         // Validate that we have the required data
         if (!token || !refreshToken) {
@@ -178,12 +159,6 @@ export const AuthProvider = ({ children }) => {
                 Cookies.set('email', finalEmail, { ...cookieOptions, expires: 30 });
             }
 
-            // console.log('✅ Cookies set successfully');
-            // console.log('Verification - accessToken:', Cookies.get('accessToken')?.substring(0, 20) + '...');
-            // console.log('Verification - refreshToken:', Cookies.get('refreshToken')?.substring(0, 20) + '...');
-            // console.log('Verification - username:', Cookies.get('username'));
-            // console.log('Verification - email:', Cookies.get('email'));
-
             // Update state
             setAccessToken(token);
             setUser({ username: finalUsername, email: finalEmail });
@@ -196,7 +171,6 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = () => {
-        console.log('Logging out...');
 
         // Remove all cookies
         Cookies.remove('accessToken', { path: '/' });
@@ -208,7 +182,6 @@ export const AuthProvider = ({ children }) => {
         setAccessToken(null);
         setUser(null);
 
-        console.log('Logout complete');
     };
 
     // Get current valid access token (refresh if needed)

@@ -26,8 +26,20 @@ public class CustomUserDetailsService implements UserDetailsService {
                         loginIdentifier,
                         loginIdentifier
                 )
+                // The exact-match finder above misses "USER@x.com" against a row
+                // stored as "user@x.com"; the case-insensitive one catches it.
+                .or(() -> userRepository.findByEmailIgnoreCase(loginIdentifier))
                 .orElseThrow(() ->
                         new UsernameNotFoundException("User not found with identifier: " + loginIdentifier));
+
+        // A Google-only account has no password. Spring's User constructor throws
+        // IllegalArgumentException on a null one, which surfaces as an opaque 500
+        // with a stack trace instead of a failed login. Treat "no password
+        // credential" as "not a password-login account" and let the normal
+        // authentication failure path handle it.
+        if (user.getPassword() == null || user.getPassword().isBlank()) {
+            throw new UsernameNotFoundException("No password credential for identifier: " + loginIdentifier);
+        }
 
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),

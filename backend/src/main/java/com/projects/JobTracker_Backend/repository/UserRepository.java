@@ -13,6 +13,20 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByEmail(String email);
 
+    /*
+     * Emails are matched case-insensitively everywhere from here on: Google hands
+     * back a lowercased address, and an existing row stored as "Taral@Gmail.com"
+     * has to link to it rather than spawn a duplicate. The lower(email) unique
+     * index in the database is the backstop that keeps these finders honest.
+     */
+    Optional<User> findByEmailIgnoreCase(String email);
+
+    boolean existsByEmailIgnoreCase(String email);
+
+    Optional<User> findByUsernameIgnoreCase(String username);
+
+    boolean existsByUsernameIgnoreCase(String username);
+
     Optional<User> findByPhoneNumber(String phone);
 
     Optional<User> findByUsernameOrEmailOrPhoneNumber(String username, String email, String phone);
