@@ -1,5 +1,6 @@
 package com.projects.JobTracker_Backend.security;
 
+import com.projects.JobTracker_Backend.ratelimit.RateLimitFilter;
 import com.projects.JobTracker_Backend.service.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,6 +13,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
+import org.springframework.web.filter.CorsFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -25,6 +28,10 @@ public class WebSecurityConfig {
     CustomUserDetailsService userDetailsService;
     @Autowired
     private AuthEntryPointJwt unauthorizedHandler;
+    @Autowired
+    private RateLimitFilter rateLimitFilter;
+    @Autowired
+    private BrowserGuardFilter browserGuardFilter;
 
     @Value("#{'${frontend.urls}'.split(',')}")
     private List<String> frontendUrls;
@@ -65,7 +72,13 @@ public class WebSecurityConfig {
                                 .anyRequest().authenticated()
                 );
 
-        // Add the JWT Token filter before the UsernamePasswordAuthenticationFilter
+        // Order matters. CorsFilter runs first so that a 429 or a 403 from the two
+        // filters below still carries Access-Control-Allow-Origin and the browser can
+        // read the status instead of reporting an opaque CORS failure. Throttling then
+        // happens before the scripted-client check and before the JWT is parsed, so a
+        // flood of junk requests costs neither a token parse nor a database round-trip.
+        http.addFilterAfter(rateLimitFilter, CorsFilter.class);
+        http.addFilterBefore(browserGuardFilter, LogoutFilter.class);
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
@@ -78,6 +91,10 @@ public class WebSecurityConfig {
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
+        // Let the SPA read how much budget it has left before it gets throttled.
+        config.setExposedHeaders(List.of(
+                "X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset",
+                "Retry-After", "X-Encrypted"));
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
