@@ -124,7 +124,10 @@
        ANALYTICS
   ═══════════════════════════════════════════ -->
   <script defer src="https://cloud.umami.is/script.js" data-website-id="5c7aa455-7e49-4135-b9b3-207fbc745fd6"></script>
-</head>
+    <!-- Google Identity Services. Loaded from the script tag rather than
+         @react-oauth/google, whose peer range does not cover React 19. -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+  </head>
 
 <body>
   <div id="root"></div>

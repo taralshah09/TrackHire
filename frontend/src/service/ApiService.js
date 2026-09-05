@@ -1,5 +1,5 @@
 import Cookies from 'js-cookie';
-import { maybeDecrypt } from '../utils/crypto';
+import { maybeDecrypt, encryptPayload } from '../utils/crypto';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -64,11 +64,19 @@ const withDecryption = (response) => {
 /** One entry per GET that is currently on the wire, keyed by URL + token. */
 const inFlightGets = new Map();
 
-/** A single attempt, including the refresh-and-retry dance on a 401. */
-const sendRequest = async (endpoint, options, headers) => {
+/**
+ * A single attempt, including the refresh-and-retry dance on a 401.
+ *
+ * `skipAuthRetry` exists because the auth endpoints legitimately answer 401:
+ * a wrong password, a bad Google ID token. Treating those as an expired access
+ * token sends the SPA off to refresh a session it does not have, which clears
+ * the cookies and hard-navigates to /login before the caller can even show the
+ * error. Every /auth/* call passes it.
+ */
+const sendRequest = async (endpoint, options, headers, skipAuthRetry = false) => {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
 
-    if (response.status === 401) {
+    if (response.status === 401 && !skipAuthRetry) {
         const newAccessToken = await refreshAccessToken();
         return fetch(`${API_BASE_URL}${endpoint}`, {
             ...options,
@@ -81,22 +89,31 @@ const sendRequest = async (endpoint, options, headers) => {
 
 // Main API request function with automatic token refresh
 export const apiRequest = async (endpoint, options = {}) => {
+    const { encryptBody, skipAuthRetry = false, ...rest } = options;
     const accessToken = getAccessToken();
-    const method = (options.method || 'GET').toUpperCase();
+    const method = (rest.method || 'GET').toUpperCase();
 
     const headers = {
         'Content-Type': 'application/json',
-        ...options.headers,
+        ...rest.headers,
     };
 
     if (accessToken) {
         headers['Authorization'] = `Bearer ${accessToken}`;
     }
 
+    // The body goes out in the same AES-GCM envelope the backend already uses
+    // for responses, so @DecryptedRequest can unwrap it. Note the honest limit:
+    // the key ships in this bundle, so this raises the cost of scripted signup
+    // and credential stuffing — TLS is what protects the body.
+    if (encryptBody && rest.body) {
+        rest.body = JSON.stringify(await encryptPayload(JSON.parse(rest.body)));
+    }
+
     try {
         // Writes are never shared — two POSTs are two intentional actions.
         if (method !== 'GET') {
-            return withDecryption(await sendRequest(endpoint, options, headers));
+            return withDecryption(await sendRequest(endpoint, rest, headers, skipAuthRetry));
         }
 
         // Two components (or React StrictMode's double-mount in dev) asking for
@@ -107,7 +124,7 @@ export const apiRequest = async (endpoint, options = {}) => {
         let pending = inFlightGets.get(key);
 
         if (!pending) {
-            pending = sendRequest(endpoint, options, headers)
+            pending = sendRequest(endpoint, rest, headers, skipAuthRetry)
                 .finally(() => inFlightGets.delete(key));
             inFlightGets.set(key, pending);
         }
@@ -149,6 +166,41 @@ export const api = {
 
     delete: (endpoint, options = {}) =>
         apiRequest(endpoint, { ...options, method: 'DELETE' }),
+
+    /** POST with an AES-GCM encrypted body, for the endpoints marked @DecryptedRequest. */
+    postEncrypted: (endpoint, data, options = {}) =>
+        apiRequest(endpoint, {
+            ...options,
+            method: 'POST',
+            body: JSON.stringify(data),
+            encryptBody: true,
+        }),
+
+    // Auth — every one of these skips the 401 refresh-and-retry, because a 401
+    // here means "those credentials are wrong", not "your session lapsed".
+    login: (loginIdentifier, password) =>
+        api.postEncrypted('/auth/login', { loginIdentifier, password }, { skipAuthRetry: true }),
+
+    googleSignIn: (credential) =>
+        api.postEncrypted('/auth/google', { credential }, { skipAuthRetry: true }),
+
+    googleComplete: (signupToken, username) =>
+        api.postEncrypted('/auth/google/complete', { signupToken, username }, { skipAuthRetry: true }),
+
+    registerStart: (payload) =>
+        api.postEncrypted('/auth/register/start', payload, { skipAuthRetry: true }),
+
+    registerVerify: (email, otp) =>
+        api.postEncrypted('/auth/register/verify', { email, otp }, { skipAuthRetry: true }),
+
+    registerResend: (email) =>
+        api.postEncrypted('/auth/register/resend', { email }, { skipAuthRetry: true }),
+
+    usernameAvailable: (u) =>
+        apiRequest(`/auth/username-available?u=${encodeURIComponent(u)}`, {
+            method: 'GET',
+            skipAuthRetry: true,
+        }),
 
     // Public Endpoints
     getFeaturedJobs: (category) =>

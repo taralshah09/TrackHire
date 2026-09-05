@@ -3,6 +3,8 @@ import { toast } from 'react-hot-toast';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
+import api from '../service/ApiService';
+import GoogleSignInButton from '../components/GoogleSignInButton';
 
 export default function LoginPage() {
     const location = useLocation();
@@ -21,11 +23,10 @@ export default function LoginPage() {
         setErrorMsg('');
         setLoading(true);
         try {
-            const response = await fetch(import.meta.env.VITE_API_BASE_URL + '/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData),
-            });
+            // Through ApiService so the body goes out encrypted and a 401 is not
+            // mistaken for an expired session (which would hard-navigate away
+            // before this error is ever shown).
+            const response = await api.login(formData.loginIdentifier, formData.password);
             const data = await response.json();
             if (response.ok && data.token && data.refreshToken) {
                 const ok = login(data);
@@ -36,6 +37,12 @@ export default function LoginPage() {
                     setErrorMsg('Failed to save login session.');
                     toast.error('Failed to save login session.');
                 }
+            } else if (data.code === 'NO_PASSWORD_ACCOUNT') {
+                // Registered with Google and never set a password. Point at the
+                // button rather than repeating "invalid credentials".
+                const msg = 'Account not found. If you signed up with Google, continue with Google below.';
+                setErrorMsg(msg);
+                toast.error(msg);
             } else {
                 const msg = data.message || "We couldn't log you in. Check your email and password and try again.";
                 setErrorMsg(msg);
@@ -114,6 +121,16 @@ export default function LoginPage() {
                             Create a free account →
                         </Link>
                     </p>
+
+                    <div className="mb-6">
+                        <GoogleSignInButton />
+                    </div>
+
+                    <div className="flex items-center gap-4 mb-6">
+                        <span className="flex-1 h-[3px] bg-brutalist-black"></span>
+                        <span className="font-label-mono font-black text-[11px] uppercase">or</span>
+                        <span className="flex-1 h-[3px] bg-brutalist-black"></span>
+                    </div>
 
                     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
                         <div className="flex flex-col gap-2">

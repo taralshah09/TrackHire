@@ -28,7 +28,7 @@ public class RateLimitProperties {
     private int defaultWindowSeconds = 60;
 
     /** Requests allowed per window for login / register / refresh. */
-    private int authLimit = 10;
+    private int authLimit = 50;
 
     /** Window length for the auth tier — deliberately long to slow credential stuffing. */
     private int authWindowSeconds = 300;
