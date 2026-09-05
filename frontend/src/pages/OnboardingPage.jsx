@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../service/ApiService';
 import Cookies from 'js-cookie';
-import { FaPlus, FaTimes, FaCheckCircle, FaArrowRight, FaArrowLeft, FaBell, FaBriefcase, FaCode, FaRocket } from 'react-icons/fa';
+import { FiPlus, FiX, FiCheck, FiArrowRight, FiArrowLeft, FiBriefcase, FiCode, FiZap } from 'react-icons/fi';
 
 /* ── Constants ── */
 const ROLE_TYPE_OPTIONS = [
@@ -25,20 +25,71 @@ const SUGGESTED_SKILLS = [
     'C++', 'Go', 'Kubernetes', 'MongoDB', 'GraphQL',
 ];
 
-/* ── Shared styles ── */
-const inputStyle = {
-    width: '100%',
-    background: 'var(--color-surface-3)',
-    border: '1px solid var(--color-border)',
-    borderRadius: '10px',
-    padding: '12px 16px',
-    fontFamily: 'var(--font-body)',
-    fontSize: '14px',
-    color: 'var(--color-white)',
-    outline: 'none',
-    transition: 'border-color 0.2s, box-shadow 0.2s',
-    boxSizing: 'border-box',
-};
+/* ── Shared styles ──
+   Tailwind's margin/padding utilities are inert in this app (the v4 preflight
+   wins over them), which is why spacing is written inline here, as it is on the
+   other brand pages. */
+const INPUT_CLASS = 'w-full bg-pure-white border-[3px] border-brutalist-black font-body-lg text-base outline-none focus:border-vibrant-orange transition-colors';
+const ADD_BUTTON_CLASS = 'flex items-center justify-center gap-2 border-[3px] border-brutalist-black bg-pure-white text-brutalist-black hover:bg-vibrant-orange hover:text-pure-white font-label-mono font-bold uppercase text-xs whitespace-nowrap transition-all active-btn';
+const SECTION_LABEL_CLASS = 'font-label-mono font-bold text-[10px] uppercase tracking-widest text-brutalist-black opacity-50';
+
+/** Square, bordered toggle used for the suggestion chips and the role types. */
+function ToggleChip({ active, onClick, children, size = 'sm' }) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className={`flex items-center gap-2 border-[3px] border-brutalist-black font-label-mono font-bold uppercase transition-all active-btn ${size === 'sm' ? 'text-[11px]' : 'text-xs justify-center text-center'
+                } ${active
+                    ? 'bg-vibrant-orange text-pure-white'
+                    : 'bg-pure-white text-brutalist-black hover:bg-brutalist-black hover:text-pure-white'
+                }`}
+            style={{
+                padding: size === 'sm' ? '8px 12px' : '14px 12px',
+                boxShadow: active ? '4px 4px 0px 0px #060608' : '0px 0px 0px 0px #060608',
+            }}
+        >
+            {active && <FiCheck className="shrink-0" />}
+            {children}
+        </button>
+    );
+}
+
+/** Selected tag with a remove control. */
+function SelectedTag({ label, onRemove }) {
+    return (
+        <span
+            className="flex items-center gap-2 border-[3px] border-brutalist-black bg-brutalist-black text-pure-white font-label-mono font-bold uppercase text-[11px]"
+            style={{ padding: '6px 8px 6px 12px' }}
+        >
+            {label}
+            <button
+                type="button"
+                onClick={onRemove}
+                aria-label={`Remove ${label}`}
+                className="flex items-center hover:text-vibrant-orange transition-colors"
+            >
+                <FiX />
+            </button>
+        </span>
+    );
+}
+
+/** Section heading shared by the three preference steps. */
+function StepHeading({ icon, title, subtitle }) {
+    return (
+        <div style={{ marginBottom: '32px' }}>
+            <div
+                className="w-12 h-12 border-[3px] border-brutalist-black bg-vibrant-orange text-pure-white flex items-center justify-center text-xl"
+                style={{ boxShadow: '4px 4px 0px 0px #060608', marginBottom: '20px' }}
+            >
+                {icon}
+            </div>
+            <h2 className="font-black text-3xl uppercase leading-none" style={{ marginBottom: '10px' }}>{title}</h2>
+            <p className="font-label-mono font-bold text-sm text-brutalist-black opacity-80">{subtitle}</p>
+        </div>
+    );
+}
 
 export default function OnboardingPage() {
     const navigate = useNavigate();
@@ -128,35 +179,20 @@ export default function OnboardingPage() {
 
     /* ── Step renderers ── */
     const renderWelcome = () => (
-        <div style={{ textAlign: 'center', padding: '20px 0' }}>
-            <div style={{
-                width: '80px', height: '80px', borderRadius: '20px',
-                background: 'linear-gradient(135deg, rgba(249,115,22,0.2) 0%, rgba(249,115,22,0.05) 100%)',
-                border: '1px solid rgba(249,115,22,0.3)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                margin: '0 auto 24px', fontSize: '36px',
-            }}>
-                🚀
+        <div>
+            <div
+                className="w-16 h-16 border-[3px] border-brutalist-black bg-vibrant-orange text-pure-white flex items-center justify-center text-3xl"
+                style={{ boxShadow: '4px 4px 0px 0px #060608', marginBottom: '28px' }}
+            >
+                <FiZap />
             </div>
-            <h1 style={{
-                fontFamily: 'var(--font-display)', fontWeight: 800,
-                fontSize: 'clamp(26px, 4vw, 36px)', letterSpacing: '-0.03em',
-                color: 'var(--color-white)', margin: '0 0 12px',
-                lineHeight: 1.2,
-            }}>
-                Welcome, <span style={{ color: 'var(--color-orange)' }}>{firstName}</span>!
+            <h1 className="font-black text-4xl uppercase leading-none" style={{ marginBottom: '20px' }}>
+                Welcome,<br /><span className="text-vibrant-orange">{firstName}</span>!
             </h1>
-            <p style={{
-                fontFamily: 'var(--font-body)', fontSize: '16px',
-                color: 'var(--color-white-65)', lineHeight: 1.7,
-                maxWidth: '460px', margin: '0 auto 8px',
-            }}>
+            <p className="font-label-mono font-bold text-sm text-brutalist-black opacity-80 max-w-md" style={{ marginBottom: '16px' }}>
                 Let's personalize your experience. We'll set up your job notification preferences so you get matched with the right opportunities.
             </p>
-            <p style={{
-                fontFamily: 'var(--font-body)', fontSize: '13px',
-                color: 'var(--color-white-40)', margin: '0 auto',
-            }}>
+            <p className="font-label-mono font-bold text-xs text-brutalist-black opacity-50">
                 This takes less than a minute. You can also skip and set up later.
             </p>
         </div>
@@ -164,128 +200,56 @@ export default function OnboardingPage() {
 
     const renderJobTitles = () => (
         <div>
-            <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-                <div style={{
-                    width: '48px', height: '48px', borderRadius: '14px',
-                    background: 'rgba(99,102,241,0.15)',
-                    border: '1px solid rgba(99,102,241,0.3)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    margin: '0 auto 16px', color: '#818cf8', fontSize: '18px',
-                }}>
-                    <FaBriefcase />
-                </div>
-                <h2 style={{
-                    fontFamily: 'var(--font-display)', fontWeight: 800,
-                    fontSize: '22px', color: 'var(--color-white)',
-                    margin: '0 0 8px', letterSpacing: '-0.02em',
-                }}>
-                    What roles are you looking for?
-                </h2>
-                <p style={{
-                    fontFamily: 'var(--font-body)', fontSize: '14px',
-                    color: 'var(--color-white-40)', margin: 0,
-                }}>
-                    Add job titles you're interested in. We'll notify you when they show up.
-                </p>
-            </div>
+            <StepHeading
+                icon={<FiBriefcase />}
+                title="What roles are you looking for?"
+                subtitle="Add job titles you're interested in. We'll notify you when they show up."
+            />
 
             {/* Suggested titles */}
-            <div style={{ marginBottom: '20px' }}>
-                <p style={{
-                    fontFamily: 'var(--font-display)', fontWeight: 700,
-                    fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase',
-                    color: 'var(--color-white-40)', marginBottom: '10px',
-                }}>
-                    Popular picks
-                </p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            <div style={{ marginBottom: '24px' }}>
+                <p className={SECTION_LABEL_CLASS} style={{ marginBottom: '12px' }}>Popular picks</p>
+                <div className="flex flex-wrap gap-2">
                     {SUGGESTED_TITLES.map(t => {
                         const added = jobTitles.includes(t);
                         return (
-                            <button
-                                key={t}
-                                onClick={() => added ? removeTitle(t) : addTitle(t)}
-                                style={{
-                                    fontFamily: 'var(--font-display)', fontWeight: 700,
-                                    fontSize: '11px', letterSpacing: '0.05em',
-                                    padding: '7px 14px', borderRadius: '999px',
-                                    cursor: 'pointer', transition: 'all 0.2s',
-                                    background: added ? 'rgba(99,102,241,0.20)' : 'var(--color-surface-3)',
-                                    color: added ? '#a5b4fc' : 'var(--color-white-40)',
-                                    border: added ? '1px solid rgba(99,102,241,0.40)' : '1px solid var(--color-border)',
-                                }}
-                            >
-                                {added && <FaCheckCircle style={{ marginRight: '5px', fontSize: '9px' }} />}
+                            <ToggleChip key={t} active={added} onClick={() => added ? removeTitle(t) : addTitle(t)}>
                                 {t}
-                            </button>
+                            </ToggleChip>
                         );
                     })}
                 </div>
             </div>
 
             {/* Custom input */}
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div className="flex flex-col sm:flex-row gap-3">
                 <input
                     value={newTitle}
                     onChange={e => setNewTitle(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && addTitle()}
                     placeholder="Or type a custom title…"
-                    style={{
-                        ...inputStyle, flex: 1, borderStyle: 'dashed',
-                    }}
-                    onFocus={e => { e.target.style.borderColor = '#6366f1'; e.target.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.12)'; }}
-                    onBlur={e => { e.target.style.borderColor = 'var(--color-border)'; e.target.style.boxShadow = 'none'; }}
+                    className={`${INPUT_CLASS} flex-1`}
+                    style={{ padding: '12px 16px' }}
                 />
                 <button
+                    type="button"
                     onClick={() => addTitle()}
-                    style={{
-                        display: 'flex', alignItems: 'center', gap: '6px',
-                        padding: '10px 18px', borderRadius: '10px',
-                        background: 'rgba(99,102,241,0.15)',
-                        color: '#818cf8',
-                        border: '1px solid rgba(99,102,241,0.30)',
-                        cursor: 'pointer', fontFamily: 'var(--font-display)',
-                        fontWeight: 700, fontSize: '12px', whiteSpace: 'nowrap',
-                        transition: 'all 0.2s',
-                    }}
+                    className={ADD_BUTTON_CLASS}
+                    style={{ padding: '12px 18px', boxShadow: '4px 4px 0px 0px #060608' }}
                 >
-                    <FaPlus style={{ fontSize: '10px' }} /> Add
+                    <FiPlus /> Add
                 </button>
             </div>
 
             {/* Selected tags */}
             {jobTitles.length > 0 && (
-                <div style={{ marginTop: '16px' }}>
-                    <p style={{
-                        fontFamily: 'var(--font-display)', fontWeight: 700,
-                        fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase',
-                        color: 'var(--color-white-40)', marginBottom: '10px',
-                    }}>
+                <div style={{ marginTop: '24px' }}>
+                    <p className={SECTION_LABEL_CLASS} style={{ marginBottom: '12px' }}>
                         Selected ({jobTitles.length})
                     </p>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    <div className="flex flex-wrap gap-2">
                         {jobTitles.map(t => (
-                            <span key={t} style={{
-                                display: 'flex', alignItems: 'center', gap: '6px',
-                                fontFamily: 'var(--font-display)', fontWeight: 700,
-                                fontSize: '11px', letterSpacing: '0.06em',
-                                background: 'rgba(99,102,241,0.12)',
-                                color: '#a5b4fc',
-                                border: '1px solid rgba(99,102,241,0.25)',
-                                padding: '5px 10px 5px 12px', borderRadius: '999px',
-                            }}>
-                                {t}
-                                <button
-                                    onClick={() => removeTitle(t)}
-                                    style={{
-                                        background: 'none', border: 'none', cursor: 'pointer',
-                                        color: 'rgba(165,180,252,0.6)', fontSize: '10px',
-                                        display: 'flex', alignItems: 'center', padding: 0,
-                                    }}
-                                >
-                                    <FaTimes />
-                                </button>
-                            </span>
+                            <SelectedTag key={t} label={t} onRemove={() => removeTitle(t)} />
                         ))}
                     </div>
                 </div>
@@ -295,128 +259,56 @@ export default function OnboardingPage() {
 
     const renderSkills = () => (
         <div>
-            <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-                <div style={{
-                    width: '48px', height: '48px', borderRadius: '14px',
-                    background: 'var(--color-orange-dim)',
-                    border: '1px solid var(--color-orange-border)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    margin: '0 auto 16px', color: 'var(--color-orange)', fontSize: '18px',
-                }}>
-                    <FaCode />
-                </div>
-                <h2 style={{
-                    fontFamily: 'var(--font-display)', fontWeight: 800,
-                    fontSize: '22px', color: 'var(--color-white)',
-                    margin: '0 0 8px', letterSpacing: '-0.02em',
-                }}>
-                    What are your key skills?
-                </h2>
-                <p style={{
-                    fontFamily: 'var(--font-body)', fontSize: '14px',
-                    color: 'var(--color-white-40)', margin: 0,
-                }}>
-                    Jobs mentioning these skills will rank higher in your digest.
-                </p>
-            </div>
+            <StepHeading
+                icon={<FiCode />}
+                title="What are your key skills?"
+                subtitle="Jobs mentioning these skills will rank higher in your digest."
+            />
 
             {/* Suggested skills */}
-            <div style={{ marginBottom: '20px' }}>
-                <p style={{
-                    fontFamily: 'var(--font-display)', fontWeight: 700,
-                    fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase',
-                    color: 'var(--color-white-40)', marginBottom: '10px',
-                }}>
-                    Popular skills
-                </p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            <div style={{ marginBottom: '24px' }}>
+                <p className={SECTION_LABEL_CLASS} style={{ marginBottom: '12px' }}>Popular skills</p>
+                <div className="flex flex-wrap gap-2">
                     {SUGGESTED_SKILLS.map(s => {
                         const added = skills.includes(s);
                         return (
-                            <button
-                                key={s}
-                                onClick={() => added ? removeSkill(s) : addSkill(s)}
-                                style={{
-                                    fontFamily: 'var(--font-display)', fontWeight: 700,
-                                    fontSize: '11px', letterSpacing: '0.05em',
-                                    padding: '7px 14px', borderRadius: '999px',
-                                    cursor: 'pointer', transition: 'all 0.2s',
-                                    background: added ? 'var(--color-orange-dim)' : 'var(--color-surface-3)',
-                                    color: added ? 'var(--color-orange)' : 'var(--color-white-40)',
-                                    border: added ? '1px solid var(--color-orange-border)' : '1px solid var(--color-border)',
-                                }}
-                            >
-                                {added && <FaCheckCircle style={{ marginRight: '5px', fontSize: '9px' }} />}
+                            <ToggleChip key={s} active={added} onClick={() => added ? removeSkill(s) : addSkill(s)}>
                                 {s}
-                            </button>
+                            </ToggleChip>
                         );
                     })}
                 </div>
             </div>
 
             {/* Custom input */}
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div className="flex flex-col sm:flex-row gap-3">
                 <input
                     value={newSkill}
                     onChange={e => setNewSkill(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && addSkill()}
                     placeholder="Or type a custom skill…"
-                    style={{
-                        ...inputStyle, flex: 1, borderStyle: 'dashed',
-                    }}
-                    onFocus={e => { e.target.style.borderColor = 'var(--color-orange)'; e.target.style.boxShadow = '0 0 0 3px rgba(249,115,22,0.12)'; }}
-                    onBlur={e => { e.target.style.borderColor = 'var(--color-border)'; e.target.style.boxShadow = 'none'; }}
+                    className={`${INPUT_CLASS} flex-1`}
+                    style={{ padding: '12px 16px' }}
                 />
                 <button
+                    type="button"
                     onClick={() => addSkill()}
-                    style={{
-                        display: 'flex', alignItems: 'center', gap: '6px',
-                        padding: '10px 18px', borderRadius: '10px',
-                        background: 'var(--color-orange-dim)',
-                        color: 'var(--color-orange)',
-                        border: '1px solid var(--color-orange-border)',
-                        cursor: 'pointer', fontFamily: 'var(--font-display)',
-                        fontWeight: 700, fontSize: '12px', whiteSpace: 'nowrap',
-                        transition: 'all 0.2s',
-                    }}
+                    className={ADD_BUTTON_CLASS}
+                    style={{ padding: '12px 18px', boxShadow: '4px 4px 0px 0px #060608' }}
                 >
-                    <FaPlus style={{ fontSize: '10px' }} /> Add
+                    <FiPlus /> Add
                 </button>
             </div>
 
             {/* Selected tags */}
             {skills.length > 0 && (
-                <div style={{ marginTop: '16px' }}>
-                    <p style={{
-                        fontFamily: 'var(--font-display)', fontWeight: 700,
-                        fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase',
-                        color: 'var(--color-white-40)', marginBottom: '10px',
-                    }}>
+                <div style={{ marginTop: '24px' }}>
+                    <p className={SECTION_LABEL_CLASS} style={{ marginBottom: '12px' }}>
                         Selected ({skills.length})
                     </p>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    <div className="flex flex-wrap gap-2">
                         {skills.map(s => (
-                            <span key={s} style={{
-                                display: 'flex', alignItems: 'center', gap: '6px',
-                                fontFamily: 'var(--font-display)', fontWeight: 700,
-                                fontSize: '11px', letterSpacing: '0.06em',
-                                background: 'var(--color-surface-3)',
-                                color: 'var(--color-white-65)',
-                                border: '1px solid var(--color-border)',
-                                padding: '5px 10px 5px 12px', borderRadius: '999px',
-                            }}>
-                                {s}
-                                <button
-                                    onClick={() => removeSkill(s)}
-                                    style={{
-                                        background: 'none', border: 'none', cursor: 'pointer',
-                                        color: 'var(--color-white-40)', fontSize: '10px',
-                                        display: 'flex', alignItems: 'center', padding: 0,
-                                    }}
-                                >
-                                    <FaTimes />
-                                </button>
-                            </span>
+                            <SelectedTag key={s} label={s} onRemove={() => removeSkill(s)} />
                         ))}
                     </div>
                 </div>
@@ -426,80 +318,22 @@ export default function OnboardingPage() {
 
     const renderRoleTypes = () => (
         <div>
-            <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-                <div style={{
-                    width: '48px', height: '48px', borderRadius: '14px',
-                    background: 'rgba(34,197,94,0.15)',
-                    border: '1px solid rgba(34,197,94,0.3)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    margin: '0 auto 16px', color: '#4ade80', fontSize: '18px',
-                }}>
-                    <FaRocket />
-                </div>
-                <h2 style={{
-                    fontFamily: 'var(--font-display)', fontWeight: 800,
-                    fontSize: '22px', color: 'var(--color-white)',
-                    margin: '0 0 8px', letterSpacing: '-0.02em',
-                }}>
-                    What type of roles suit you?
-                </h2>
-                <p style={{
-                    fontFamily: 'var(--font-body)', fontSize: '14px',
-                    color: 'var(--color-white-40)', margin: 0,
-                }}>
-                    Pick what matches your experience level and work style.
-                </p>
-            </div>
+            <StepHeading
+                icon={<FiZap />}
+                title="What type of roles suit you?"
+                subtitle="Pick what matches your experience level and work style."
+            />
 
-            <div style={{
-                display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
-                gap: '10px',
-            }}>
-                {ROLE_TYPE_OPTIONS.map(type => {
-                    const active = roleTypes.includes(type);
-                    return (
-                        <button
-                            key={type}
-                            onClick={() => toggleRole(type)}
-                            style={{
-                                fontFamily: 'var(--font-display)', fontWeight: 700,
-                                fontSize: '12px', letterSpacing: '0.05em',
-                                padding: '14px 16px', borderRadius: '12px',
-                                cursor: 'pointer', transition: 'all 0.2s',
-                                textAlign: 'center',
-                                background: active ? 'rgba(34,197,94,0.15)' : 'var(--color-surface-3)',
-                                color: active ? '#4ade80' : 'var(--color-white-40)',
-                                border: active ? '1px solid rgba(34,197,94,0.40)' : '1px solid var(--color-border)',
-                                boxShadow: active ? '0 0 0 2px rgba(34,197,94,0.12)' : 'none',
-                            }}
-                            onMouseEnter={e => {
-                                if (!active) {
-                                    e.currentTarget.style.background = 'rgba(34,197,94,0.08)';
-                                    e.currentTarget.style.color = '#86efac';
-                                    e.currentTarget.style.borderColor = 'rgba(34,197,94,0.25)';
-                                }
-                            }}
-                            onMouseLeave={e => {
-                                if (!active) {
-                                    e.currentTarget.style.background = 'var(--color-surface-3)';
-                                    e.currentTarget.style.color = 'var(--color-white-40)';
-                                    e.currentTarget.style.borderColor = 'var(--color-border)';
-                                }
-                            }}
-                        >
-                            {active && <FaCheckCircle style={{ marginRight: '6px', fontSize: '10px' }} />}
-                            {type}
-                        </button>
-                    );
-                })}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {ROLE_TYPE_OPTIONS.map(type => (
+                    <ToggleChip key={type} size="lg" active={roleTypes.includes(type)} onClick={() => toggleRole(type)}>
+                        {type}
+                    </ToggleChip>
+                ))}
             </div>
 
             {roleTypes.length > 0 && (
-                <p style={{
-                    fontFamily: 'var(--font-body)', fontSize: '12px',
-                    color: 'var(--color-white-40)', textAlign: 'center',
-                    marginTop: '16px',
-                }}>
+                <p className="font-label-mono font-bold text-xs uppercase text-brutalist-black opacity-50" style={{ marginTop: '24px' }}>
                     {roleTypes.length} role type{roleTypes.length !== 1 ? 's' : ''} selected
                 </p>
             )}
@@ -511,190 +345,166 @@ export default function OnboardingPage() {
     const isLastStep = step === totalSteps - 1;
 
     return (
-        <div style={{
-            minHeight: '100vh',
-            background: 'var(--color-bg)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: '24px', fontFamily: 'var(--font-body)',
-        }}>
+        <div
+            className="ob-shell min-h-screen bg-surface flex items-center justify-center font-body-lg text-brutalist-black selection:bg-vibrant-orange selection:text-pure-white overflow-hidden relative"
+            style={{ padding: '48px' }}
+        >
             <style>{`
-                @keyframes fadeSlideIn {
-                    from { opacity: 0; transform: translateY(16px); }
-                    to   { opacity: 1; transform: translateY(0); }
+                .sticker-rotate-pos { transform: rotate(3deg); }
+                .sticker-rotate-neg { transform: rotate(-3deg); }
+                .active-btn:active {
+                    transform: translate(4px, 4px) !important;
+                    box-shadow: 0px 0px 0px 0px #060608 !important;
                 }
-                @keyframes float {
-                    0%, 100% { transform: translateY(0px); }
-                    50% { transform: translateY(-6px); }
-                }
-                @media (max-width: 600px) {
-                    .onboarding-card { max-width: 100% !important; padding: 28px 20px !important; }
+                @media (max-width: 640px) {
+                    .ob-shell { padding: 20px !important; }
+                    .ob-panel { padding: 24px !important; }
                 }
             `}</style>
 
-            {/* Background decorations */}
-            <div style={{
-                position: 'fixed', top: '-120px', right: '-120px',
-                width: '400px', height: '400px',
-                background: 'radial-gradient(circle, rgba(249,115,22,0.06) 0%, transparent 70%)',
-                borderRadius: '50%', pointerEvents: 'none',
-            }} />
-            <div style={{
-                position: 'fixed', bottom: '-100px', left: '-100px',
-                width: '350px', height: '350px',
-                background: 'radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 70%)',
-                borderRadius: '50%', pointerEvents: 'none',
-            }} />
+            {/* Background grid */}
+            <div className="absolute inset-0 pointer-events-none opacity-20" style={{
+                backgroundImage: 'linear-gradient(to right, #060608 1px, transparent 1px), linear-gradient(to bottom, #060608 1px, transparent 1px)',
+                backgroundSize: '64px 64px'
+            }}></div>
 
             <div
-                className="onboarding-card"
-                style={{
-                    width: '100%', maxWidth: '560px',
-                    background: 'var(--color-surface-1)',
-                    border: '1px solid var(--color-border)',
-                    borderRadius: '20px',
-                    padding: '40px 36px',
-                    position: 'relative',
-                    animation: 'fadeSlideIn 0.5s ease-out',
-                }}
+                className="w-full max-w-5xl bg-pure-white border-[4px] border-brutalist-black rounded-none flex flex-col md:flex-row min-h-[600px] z-10"
+                style={{ boxShadow: '12px 12px 0px 0px #060608' }}
             >
-                {/* Logo */}
-                <div style={{
-                    fontFamily: 'var(--font-display)', fontWeight: 800,
-                    fontSize: '18px', color: 'var(--color-white)',
-                    letterSpacing: '-0.02em', marginBottom: '8px',
-                    textAlign: 'center',
-                }}>
-                    Track<span style={{ color: 'var(--color-orange)' }}>H</span>ire
-                </div>
+                {/* Left Panel — branding + progress */}
+                <div
+                    className="ob-panel hidden md:flex flex-col md:w-[38%] border-r-[4px] border-brutalist-black bg-vibrant-orange text-brutalist-black justify-between relative overflow-hidden"
+                    style={{ padding: '48px' }}
+                >
+                    {/* decorative star */}
+                    <svg width="56" height="56" viewBox="0 0 100 100" className="absolute bottom-8 right-8 fill-pure-white stroke-brutalist-black stroke-[4px] hidden lg:block sticker-rotate-pos pointer-events-none z-0">
+                        <polygon points="50,5 62,38 95,50 62,62 50,95 38,62 5,50 38,38" strokeLinejoin="round" />
+                    </svg>
 
-                {/* Progress bar */}
-                <div style={{ marginBottom: '32px' }}>
-                    <div style={{
-                        display: 'flex', justifyContent: 'space-between',
-                        marginBottom: '8px',
-                    }}>
-                        <span style={{
-                            fontFamily: 'var(--font-display)', fontWeight: 700,
-                            fontSize: '10px', letterSpacing: '0.12em',
-                            textTransform: 'uppercase', color: 'var(--color-white-40)',
-                        }}>
-                            Step {step + 1} of {totalSteps}
-                        </span>
-                        <span style={{
-                            fontFamily: 'var(--font-display)', fontWeight: 700,
-                            fontSize: '10px', letterSpacing: '0.08em',
-                            color: 'var(--color-orange)',
-                        }}>
-                            {stepLabels[step]}
-                        </span>
+                    <div className="relative z-10">
+                        <Link
+                            to="/"
+                            className="font-headline-md text-3xl uppercase tracking-tighter block border-b-[3px] border-brutalist-black inline-block"
+                            style={{ paddingBottom: '8px', marginBottom: '48px' }}
+                        >
+                            TRACK<span className="text-pure-white">HIRE</span>
+                        </Link>
+                        <h1 className="font-black text-5xl uppercase leading-none" style={{ marginBottom: '24px' }}>
+                            Set<br />Up.
+                        </h1>
+                        <p className="font-label-mono font-bold text-base max-w-sm">
+                            Tell us what you want. <br />We'll do the hunting.
+                        </p>
                     </div>
-                    <div style={{
-                        height: '3px', borderRadius: '999px',
-                        background: 'var(--color-border)', overflow: 'hidden',
-                    }}>
-                        <div style={{
-                            height: '100%', borderRadius: '999px',
-                            background: 'linear-gradient(90deg, var(--color-orange), #f59e0b)',
-                            width: `${((step + 1) / totalSteps) * 100}%`,
-                            transition: 'width 0.4s ease',
-                        }} />
+
+                    {/* Step list, doubling as the progress indicator */}
+                    <div className="relative z-10 flex flex-col gap-3" style={{ marginTop: '48px' }}>
+                        {stepLabels.map((labelText, i) => {
+                            const done = i < step;
+                            const current = i === step;
+                            return (
+                                <div
+                                    key={labelText}
+                                    className={`flex items-center gap-4 border-[3px] border-brutalist-black w-max ${current ? 'bg-brutalist-black text-pure-white sticker-rotate-neg' : 'bg-pure-white text-brutalist-black'
+                                        }`}
+                                    style={{ boxShadow: '4px 4px 0px 0px #060608', padding: '8px 16px' }}
+                                >
+                                    <span className={`font-black text-xl min-w-[28px] ${current || done ? 'text-vibrant-orange' : ''}`}>
+                                        {done ? <FiCheck /> : i + 1}
+                                    </span>
+                                    <span className="font-label-mono text-sm font-bold uppercase">{labelText}</span>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
 
-                {/* Step content */}
-                <div key={step} style={{ animation: 'fadeSlideIn 0.35s ease-out' }}>
-                    {steps[step]()}
-                </div>
-
-                {/* Navigation buttons */}
-                <div style={{
-                    display: 'flex', justifyContent: 'space-between',
-                    alignItems: 'center', marginTop: '32px',
-                    gap: '12px',
-                }}>
-                    {/* Left side — Back or Skip */}
+                {/* Right Panel — step content */}
+                <div className="ob-panel flex-1 flex flex-col justify-between bg-pure-white relative" style={{ padding: '48px' }}>
                     <div>
+                        {/* Mobile logo (the left panel is hidden at this width) */}
+                        <div className="md:hidden flex items-center justify-between" style={{ marginBottom: '32px' }}>
+                            <div className="font-headline-md text-2xl uppercase tracking-tighter border-b-[3px] border-brutalist-black inline-block" style={{ paddingBottom: '8px' }}>
+                                TRACK<span className="text-vibrant-orange">HIRE</span>
+                            </div>
+                        </div>
+
+                        {/* Progress bar */}
+                        <div style={{ marginBottom: '40px' }}>
+                            <div className="flex justify-between items-end" style={{ marginBottom: '10px' }}>
+                                <span className="font-label-mono font-bold text-[10px] uppercase tracking-widest">
+                                    Step {step + 1} of {totalSteps}
+                                </span>
+                                <span className="font-label-mono font-bold text-[10px] uppercase tracking-widest text-vibrant-orange">
+                                    {stepLabels[step]}
+                                </span>
+                            </div>
+                            <div className="h-[14px] border-[3px] border-brutalist-black bg-pure-white">
+                                <div
+                                    className="h-full bg-vibrant-orange transition-all duration-300"
+                                    style={{ width: `${((step + 1) / totalSteps) * 100}%` }}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Step content */}
+                        <div key={step}>{steps[step]()}</div>
+                    </div>
+
+                    {/* Navigation */}
+                    <div
+                        className="flex justify-between items-center gap-4 border-t-[3px] border-brutalist-black"
+                        style={{ marginTop: '48px', paddingTop: '32px' }}
+                    >
                         {step > 0 ? (
                             <button
+                                type="button"
                                 onClick={prev}
-                                style={{
-                                    display: 'flex', alignItems: 'center', gap: '6px',
-                                    fontFamily: 'var(--font-display)', fontWeight: 700,
-                                    fontSize: '13px', color: 'var(--color-white-40)',
-                                    background: 'none', border: 'none',
-                                    cursor: 'pointer', padding: '8px 0',
-                                    transition: 'color 0.2s',
-                                }}
-                                onMouseEnter={e => e.currentTarget.style.color = 'var(--color-white)'}
-                                onMouseLeave={e => e.currentTarget.style.color = 'var(--color-white-40)'}
+                                className="flex items-center gap-2 font-label-mono font-bold uppercase text-xs hover:text-vibrant-orange transition-colors"
                             >
-                                <FaArrowLeft style={{ fontSize: '11px' }} /> Back
+                                <FiArrowLeft /> Back
                             </button>
                         ) : (
                             <button
+                                type="button"
                                 onClick={handleSkip}
-                                style={{
-                                    fontFamily: 'var(--font-display)', fontWeight: 700,
-                                    fontSize: '13px', color: 'var(--color-white-40)',
-                                    background: 'none', border: 'none',
-                                    cursor: 'pointer', padding: '8px 0',
-                                    transition: 'color 0.2s',
-                                }}
-                                onMouseEnter={e => e.currentTarget.style.color = 'var(--color-white)'}
-                                onMouseLeave={e => e.currentTarget.style.color = 'var(--color-white-40)'}
+                                className="font-label-mono font-bold uppercase text-xs hover:text-vibrant-orange transition-colors"
                             >
                                 Skip for now
                             </button>
                         )}
-                    </div>
 
-                    {/* Right side — Next or Finish */}
-                    <button
-                        onClick={isLastStep ? handleFinish : next}
-                        disabled={saving}
-                        style={{
-                            display: 'flex', alignItems: 'center', gap: '8px',
-                            fontFamily: 'var(--font-display)', fontWeight: 700,
-                            fontSize: '14px', color: '#000',
-                            background: saving ? 'var(--color-white-20)' : 'var(--color-orange)',
-                            padding: '12px 28px',
-                            borderRadius: '10px', border: 'none',
-                            cursor: saving ? 'not-allowed' : 'pointer',
-                            transition: 'all 0.2s',
-                            boxShadow: '0 2px 12px rgba(249,115,22,0.25)',
-                        }}
-                        onMouseEnter={e => { if (!saving) e.currentTarget.style.background = 'var(--color-orange-hover)'; }}
-                        onMouseLeave={e => { if (!saving) e.currentTarget.style.background = 'var(--color-orange)'; }}
-                    >
-                        {saving ? 'Saving…' : isLastStep ? (
-                            <>Finish Setup <FaCheckCircle style={{ fontSize: '12px' }} /></>
-                        ) : step === 0 ? (
-                            <>Let's Go <FaArrowRight style={{ fontSize: '11px' }} /></>
-                        ) : (
-                            <>Continue <FaArrowRight style={{ fontSize: '11px' }} /></>
-                        )}
-                    </button>
-                </div>
-
-                {/* Skip link (on non-welcome steps) */}
-                {step > 0 && (
-                    <div style={{ textAlign: 'center', marginTop: '16px' }}>
                         <button
-                            onClick={handleSkip}
-                            style={{
-                                fontFamily: 'var(--font-body)', fontSize: '12px',
-                                color: 'var(--color-white-20)',
-                                background: 'none', border: 'none',
-                                cursor: 'pointer', padding: '4px 0',
-                                transition: 'color 0.2s',
-                            }}
-                            onMouseEnter={e => e.currentTarget.style.color = 'var(--color-white-40)'}
-                            onMouseLeave={e => e.currentTarget.style.color = 'var(--color-white-20)'}
+                            type="button"
+                            onClick={isLastStep ? handleFinish : next}
+                            disabled={saving}
+                            className="font-black uppercase text-lg bg-vibrant-orange text-pure-white border-[3px] border-brutalist-black transition-all hover:bg-brutalist-black disabled:opacity-50 disabled:cursor-not-allowed active-btn flex items-center gap-3"
+                            style={{ padding: '14px 28px', boxShadow: saving ? '0px 0px 0px 0px #060608' : '6px 6px 0px 0px #060608' }}
                         >
-                            Skip and set up later →
+                            {saving ? 'Saving…' : isLastStep ? (
+                                <>Finish Setup <FiCheck /></>
+                            ) : step === 0 ? (
+                                <>Let's Go <FiArrowRight /></>
+                            ) : (
+                                <>Continue <FiArrowRight /></>
+                            )}
                         </button>
                     </div>
-                )}
+
+                    {/* Skip link (on non-welcome steps) */}
+                    {step > 0 && (
+                        <div className="text-center" style={{ marginTop: '20px' }}>
+                            <button
+                                type="button"
+                                onClick={handleSkip}
+                                className="font-label-mono font-bold text-[10px] uppercase text-brutalist-black opacity-50 hover:opacity-100 hover:text-vibrant-orange transition-all"
+                            >
+                                Skip and set up later →
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

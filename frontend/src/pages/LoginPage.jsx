@@ -122,11 +122,13 @@ export default function LoginPage() {
                         </Link>
                     </p>
 
-                    <div className="mb-6">
+                    {/* Inline spacing: Tailwind's margin utilities are inert in this
+                        app, and the button's offset shadow needs the clearance. */}
+                    <div style={{ marginBottom: '28px' }}>
                         <GoogleSignInButton />
                     </div>
 
-                    <div className="flex items-center gap-4 mb-6">
+                    <div className="flex items-center gap-4" style={{ marginBottom: '24px' }}>
                         <span className="flex-1 h-[3px] bg-brutalist-black"></span>
                         <span className="font-label-mono font-black text-[11px] uppercase">or</span>
                         <span className="flex-1 h-[3px] bg-brutalist-black"></span>
