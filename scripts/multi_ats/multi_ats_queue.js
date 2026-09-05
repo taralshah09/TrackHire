@@ -5,10 +5,23 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const REDIS_URL = process.env.REDIS_URL;
 
-const REDIS_CONFIG = REDIS_URL ? {
-    url: REDIS_URL,
-    maxRetriesPerRequest: null
-} : {
+// ioredis ignores a `url` key inside an options object — passing one makes it
+// silently connect to localhost:6379 instead of the remote instance. So the URL
+// has to be broken out into the fields ioredis actually reads.
+function configFromUrl(rawUrl) {
+    const parsed = new URL(rawUrl);
+    return {
+        host: parsed.hostname,
+        port: parseInt(parsed.port, 10) || 6379,
+        username: parsed.username ? decodeURIComponent(parsed.username) : undefined,
+        password: parsed.password ? decodeURIComponent(parsed.password) : undefined,
+        // rediss:// means TLS (Upstash and most managed providers require it).
+        tls: parsed.protocol === "rediss:" ? {} : undefined,
+        maxRetriesPerRequest: null
+    };
+}
+
+const REDIS_CONFIG = REDIS_URL ? configFromUrl(REDIS_URL) : {
     host: process.env.REDIS_HOST || "127.0.0.1",
     port: parseInt(process.env.REDIS_PORT) || 6379,
     password: process.env.REDIS_PASSWORD || undefined,

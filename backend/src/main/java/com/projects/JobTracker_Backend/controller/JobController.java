@@ -9,13 +9,13 @@ import com.projects.JobTracker_Backend.service.ForYouService;
 import com.projects.JobTracker_Backend.service.FulltimeJobsService;
 import com.projects.JobTracker_Backend.service.InternJobsService;
 import com.projects.JobTracker_Backend.service.JobService;
+import com.projects.JobTracker_Backend.crypto.EncryptedResponse;
+import com.projects.JobTracker_Backend.util.PageRequestFactory;
 import com.projects.JobTracker_Backend.util.SecurityUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -34,6 +34,7 @@ public class JobController {
     private final FulltimeJobsService fulltimeJobsService;
     private final ForYouService forYouService;
     private final SecurityUtil securityUtil;
+    private final PageRequestFactory pageRequests;
 
     // ================== JOB BROWSING ==================
 
@@ -48,9 +49,7 @@ public class JobController {
             @RequestParam(defaultValue = "postedAt") String sort,
             @RequestParam(defaultValue = "DESC") String direction
     ) {
-        Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC") ?
-                Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort).and(Sort.by(Sort.Direction.DESC, "id")));
+        Pageable pageable = pageRequests.of(page, size, sort, direction);
 
         Page<JobDTO> jobs = jobService.getAllJobs(pageable, securityUtil.getCurrentUser());
         return ResponseEntity.ok(jobs);
@@ -61,6 +60,7 @@ public class JobController {
      * Get paginated intern jobs (served from intern_jobs table)
      */
     @GetMapping("/intern")
+    @EncryptedResponse
     public ResponseEntity<Page<JobDTO>> getInternJobs(
             @RequestParam(required = false) String keywords,
             @RequestParam(required = false) String categories,
@@ -89,9 +89,7 @@ public class JobController {
         List<String> positionList = parseCommaSeparated(position);
         List<String> skillList = parseCommaSeparated(skills);
 
-        Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC") ?
-                Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort).and(Sort.by(Sort.Direction.DESC, "id")));
+        Pageable pageable = pageRequests.of(page, size, sort, direction);
 
         Page<JobDTO> jobs = internJobsService.filterJobs(
                 keywordList, categoryList, locationList, employmentTypeList, experienceLevelList,
@@ -105,6 +103,7 @@ public class JobController {
      * Get paginated full-time jobs (served from fulltime_jobs table)
      */
     @GetMapping("/fulltime")
+    @EncryptedResponse
     public ResponseEntity<Page<JobDTO>> getFulltimeJobs(
             @RequestParam(required = false) String keywords,
             @RequestParam(required = false) String categories,
@@ -133,9 +132,7 @@ public class JobController {
         List<String> positionList = parseCommaSeparated(position);
         List<String> skillList = parseCommaSeparated(skills);
 
-        Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC") ?
-                Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort).and(Sort.by(Sort.Direction.DESC, "id")));
+        Pageable pageable = pageRequests.of(page, size, sort, direction);
 
         Page<JobDTO> jobs = fulltimeJobsService.filterJobs(
                 keywordList, categoryList, locationList, employmentTypeList, experienceLevelList,
@@ -156,9 +153,7 @@ public class JobController {
             @RequestParam(defaultValue = "postedAt") String sort,
             @RequestParam(defaultValue = "DESC") String direction
     ) {
-        Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC") ?
-                Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort).and(Sort.by(Sort.Direction.DESC, "id")));
+        Pageable pageable = pageRequests.of(page, size, sort, direction);
 
         Page<JobDTO> jobs = jobService.getJobsByCategory(category, pageable, securityUtil.getCurrentUser());
         return ResponseEntity.ok(jobs);
@@ -179,9 +174,7 @@ public class JobController {
     ) {
         List<String> keywordList = parseCommaSeparated(keywords);
 
-        Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC") ?
-                Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort).and(Sort.by(Sort.Direction.DESC, "id")));
+        Pageable pageable = pageRequests.of(page, size, sort, direction);
 
         Page<JobDTO> jobs = jobService.searchJobsByCategory(keywordList, category, pageable, securityUtil.getCurrentUser());
         return ResponseEntity.ok(jobs);
@@ -192,6 +185,7 @@ public class JobController {
      * Advanced multi-filter search
      */
     @GetMapping("/filter")
+    @EncryptedResponse
     public ResponseEntity<Page<JobDTO>> filterJobs(
             @RequestParam(required = false) String keywords,
             @RequestParam(required = false) String categories,
@@ -220,9 +214,7 @@ public class JobController {
         List<String> positionList = parseCommaSeparated(position);
         List<String> skillList = parseCommaSeparated(skills);
 
-        Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC") ?
-                Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort).and(Sort.by(Sort.Direction.DESC, "id")));
+        Pageable pageable = pageRequests.of(page, size, sort, direction);
 
         Page<JobDTO> jobs = jobService.filterJobs(
                 keywordList, categoryList, locationList, employmentTypeList, experienceLevelList,
@@ -246,9 +238,7 @@ public class JobController {
     ) {
         List<String> keywordList = parseCommaSeparated(keywords);
 
-        Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC") ?
-                Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort).and(Sort.by(Sort.Direction.DESC, "id")));
+        Pageable pageable = pageRequests.of(page, size, sort, direction);
 
         Page<JobDTO> jobs = jobService.searchJobs(keywordList, pageable, securityUtil.getCurrentUser());
         return ResponseEntity.ok(jobs);
@@ -290,6 +280,7 @@ public class JobController {
      * No scoring at request time — reads directly from user_job_relevance.
      */
     @GetMapping("/for-you")
+    @EncryptedResponse
     public ResponseEntity<List<ForYouJobDTO>> getForYouFeed() {
         Long userId = securityUtil.getCurrentUserId();
         List<ForYouJobDTO> feed = forYouService.getForYouFeed(userId);
@@ -329,9 +320,7 @@ public class JobController {
             @RequestParam(defaultValue = "savedAt") String sort,
             @RequestParam(defaultValue = "DESC") String direction
     ) {
-        Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC") ?
-                Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort).and(Sort.by(Sort.Direction.DESC, "id")));
+        Pageable pageable = pageRequests.of(page, size, sort, direction);
         Page<JobDTO> jobs = jobService.getSavedJobs(pageable, securityUtil.getCurrentUser());
         return ResponseEntity.ok(jobs);
     }
@@ -398,9 +387,7 @@ public class JobController {
     ) {
         List<AppliedJob.ApplicationStatus> statusList = parseEnumList(statuses, AppliedJob.ApplicationStatus.class);
 
-        Sort.Direction sortDirection = direction.equalsIgnoreCase("ASC") ?
-                Sort.Direction.ASC : Sort.Direction.DESC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort).and(Sort.by(Sort.Direction.DESC, "id")));
+        Pageable pageable = pageRequests.of(page, size, sort, direction);
         Page<JobDTO> jobs = jobService.getAppliedJobs(statusList, pageable, securityUtil.getCurrentUser());
         return ResponseEntity.ok(jobs);
     }

@@ -1,4 +1,5 @@
 import Cookies from 'js-cookie';
+import { maybeDecrypt } from '../utils/crypto';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -47,9 +48,41 @@ const refreshAccessToken = async () => {
     }
 };
 
+/**
+ * Some endpoints (/jobs/fulltime, /jobs/intern, /jobs/filter, /jobs/for-you,
+ * /companies) come back AES-GCM encrypted. Rather than making every call site
+ * aware of that, shadow `json()` on the Response so it transparently unwraps the
+ * envelope. Plain bodies pass straight through, so this is safe to apply to
+ * every response and nothing downstream has to change.
+ */
+const withDecryption = (response) => {
+    const readJson = response.json.bind(response);
+    response.json = async () => maybeDecrypt(await readJson());
+    return response;
+};
+
+/** One entry per GET that is currently on the wire, keyed by URL + token. */
+const inFlightGets = new Map();
+
+/** A single attempt, including the refresh-and-retry dance on a 401. */
+const sendRequest = async (endpoint, options, headers) => {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
+
+    if (response.status === 401) {
+        const newAccessToken = await refreshAccessToken();
+        return fetch(`${API_BASE_URL}${endpoint}`, {
+            ...options,
+            headers: { ...headers, Authorization: `Bearer ${newAccessToken}` },
+        });
+    }
+
+    return response;
+};
+
 // Main API request function with automatic token refresh
 export const apiRequest = async (endpoint, options = {}) => {
     const accessToken = getAccessToken();
+    const method = (options.method || 'GET').toUpperCase();
 
     const headers = {
         'Content-Type': 'application/json',
@@ -61,24 +94,27 @@ export const apiRequest = async (endpoint, options = {}) => {
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-            ...options,
-            headers,
-        });
-
-        if (response.status === 401) {
-            const newAccessToken = await refreshAccessToken();
-            headers['Authorization'] = `Bearer ${newAccessToken}`;
-
-            const retryResponse = await fetch(`${API_BASE_URL}${endpoint}`, {
-                ...options,
-                headers,
-            });
-
-            return retryResponse;
+        // Writes are never shared — two POSTs are two intentional actions.
+        if (method !== 'GET') {
+            return withDecryption(await sendRequest(endpoint, options, headers));
         }
 
-        return response;
+        // Two components (or React StrictMode's double-mount in dev) asking for
+        // the same URL at the same moment should cost one round-trip, not two.
+        // Only overlapping requests are shared: once a response lands its entry is
+        // dropped, so a later refetch always hits the network and nothing goes stale.
+        const key = `${endpoint}|${accessToken || ''}`;
+        let pending = inFlightGets.get(key);
+
+        if (!pending) {
+            pending = sendRequest(endpoint, options, headers)
+                .finally(() => inFlightGets.delete(key));
+            inFlightGets.set(key, pending);
+        }
+
+        // A Response body can only be read once, so hand every caller its own copy
+        // and leave the shared original untouched.
+        return withDecryption((await pending).clone());
     } catch (error) {
         console.error('API request error:', error);
         throw error;

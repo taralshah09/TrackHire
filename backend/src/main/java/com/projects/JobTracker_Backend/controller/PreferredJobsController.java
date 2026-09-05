@@ -5,11 +5,10 @@ import com.projects.JobTracker_Backend.model.User;
 import com.projects.JobTracker_Backend.repository.UserRepository;
 import com.projects.JobTracker_Backend.service.JobService;
 import com.projects.JobTracker_Backend.service.PreferenceService;
+import com.projects.JobTracker_Backend.util.PageRequestFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -28,6 +27,7 @@ public class PreferredJobsController {
     private final JobService jobService;
     private final PreferenceService preferenceService;
     private final UserRepository userRepository;
+    private final PageRequestFactory pageRequests;
 
     @GetMapping
     public ResponseEntity<Page<JobDTO>> getPreferredJobs(
@@ -45,7 +45,7 @@ public class PreferredJobsController {
 
         List<String> preferredCompanies = preferenceService.getUserPreferredCompanies(user.getId());
 
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = pageRequests.of(page, size);
 
         Page<JobDTO> jobs = jobService.getPreferredJobs(
                 type, preferredCompanies, 

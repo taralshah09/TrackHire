@@ -1,5 +1,6 @@
 package com.projects.JobTracker_Backend.controller;
 
+import com.projects.JobTracker_Backend.crypto.EncryptedResponse;
 import com.projects.JobTracker_Backend.service.CompanyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,7 @@ public class CompanyController {
     private CompanyService companyService;
 
     @GetMapping
+    @EncryptedResponse
     public ResponseEntity<List<String>> getCompanies() {
         return ResponseEntity.ok(companyService.getAvailableCompanies());
     }
