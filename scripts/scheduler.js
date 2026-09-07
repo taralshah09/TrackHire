@@ -15,8 +15,7 @@ const multiAtsLoader = require("./multi_ats/multi_ats_load_to_db");
 const emailPipeline = require("./email/email_pipeline_batch");
 
 // Config
-const RENDER_HEALTH_URL =
-    "https://trackhire-9ve0.onrender.com/api/public/health";
+const RENDER_HEALTH_URL = "https://trackhire-9ve0.onrender.com/api/public/health"
 
 // ─── Time Helper (UTC → IST) ──────────────────────────────────────────────
 
@@ -33,8 +32,9 @@ async function pingRenderServer() {
 
     const urls = [
         RENDER_HEALTH_URL,
+        "https://trackhire-singapore.onrender.com/api/public/health",
         "https://p2p-share-server-vbhp.onrender.com/health",
-        "https://tl-dr.onrender.com/",
+        "https://tl-dr.onrender.com/"
     ];
 
     await Promise.all(
