@@ -34,7 +34,8 @@ async function pingRenderServer() {
         RENDER_HEALTH_URL,
         "https://trackhire-singapore.onrender.com/api/public/health",
         "https://p2p-share-server-vbhp.onrender.com/health",
-        "https://tl-dr.onrender.com/"
+        "https://tl-dr.onrender.com/",
+        "https://health-coach-api-nmz6.onrender.com/v1/health"
     ];
 
     await Promise.all(
@@ -159,7 +160,7 @@ async function runScheduler() {
     await pingRenderServer();
 
     // 🔹 03:30 IST → Job pipelines (triggered within the 03:30 to 03:40 window by the 10-minute Railway cron)
-    if (hour === 3 && minute >= 30 && minute < 40) {
+    if (process.env.FORCE_PIPELINES === "1" || (hour === 3 && minute >= 30 && minute < 40)) {
         console.log("⏰ Running scraping pipelines (03:30 IST window)");
 
         await runAdzunaPipeline();
