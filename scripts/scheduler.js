@@ -35,7 +35,8 @@ async function pingRenderServer() {
         "https://trackhire-singapore.onrender.com/api/public/health",
         "https://p2p-share-server-vbhp.onrender.com/health",
         "https://tl-dr.onrender.com/",
-        "https://health-coach-api-nmz6.onrender.com/v1/health"
+        "https://health-coach-api-nmz6.onrender.com/v1/health",
+        "https://broyouoweme.onrender.com/health"
     ];
 
     await Promise.all(
